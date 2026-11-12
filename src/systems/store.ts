@@ -15,6 +15,7 @@ type State = {
   // Reel "build-up" mode: null = everything visible (normal game).
   // A Set = only these pieces are built; the reel adds ids as code lines finish.
   revealed: Set<string> | null
+  kozie: boolean // Kozie on set (reels)
   reveal: (...ids: string[]) => void
   startBuild: () => void
 }
@@ -30,6 +31,7 @@ export const useGame = create<State>((set) => ({
   barista: { skin: '#f6cdb4', hair: '#5a3166', apron: '#ef9fc3', shirt: '#fff6ee', cap: '#9d6fd0' },
   setBarista: (p) => set((s) => ({ barista: { ...s.barista, ...p } })),
   revealed: null,
+  kozie: false,
   reveal: (...ids) => set((s) => ({ revealed: new Set([...(s.revealed ?? []), ...ids]) })),
   startBuild: () => set({ revealed: new Set() }),
 }))

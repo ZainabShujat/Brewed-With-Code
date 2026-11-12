@@ -7,8 +7,17 @@
   </head>
   <body>
     <!-- ?render=1: frame-stepped virtual clock shared with the notes-brain exporter -->
-    <script src="/clock.js"></script>
+    <script>
+      // Embedded in a notes-brain reel page: borrow the parent's clock so the exporter's
+      // frame-stepping drives the café too. Standalone: load our own copy of the clock.
+      if (location.search.includes('embed') && window.parent !== window) {
+        const P = window.parent
+        performance.now = () => P.performance.now()
+        window.requestAnimationFrame = (f) => P.requestAnimationFrame(f)
+        window.cancelAnimationFrame = (id) => P.cancelAnimationFrame(id)
+      } else document.write('<script src="./clock.js"><\/script>')
+    </script>
     <div id="root"></div>
-    <script type="module" src="/src/reel/main.tsx"></script>
+    <script type="module" src="./src/reel/main.tsx"></script>
   </body>
 </html>

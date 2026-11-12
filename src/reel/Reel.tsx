@@ -1,8 +1,10 @@
 import { Canvas } from '@react-three/fiber'
 import { useEffect, useMemo, useState } from 'react'
+import { flushSync } from 'react-dom'
 import { World } from '../App'
 import { useGame } from '../systems/store'
 import { EPISODES, type Step } from './eps/s01'
+import { kozieCtl } from '../world/Kozie'
 
 // 1080x1920 split screen: code typing on top, the café building itself below.
 // Driven by performance.now(), so the notes-brain frame-stepped exporter can capture it exactly.
@@ -42,7 +44,42 @@ function paint(text: string) {
   return out
 }
 
+// ?embed: only the café, full size, remote-controlled by the parent reel page via window.cafe
+function Embedded() {
+  useEffect(() => {
+    const g = useGame.getState()
+    g.startBuild(); g.setMode('exterior'); useGame.setState({ kozie: true })
+    ;(window as any).cafe = {
+      // flushSync: commit the React update right now, so the exporter's virtual
+      // clock and the café never drift apart (React would otherwise render later, in real time)
+      reveal: (...ids: string[]) => flushSync(() => useGame.getState().reveal(...ids)),
+      mode: (m: any) => flushSync(() => useGame.getState().setMode(m)),
+      kozie: {
+        say: (sec: number) => kozieCtl.m?.say(sec),
+        pose: (p: any) => kozieCtl.m?.pose(p),
+        hop: () => { kozieCtl.hopReq = true },
+      },
+      state: () => { const s = useGame.getState(); return { mode: s.mode, revealed: s.revealed && [...s.revealed] } },
+      reset: () => flushSync(() => { useGame.getState().startBuild(); useGame.getState().setMode('exterior') }),
+    }
+    ;(window as any).__cafeReady = true
+  }, [])
+  return (
+    <div style={{ position: 'fixed', inset: 0 }}>
+      <Canvas flat shadows dpr={1} camera={{ fov: 45, position: [20, 12, 33] }} gl={{ antialias: true, preserveDrawingBuffer: true }}>
+        <color attach="background" args={['#e2c9fb']} />
+        <World />
+      </Canvas>
+    </div>
+  )
+}
+
 export function Reel() {
+  if (location.search.includes('embed')) return <Embedded />
+  return <SplitReel />
+}
+
+function SplitReel() {
   const ep = EPISODES[new URLSearchParams(location.search).get('ep') ?? 's01']
   const lines = useMemo(() => layout(ep.steps), [ep])
   const [t, setT] = useState(0)

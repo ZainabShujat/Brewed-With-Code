@@ -6,12 +6,13 @@ import { useGame } from '../systems/store'
 // Wraps a piece of the café. In build-up mode it stays hidden until its id is
 // revealed, then pops in with a springy overshoot. In the normal game it's just there.
 export function Reveal({ id, at = [0, 0, 0], children }: { id: string; at?: [number, number, number]; children: ReactNode }) {
-  const on = useGame((s) => s.revealed === null || s.revealed.has(id))
   const ref = useRef<THREE.Group>(null)
-  const t = useRef(on ? 1 : 0)
+  // read the store every frame (not via a React re-render) so reel timing is frame-exact
+  const isOn = () => { const r = useGame.getState().revealed; return r === null || r.has(id) }
+  const t = useRef(isOn() ? 1 : 0)
   useFrame((_, dt) => {
     if (!ref.current) return
-    const target = on ? 1 : 0
+    const target = isOn() ? 1 : 0
     t.current = Math.min(1, Math.max(0, t.current + (target ? dt : -dt) * 2.2))
     const x = t.current
     // easeOutBack: overshoots a little, then settles = "pop"

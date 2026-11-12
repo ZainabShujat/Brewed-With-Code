@@ -6,6 +6,7 @@ import { Exterior } from './world/Exterior'
 import { Interior } from './world/Interior'
 import { Barista } from './world/Barista'
 import { Reveal } from './world/Reveal'
+import { Kozie } from './world/Kozie'
 
 const MODES: { id: CamMode; label: string; key: string }[] = [
   { id: 'exterior', label: 'Outside', key: '1' },
@@ -17,6 +18,7 @@ const MODES: { id: CamMode; label: string; key: string }[] = [
 export function World() {
   const mode = useGame((s) => s.mode)
   const inside = mode !== 'exterior'
+  const kozie = useGame((s) => s.kozie)
   return (
     <>
       <hemisphereLight args={['#ffe6f6', '#b48ac0', 0.75]} />
@@ -28,6 +30,7 @@ export function World() {
       <Exterior showPot={!inside} />
       {inside && <Interior cutaway={mode === 'dollhouse' || mode === 'pov'} pov={mode === 'pov'} />}
       {inside && mode !== 'pov' && <Reveal id="barista" at={[0.4, 0, 2.4]}><Barista /></Reveal>}
+      {kozie && <Kozie />}
       <CameraRig />
       <FpsProbe />
     </>
