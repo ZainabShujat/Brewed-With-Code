@@ -5,6 +5,10 @@ import { mat, glass, glow } from './mats'
 import { PlusSpot } from './PlusSpot'
 import { RBox } from './Soft'
 import { Reveal } from './Reveal'
+import { FadeIn } from './FadeIn'
+
+// The outside world is scaled so the coffee pot is big enough to hold the 14 m interior.
+export const OUT_SCALE = 2.05
 
 // Coffee-pot café from references/sketches/02-exterior-coffee-pot.jpg
 const POT_PROFILE: [number, number][] = [
@@ -204,13 +208,13 @@ function Flowers() {
   )
 }
 
-export function Exterior({ showPot }: { showPot: boolean }) {
+export function Exterior({ showPot, fadeIn = false }: { showPot: boolean; fadeIn?: boolean }) {
   return (
     <group>
       <mesh rotation={[-Math.PI / 2, 0, 0]} material={mat(C.grass)} receiveShadow><planeGeometry args={[100, 80]} /></mesh>
-      {/* s02: everything outside scales with the bigger interior */}
-      <group scale={1.4}>
-      {showPot && <CoffeePot />}
+      {/* everything outside scales so the pot contains the interior */}
+      <group scale={OUT_SCALE}>
+      {showPot && (fadeIn ? <FadeIn><CoffeePot /></FadeIn> : <CoffeePot />)}
       {showPot && <Reveal id="flowers"><Flowers /></Reveal>}
       <Reveal id="path" at={[0, 0, 7]}><WindingPath /></Reveal>
       <Reveal id="parking" at={[0, 0, 10.5]}>

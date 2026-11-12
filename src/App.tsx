@@ -18,6 +18,7 @@ const MODES: { id: CamMode; label: string; key: string }[] = [
 export function World() {
   const mode = useGame((s) => s.mode)
   const inside = mode !== 'exterior'
+  const outro = mode === 'outro'
   const kozie = useGame((s) => s.kozie)
   return (
     <>
@@ -27,8 +28,8 @@ export function World() {
         shadow-mapSize={[1024, 1024]} shadow-camera-left={-20} shadow-camera-right={20}
         shadow-camera-top={20} shadow-camera-bottom={-20}
       />
-      <Exterior showPot={!inside} />
-      {inside && <Interior cutaway={mode === 'dollhouse' || mode === 'pov'} pov={mode === 'pov'} />}
+      <Exterior showPot={!inside || outro} fadeIn={outro} />
+      {inside && <Interior cutaway={mode === 'dollhouse' || mode === 'pov' || outro} pov={mode === 'pov'} />}
       {inside && mode !== 'pov' && <Reveal id="barista" at={[0.4, 0, 2.4]}><Barista /></Reveal>}
       {kozie && <Kozie />}
       <CameraRig />

@@ -8,7 +8,7 @@ import { useGame } from '../systems/store'
 // Kozie on set: stands in the café (on the path outside, on the floor inside), turns to face the camera.
 // The reel page drives talking/poses through window.cafe.kozie.
 const SPOT = {
-  exterior: { pos: new THREE.Vector3(-2.6, 0, 12.6), s: 1.4 }, // world outside is scaled 1.4x
+  exterior: { pos: new THREE.Vector3(-3.8, 0, 18.4), s: 2.05 }, // outside world is scaled 2.05x
   inside: { pos: new THREE.Vector3(4.3, 0.12, 4.6), s: 1.0 }, // same height as the barista
 }
 export const kozieCtl: { m?: Mascot; hopT: number; hopReq: boolean } = { hopT: -9, hopReq: false }
@@ -28,7 +28,7 @@ export function Kozie() {
     const g = ref.current; if (!g) return
     const t = clock.elapsedTime
     if (kozieCtl.hopReq) { kozieCtl.hopT = t; kozieCtl.hopReq = false }
-    const spot = useGame.getState().mode === 'exterior' ? SPOT.exterior : SPOT.inside
+    const spot = ['exterior', 'outro'].includes(useGame.getState().mode) ? SPOT.exterior : SPOT.inside
     const hop = Math.max(0, Math.sin(Math.min(1, (t - kozieCtl.hopT) / 0.45) * Math.PI))
     g.position.copy(spot.pos)
     g.position.y += spot.s * 0.95 + hop * 0.5 * spot.s

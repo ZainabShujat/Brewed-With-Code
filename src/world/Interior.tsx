@@ -4,6 +4,7 @@ import { mat, glass, glow } from './mats'
 import { PlusSpot } from './PlusSpot'
 import { RBox, Puck } from './Soft'
 import { Reveal } from './Reveal'
+import { useGame } from '../systems/store'
 import { ArchWindow, Chalkboard, Clock, PendantLamp, Plant, RoundTable, Rug, Shelf, Stool, StringLights } from './Props'
 import { BACK_DZ, COUNTER, FRIDGE_DX, H, KITCHEN_DX, PLUS_SPOTS, ROOM, TABLES } from './layout'
 
@@ -74,7 +75,7 @@ function Kitchen() {
       <mesh position={[-4.0, 0.7, -3.44]} material={glow(C.peach)}><planeGeometry args={[0.5, 0.25]} /></mesh>
       <RBox size={[0.9, 0.9, 0.7]} pos={[-3.0, 0.45, -4.2]} color={C.counter} r={0.1} />
       <RBox size={[0.55, 0.4, 0.38]} pos={[-3.0, 1.1, -4.2]} color={C.mint} r={0.12} />
-      <Html position={[-3.6, 3.1, -2.25]} center className="tag">kitchen</Html>
+      {!useGame((s) => s.mode === 'outro') && <Html position={[-3.6, 3.1, -2.25]} center className="tag">kitchen</Html>}
     </group>
   )
 }

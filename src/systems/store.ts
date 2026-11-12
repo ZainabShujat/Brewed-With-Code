@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 
-export type CamMode = 'exterior' | 'dollhouse' | 'walk' | 'pov'
+export type CamMode = 'exterior' | 'dollhouse' | 'walk' | 'pov' | 'outro'
 
 export type BaristaLook = { skin: string; hair: string; apron: string; shirt: string; cap: string }
 

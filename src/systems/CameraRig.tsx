@@ -5,7 +5,9 @@ import { step } from './movement'
 
 // Fixed shots per mode. Walk mode follows the barista instead.
 const SHOTS: Record<Exclude<CamMode, 'walk'>, { pos: THREE.Vector3; look: THREE.Vector3 }> = {
-  exterior: { pos: new THREE.Vector3(20, 12, 33), look: new THREE.Vector3(0, 4.5, 3) },
+  exterior: { pos: new THREE.Vector3(29, 17, 48), look: new THREE.Vector3(0, 6.5, 4) },
+  // outro: pull back from the dollhouse to the full exterior while the pot walls fade in
+  outro: { pos: new THREE.Vector3(29, 17, 48), look: new THREE.Vector3(0, 6.5, 4) },
   dollhouse: { pos: new THREE.Vector3(16.5, 17.5, 22), look: new THREE.Vector3(-0.3, 0.4, -0.3) },
   pov: { pos: new THREE.Vector3(0.1, 3.4, -12.2), look: new THREE.Vector3(0.1, 0.8, -5.3) },
 }
@@ -34,7 +36,7 @@ export function CameraRig() {
       wantPos.copy(SHOTS[mode].pos); wantLook.copy(SHOTS[mode].look)
     }
     // ?snap = jump straight to the shot (used for footage capture and tests)
-    const k = SNAP ? 1 : 1 - Math.exp(-dt * 4)
+    const k = SNAP ? 1 : 1 - Math.exp(-dt * (mode === 'outro' ? 1.4 : 4))
     camera.position.lerp(wantPos, k)
     look.lerp(wantLook, k)
     camera.lookAt(look)
