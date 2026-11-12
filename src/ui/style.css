@@ -1,0 +1,17 @@
+html, body, #root { margin: 0; height: 100%; overflow: hidden; background: #ecdcf7; }
+body { font-family: 'Trebuchet MS', system-ui, sans-serif; }
+.hud { position: fixed; top: 14px; left: 14px; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
+.title { font-size: 22px; font-weight: 800; color: #6e3f78; letter-spacing: 0.5px; text-shadow: 0 2px 0 #fff1f6; }
+.modes { display: flex; gap: 6px; flex-wrap: wrap; pointer-events: auto; }
+.modes button {
+  border: 0; border-radius: 14px; padding: 8px 14px; font: inherit; font-weight: 700; font-size: 14px;
+  background: #fff1f6; color: #6e3f78; box-shadow: 0 3px 0 #ef9fc3; cursor: pointer;
+}
+.modes button span { opacity: 0.5; margin-right: 6px; }
+.modes button.on { background: #d8b8f0; box-shadow: 0 3px 0 #6e3f78; }
+.hint { color: #6e3f78; font-weight: 700; background: #fff1f6cc; padding: 4px 10px; border-radius: 10px; width: fit-content; }
+.fps { position: fixed; right: 12px; bottom: 10px; font: 12px monospace; color: #6e3f78; opacity: 0.6; }
+.tag {
+  background: #fff1f6; color: #6e3f78; font-weight: 800; font-size: 12px; padding: 2px 8px;
+  border-radius: 8px; white-space: nowrap; box-shadow: 0 2px 0 #ef9fc3; pointer-events: none;
+}
