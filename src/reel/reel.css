@@ -1,0 +1,32 @@
+/* 1080x1920 reel canvas, scaled down to fit when previewed in a normal window */
+html, body, #root { margin: 0; height: 100%; background: #1d1022; overflow: hidden; }
+.reel {
+  width: 1080px; height: 1920px; position: absolute; left: 50%; top: 50%;
+  transform: translate(-50%, -50%) scale(min(calc(100vw / 1080px), calc(100vh / 1920px)));
+  transform: translate(-50%, -50%) scale(var(--fit, 1));
+  display: flex; flex-direction: column; overflow: hidden; background: #2a1830;
+  font-family: 'Cascadia Code', Consolas, monospace;
+}
+.code { height: 760px; background: #2a1830; padding: 0 0 0 0; box-sizing: border-box; }
+.tabs { height: 96px; display: flex; align-items: center; gap: 14px; padding: 0 40px; background: #1f1124; color: #d8b8f0; }
+.dot { width: 22px; height: 22px; border-radius: 50%; }
+.dot.r { background: #ef7fa8; } .dot.y { background: #ffd98a; } .dot.g { background: #9fe0cf; }
+.file { margin-left: 18px; font-size: 30px; padding: 10px 22px; background: #2a1830; border-radius: 14px 14px 0 0; color: #fff1f6; }
+.brand { margin-left: auto; font: 800 24px 'Trebuchet MS', sans-serif; color: #ef9fc3; letter-spacing: 1px; }
+pre { margin: 0; padding: 28px 40px; font-size: 33px; line-height: 1.5; color: #f3e6f7; white-space: pre-wrap; }
+.ln { display: flex; gap: 28px; border-radius: 10px; }
+.ln.active { background: #ffffff0d; }
+.no { color: #7d5a88; width: 46px; text-align: right; flex: none; }
+.src { flex: 1; }
+.c { color: #9e86a8; font-style: italic; }
+.s { color: #9fe0cf; } .n { color: #ffd98a; } .t { color: #ef9fc3; } .k { color: #c9a2ff; }
+.caret { display: inline-block; width: 16px; height: 38px; background: #ef9fc3; vertical-align: -6px; margin-left: 2px; }
+.seam { height: 64px; display: flex; align-items: center; justify-content: center; gap: 22px; background: #ef9fc3;
+  color: #2a1830; font: 800 28px 'Trebuchet MS', sans-serif; letter-spacing: 3px; text-transform: uppercase; }
+.seam .arrow { font-size: 22px; }
+.stage { flex: 1; position: relative; }
+.stage canvas { display: block; }
+.tag {
+  background: #fff1f6; color: #6e3f78; font: 800 22px 'Trebuchet MS', sans-serif; padding: 4px 14px;
+  border-radius: 10px; white-space: nowrap; box-shadow: 0 3px 0 #ef9fc3; pointer-events: none;
+}

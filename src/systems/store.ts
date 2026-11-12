@@ -12,12 +12,24 @@ type State = {
   player: { x: number; z: number; facing: number; moving?: boolean }
   barista: BaristaLook
   setBarista: (p: Partial<BaristaLook>) => void
+  // Reel "build-up" mode: null = everything visible (normal game).
+  // A Set = only these pieces are built; the reel adds ids as code lines finish.
+  revealed: Set<string> | null
+  reveal: (...ids: string[]) => void
+  startBuild: () => void
 }
 
 export const useGame = create<State>((set) => ({
   mode: 'exterior',
-  setMode: (mode) => set({ mode }),
-  player: { x: 0.5, z: 1.2, facing: Math.PI },
+  setMode: (mode) => set((s) => {
+    // entering walk from the barista view: step out onto the café floor
+    if (mode === 'walk' && s.mode === 'pov') Object.assign(s.player, { x: 0.4, z: 2.4, facing: Math.PI })
+    return { mode }
+  }),
+  player: { x: 0.4, z: 2.4, facing: Math.PI },
   barista: { skin: '#f6cdb4', hair: '#5a3166', apron: '#ef9fc3', shirt: '#fff6ee', cap: '#9d6fd0' },
   setBarista: (p) => set((s) => ({ barista: { ...s.barista, ...p } })),
+  revealed: null,
+  reveal: (...ids) => set((s) => ({ revealed: new Set([...(s.revealed ?? []), ...ids]) })),
+  startBuild: () => set({ revealed: new Set() }),
 }))

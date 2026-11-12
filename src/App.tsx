@@ -5,7 +5,7 @@ import { CameraRig } from './systems/CameraRig'
 import { Exterior } from './world/Exterior'
 import { Interior } from './world/Interior'
 import { Barista } from './world/Barista'
-import { C } from './data/palette'
+import { Reveal } from './world/Reveal'
 
 const MODES: { id: CamMode; label: string; key: string }[] = [
   { id: 'exterior', label: 'Outside', key: '1' },
@@ -14,7 +14,7 @@ const MODES: { id: CamMode; label: string; key: string }[] = [
   { id: 'pov', label: 'Barista', key: '4' },
 ]
 
-function World() {
+export function World() {
   const mode = useGame((s) => s.mode)
   const inside = mode !== 'exterior'
   return (
@@ -27,7 +27,7 @@ function World() {
       />
       <Exterior showPot={!inside} />
       {inside && <Interior cutaway={mode === 'dollhouse' || mode === 'pov'} pov={mode === 'pov'} />}
-      {inside && mode !== 'pov' && <Barista />}
+      {inside && mode !== 'pov' && <Reveal id="barista" at={[0.4, 0, 2.4]}><Barista /></Reveal>}
       <CameraRig />
       <FpsProbe />
     </>

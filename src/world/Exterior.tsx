@@ -4,6 +4,7 @@ import { C } from '../data/palette'
 import { mat, glass, glow } from './mats'
 import { PlusSpot } from './PlusSpot'
 import { RBox } from './Soft'
+import { Reveal } from './Reveal'
 
 // Coffee-pot café from references/sketches/02-exterior-coffee-pot.jpg
 const POT_PROFILE: [number, number][] = [
@@ -25,25 +26,30 @@ function CoffeePot() {
   }, [])
   return (
     <group>
-      <mesh geometry={body} material={mat(C.potBody)} castShadow receiveShadow />
+      <Reveal id="pot"><mesh geometry={body} material={mat(C.potBody)} castShadow receiveShadow /></Reveal>
+      <Reveal id="lid" at={[0, 7, 0]}>
       {/* lid: rim + dome + knob */}
       <mesh position={[0, 7.0, 0]} material={mat(C.purple)} castShadow><cylinderGeometry args={[5.25, 5.25, 0.4, 48]} /></mesh>
       <mesh position={[0, 7.2, 0]} rotation={[Math.PI / 2, 0, 0]} material={mat(C.purple)}><torusGeometry args={[5.1, 0.22, 12, 48]} /></mesh>
       <mesh position={[0, 7.2, 0]} scale={[1, 0.38, 1]} material={mat(C.lilac)} castShadow>
         <sphereGeometry args={[4.9, 40, 16, 0, Math.PI * 2, 0, Math.PI / 2]} />
       </mesh>
+      </Reveal>
+      <Reveal id="chimney" at={[0.6, 8.2, -0.6]}>
       {/* spout chimney with a wide cap (sketch) */}
       <mesh position={[0.6, 9.1, -0.6]} material={mat(C.plum)} castShadow><cylinderGeometry args={[0.45, 0.6, 1.8, 20]} /></mesh>
       <RBox size={[1.9, 0.4, 1.0]} pos={[0.6, 10.1, -0.6]} color={C.plum} r={0.18} />
+      </Reveal>
+      <Reveal id="band" at={[0, 3, 0]}>
       {/* candy band with dots */}
       <mesh position={[0, 4.4, 0]} rotation={[Math.PI / 2, 0, 0]} material={mat(C.counter)}><torusGeometry args={[5.97, 0.16, 10, 48]} /></mesh>
       {Array.from({ length: 16 }, (_, i) => {
         const a = (i / 16) * Math.PI * 2, y = 1.9, r = POT_R(y) + 0.02
         return <mesh key={i} position={[Math.sin(a) * r, y, Math.cos(a) * r]} material={mat(i % 2 ? C.lilac : C.cream)}><sphereGeometry args={[0.22, 12, 8]} /></mesh>
       })}
-      <Porthole />
-      <ArchDoor />
-      <Awning />
+      </Reveal>
+      <Reveal id="window" at={[3.6, 4.9, 3.7]}><Porthole /></Reveal>
+      <Reveal id="door" at={[0, 0, 5.9]}><ArchDoor /><Awning /></Reveal>
     </group>
   )
 }
@@ -202,19 +208,26 @@ export function Exterior({ showPot }: { showPot: boolean }) {
   return (
     <group>
       <mesh rotation={[-Math.PI / 2, 0, 0]} material={mat(C.grass)} receiveShadow><planeGeometry args={[100, 80]} /></mesh>
+      {/* s02: everything outside scales with the bigger interior */}
+      <group scale={1.4}>
       {showPot && <CoffeePot />}
-      {showPot && <Flowers />}
-      <WindingPath />
-      <Parking x={-9.5} cars={[[-2, C.lilac]]} />
-      <Parking x={9.5} cars={[[2, C.mint]]} />
-      <Road />
-      {showPot && <LockedWings />}
-      <Tree x={-15} z={-4} s={1.2} />
-      <Tree x={-13} z={4} c={C.leafDark} />
-      <Tree x={14.5} z={-5} s={1.3} c={C.leafDark} />
-      <Tree x={16} z={3} />
-      <Tree x={-6} z={-10} s={1.4} c="#f2a9c9" />
-      <Tree x={7} z={-11} s={1.5} c="#d7b4ef" />
+      {showPot && <Reveal id="flowers"><Flowers /></Reveal>}
+      <Reveal id="path" at={[0, 0, 7]}><WindingPath /></Reveal>
+      <Reveal id="parking" at={[0, 0, 10.5]}>
+        <Parking x={-9.5} cars={[[-2, C.lilac]]} />
+        <Parking x={9.5} cars={[[2, C.mint]]} />
+      </Reveal>
+      <Reveal id="road" at={[0, 0, 17.5]}><Road /></Reveal>
+      {showPot && <Reveal id="wings"><LockedWings /></Reveal>}
+      <Reveal id="trees">
+        <Tree x={-15} z={-4} s={1.2} />
+        <Tree x={-13} z={4} c={C.leafDark} />
+        <Tree x={14.5} z={-5} s={1.3} c={C.leafDark} />
+        <Tree x={16} z={3} />
+        <Tree x={-6} z={-10} s={1.4} c="#f2a9c9" />
+        <Tree x={7} z={-11} s={1.5} c="#d7b4ef" />
+      </Reveal>
+      </group>
     </group>
   )
 }
