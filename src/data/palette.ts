@@ -1,28 +1,28 @@
 // Single source of colour. Pinks, purples, mauves, candy accents (see DESIGN_BIBLE.md).
 export const C = {
   // structure
-  wall: '#f7e3ec',      // blush cream walls
-  wallTrim: '#c99ad8',  // lilac wainscot
-  wood: '#c98b9b',      // mauve wood
-  woodDark: '#a96f82',  // darker mauve plank
-  plum: '#6e3f78',      // darkest accent (trim, frames, coffee)
-  counter: '#ef9fc3',   // candy pink counter
-  counterTop: '#fff1f6',
-  purple: '#9d6fd0',    // machine, lid
-  lilac: '#d8b8f0',
-  mint: '#9fe0cf',      // fresh accent
-  butter: '#ffd98a',    // warm lights
-  peach: '#ffb59a',
+  wall: '#fbd3e4',      // blush cream walls
+  wallTrim: '#b77ee0',  // lilac wainscot
+  wood: '#d77a9a',      // mauve wood
+  woodDark: '#b65a7e',  // darker mauve plank
+  plum: '#5e2a75',      // darkest accent (trim, frames, coffee)
+  counter: '#ff7fb6',   // candy pink counter
+  counterTop: '#ffe4f0',
+  purple: '#8a4fe0',    // machine, lid
+  lilac: '#c99cff',
+  mint: '#6fe0c4',      // fresh accent
+  butter: '#ffcf5c',    // warm lights
+  peach: '#ff9a78',
   cream: '#fff6ee',
   white: '#ffffff',
   steel: '#d9d3e3',
-  leaf: '#7ccf9a',
-  leafDark: '#57b07f',
+  leaf: '#5fcf86',
+  leafDark: '#3fae6e',
   // outside
-  potBody: '#f6b8d2',
-  grass: '#b3dd97',
-  path: '#f3dccb',
-  road: '#8a7f99',
-  sky: '#ecdcf7',
-  glass: '#e6d4ff',
+  potBody: '#ff9ec8',
+  grass: '#9fdc78',
+  path: '#f7d2bd',
+  road: '#7a6a92',
+  sky: '#e2c9fb',
+  glass: '#d9bfff',
 } as const

@@ -104,8 +104,8 @@ export function Reel() {
       </div>
       <div className="seam"><span>code</span><span className="arrow">▼</span><span>café</span></div>
       <div className="stage">
-        <Canvas shadows dpr={1} resize={{ offsetSize: true }} camera={{ fov: 45, position: [20, 12, 33] }} gl={{ antialias: true, preserveDrawingBuffer: true }}>
-          <color attach="background" args={['#ecdcf7']} />
+        <Canvas flat shadows dpr={1} resize={{ offsetSize: true }} camera={{ fov: 45, position: [20, 12, 33] }} gl={{ antialias: true, preserveDrawingBuffer: true }}>
+          <color attach="background" args={['#e2c9fb']} />
           <World />
         </Canvas>
       </div>

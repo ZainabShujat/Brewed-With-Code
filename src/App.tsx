@@ -19,9 +19,9 @@ export function World() {
   const inside = mode !== 'exterior'
   return (
     <>
-      <hemisphereLight args={['#fff0fa', '#c9a2c8', 1.1]} />
+      <hemisphereLight args={['#ffe6f6', '#b48ac0', 0.75]} />
       <directionalLight
-        position={[12, 18, 10]} intensity={1.7} color="#ffe9e0" castShadow
+        position={[12, 18, 10]} intensity={1.35} color="#ffe9e0" castShadow
         shadow-mapSize={[1024, 1024]} shadow-camera-left={-20} shadow-camera-right={20}
         shadow-camera-top={20} shadow-camera-bottom={-20}
       />
@@ -58,8 +58,8 @@ export default function App() {
 
   return (
     <>
-      <Canvas shadows dpr={[1, 1.5]} camera={{ fov: 45, position: [15, 9, 25] }} gl={{ antialias: true }}>
-        <color attach="background" args={['#ecdcf7']} />
+      <Canvas flat shadows dpr={[1, 1.5]} camera={{ fov: 45, position: [15, 9, 25] }} gl={{ antialias: true }}>
+        <color attach="background" args={['#e2c9fb']} />
         <World />
       </Canvas>
       <div className="hud">

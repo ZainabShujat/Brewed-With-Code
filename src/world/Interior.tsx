@@ -15,9 +15,9 @@ function Floor() {
   const n = 14
   return (
     <group>
-      <RBox size={[ROOM + 0.5, 0.5, ROOM + 0.5]} pos={[0, -0.26, 0]} color={C.plum} r={0.15} />
+      <RBox size={[ROOM + 0.5, 0.5, ROOM + 0.5]} pos={[0, -0.22, 0]} color={C.plum} r={0.15} />
       {Array.from({ length: n }, (_, i) => (
-        <RBox key={i} size={[ROOM / n - 0.04, 0.08, ROOM]} pos={[-H + (i + 0.5) * (ROOM / n), -0.02, 0]}
+        <RBox key={i} size={[ROOM / n - 0.04, 0.08, ROOM]} pos={[-H + (i + 0.5) * (ROOM / n), 0.05, 0]}
           color={i % 2 ? C.wood : C.woodDark} r={0.03} shadow={false} />
       ))}
     </group>
@@ -221,8 +221,8 @@ function Decor({ hideBack }: { hideBack: boolean }) {
       <Plant pos={[-6.3, 0, 6.3]} s={1.1} pot={C.counter} />
       <Plant pos={[6.3, 0, -2.6]} s={1.2} pot={C.lilac} />
       <Plant pos={[-6.3, 0, 2.6]} s={0.9} pot={C.mint} />
-      <Rug pos={[0.4, 0.03, 0.8]} r={2.1} />
-      <Rug pos={[0.2, 0.03, 4.1]} r={2.6} color={C.counter} />
+      <Rug pos={[0.4, 0.1, 0.8]} r={2.1} />
+      <Rug pos={[0.2, 0.1, 4.1]} r={2.6} color={C.counter} />
       {/* bar stools along the side of the counter */}
       <Stool pos={[4.0, 0, -3.6]} />
       <Stool pos={[4.0, 0, -2.7]} color={C.purple} />
