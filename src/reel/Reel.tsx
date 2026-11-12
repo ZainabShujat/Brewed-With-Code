@@ -5,6 +5,7 @@ import { World } from '../App'
 import { useGame } from '../systems/store'
 import { EPISODES, type Step } from './eps/s01'
 import { kozieCtl } from '../world/Kozie'
+import { anim, tween, walkTo } from '../systems/anim'
 
 // 1080x1920 split screen: code typing on top, the café building itself below.
 // Driven by performance.now(), so the notes-brain frame-stepped exporter can capture it exactly.
@@ -58,6 +59,19 @@ function Embedded() {
         say: (sec: number) => kozieCtl.m?.say(sec),
         pose: (p: any) => kozieCtl.m?.pose(p),
         hop: () => { kozieCtl.hopReq = true },
+      },
+      showAll: () => flushSync(() => useGame.setState({ revealed: null })),
+      // vlog controls (BUILDS #002 tour)
+      vlog: {
+        door: (which: 'doorOut' | 'doorIn', to: number, dur = 0.8) => tween(() => anim[which], (v) => (anim[which] = v), to, dur),
+        drawer: (id: string, to: number, dur = 0.35) => tween(() => anim.drawers[id], (v) => (anim.drawers[id] = v), to, dur),
+        place: (x: number, z: number, s = 1, y = 0) => { Object.assign(anim.kozie, { free: true, s, walking: false }); anim.kozie.pos.set(x, y, z) },
+        walk: (x: number, z: number, dur: number) => walkTo(x, z, dur),
+        face: (cam: boolean, heading?: number) => { anim.kozie.faceCam = cam; if (heading !== undefined) anim.kozie.heading = heading },
+        follow: (ox: number, oy: number, oz: number, speed = 3) => Object.assign(anim.cam, { active: true, follow: true, speed, dist: 1.4, off: anim.cam.off.set(ox, oy, oz) }),
+        shot: (p: number[], l: number[], speed = 3, dist = 1.4) => { Object.assign(anim.cam, { active: true, follow: false, speed, dist }); anim.cam.pos.set(p[0], p[1], p[2]); anim.cam.look.set(l[0], l[1], l[2]) },
+        sway: (v: number) => (anim.cam.sway = v),
+        off: () => { anim.cam.active = false; anim.kozie.free = false },
       },
       state: () => { const s = useGame.getState(); return { mode: s.mode, revealed: s.revealed && [...s.revealed] } },
       reset: () => flushSync(() => { useGame.getState().startBuild(); useGame.getState().setMode('exterior') }),

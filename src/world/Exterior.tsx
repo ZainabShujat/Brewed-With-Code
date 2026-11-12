@@ -6,6 +6,7 @@ import { PlusSpot } from './PlusSpot'
 import { RBox } from './Soft'
 import { Reveal } from './Reveal'
 import { FadeIn } from './FadeIn'
+import { Swing } from './Swing'
 
 // The outside world is scaled so the coffee pot is big enough to hold the 14 m interior.
 export const OUT_SCALE = 2.05
@@ -78,11 +79,20 @@ function ArchDoor() {
       <mesh position={[0, 2.8, 0]} rotation={[Math.PI / 2, 0, 0]} material={mat(C.plum)}>
         <cylinderGeometry args={[1.35, 1.35, 0.5, 32, 1, false, -Math.PI / 2, Math.PI]} />
       </mesh>
-      {[-0.52, 0.52].map((x) => <RBox key={x} size={[1.0, 2.7, 0.1]} pos={[x, 1.38, 0.27]} color={C.purple} r={0.05} />)}
+      {/* double doors, hinged at the outer edges, swing outward (anim.doorOut) */}
+      <Swing pos={[-1.03, 0, 0.27]} dir={-1} src="doorOut">
+        <RBox size={[1.0, 2.7, 0.1]} pos={[0.51, 1.38, 0]} color={C.purple} r={0.05} />
+        <mesh position={[0.83, 1.4, 0.09]} material={mat(C.butter)}><sphereGeometry args={[0.1, 12, 8]} /></mesh>
+      </Swing>
+      <Swing pos={[1.03, 0, 0.27]} dir={1} src="doorOut">
+        <RBox size={[1.0, 2.7, 0.1]} pos={[-0.51, 1.38, 0]} color={C.purple} r={0.05} />
+        <mesh position={[-0.83, 1.4, 0.09]} material={mat(C.butter)}><sphereGeometry args={[0.1, 12, 8]} /></mesh>
+      </Swing>
+      {/* dark doorway behind the leaves */}
+      <RBox size={[2.06, 2.7, 0.06]} pos={[0, 1.38, 0.2]} color="#3a1f45" r={0.02} shadow={false} />
       <mesh position={[0, 2.78, 0.27]} rotation={[Math.PI / 2, 0, 0]} material={mat(C.purple)}>
         <cylinderGeometry args={[1.05, 1.05, 0.1, 32, 1, false, -Math.PI / 2, Math.PI]} />
       </mesh>
-      {[-0.2, 0.2].map((x) => <mesh key={x} position={[x, 1.4, 0.36]} material={mat(C.butter)}><sphereGeometry args={[0.1, 12, 8]} /></mesh>)}
       {/* little hanging sign */}
       <RBox size={[1.2, 0.45, 0.08]} pos={[0, 4.15, 0.25]} color={C.cream} r={0.12} />
       <RBox size={[0.9, 0.08, 0.02]} pos={[0, 4.15, 0.3]} color={C.counter} r={0.03} shadow={false} />

@@ -2,9 +2,10 @@ import { useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
 import { useGame, type CamMode } from './store'
 import { step } from './movement'
+import { anim, stepTweens } from './anim'
 
 // Fixed shots per mode. Walk mode follows the barista instead.
-const SHOTS: Record<Exclude<CamMode, 'walk'>, { pos: THREE.Vector3; look: THREE.Vector3 }> = {
+const SHOTS: Record<Exclude<CamMode, 'walk' | 'vlog'>, { pos: THREE.Vector3; look: THREE.Vector3 }> = {
   exterior: { pos: new THREE.Vector3(29, 17, 48), look: new THREE.Vector3(0, 6.5, 4) },
   // outro: pull back from the dollhouse to the full exterior while the pot walls fade in
   outro: { pos: new THREE.Vector3(29, 17, 48), look: new THREE.Vector3(0, 6.5, 4) },
@@ -14,6 +15,7 @@ const SHOTS: Record<Exclude<CamMode, 'walk'>, { pos: THREE.Vector3; look: THREE.
 
 const SNAP = typeof location !== 'undefined' && location.search.includes('snap')
 const look = new THREE.Vector3()
+const setFov = (cam: THREE.PerspectiveCamera, f: number) => { if (Math.abs(cam.fov - f) > 0.01) { cam.fov = f; cam.updateProjectionMatrix() } }
 const wantPos = new THREE.Vector3()
 const wantLook = new THREE.Vector3()
 
@@ -23,6 +25,24 @@ export function CameraRig() {
   useFrame((_, dtRaw) => {
     const dt = Math.min(dtRaw, 0.05)
     const { mode, player } = useGame.getState()
+    stepTweens(dt)
+    const c = anim.cam
+    if (c.active) {
+      // reel camera: follow Kozie like a handheld vlog cam, or glide to a set shot; plus handheld sway
+      if (c.follow) {
+        const k = anim.kozie
+        wantPos.copy(k.pos).add(c.off)
+        wantLook.set(k.pos.x, k.pos.y + 1.3 * k.s, k.pos.z)
+      } else { wantPos.copy(c.pos); wantLook.copy(c.look) }
+      wantPos.sub(wantLook).multiplyScalar(c.dist).add(wantLook)
+      const T = performance.now() / 1000
+      wantPos.x += Math.sin(T * 1.3) * 0.06 * c.sway; wantPos.y += Math.sin(T * 1.9 + 1) * 0.05 * c.sway
+      const kk = SNAP ? 1 : 1 - Math.exp(-dt * c.speed)
+      camera.position.lerp(wantPos, kk); look.lerp(wantLook, kk); camera.lookAt(look)
+      setFov(camera as THREE.PerspectiveCamera, c.fov)   // vlog = wider lens (tall 9:16 frame)
+      return
+    }
+    setFov(camera as THREE.PerspectiveCamera, 45)
     if (mode === 'walk') {
       step(player, dt)
       // stay inside the room so the front wall never blocks the view
@@ -32,7 +52,7 @@ export function CameraRig() {
       // POV = the barista standing behind the counter
       player.x = 0.3; player.z = -6.6; player.facing = 0
       wantPos.copy(SHOTS.pov.pos); wantLook.copy(SHOTS.pov.look)
-    } else {
+    } else if (mode !== 'vlog') {
       wantPos.copy(SHOTS[mode].pos); wantLook.copy(SHOTS[mode].look)
     }
     // ?snap = jump straight to the shot (used for footage capture and tests)

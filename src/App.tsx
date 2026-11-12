@@ -30,7 +30,7 @@ export function World() {
       />
       <Exterior showPot={!inside || outro} fadeIn={outro} />
       {inside && <Interior cutaway={mode === 'dollhouse' || mode === 'pov' || outro} pov={mode === 'pov'} />}
-      {inside && mode !== 'pov' && <Reveal id="barista" at={[0.4, 0, 2.4]}><Barista /></Reveal>}
+      {inside && mode !== 'pov' && mode !== 'vlog' && <Reveal id="barista" at={[0.4, 0, 2.4]}><Barista /></Reveal>}
       {kozie && <Kozie />}
       <CameraRig />
       <FpsProbe />

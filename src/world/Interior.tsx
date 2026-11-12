@@ -4,6 +4,7 @@ import { mat, glass, glow } from './mats'
 import { PlusSpot } from './PlusSpot'
 import { RBox, Puck } from './Soft'
 import { Reveal } from './Reveal'
+import { Swing, Slide } from './Swing'
 import { useGame } from '../systems/store'
 import { ArchWindow, Chalkboard, Clock, PendantLamp, Plant, RoundTable, Rug, Shelf, Stool, StringLights } from './Props'
 import { BACK_DZ, COUNTER, FRIDGE_DX, H, KITCHEN_DX, PLUS_SPOTS, ROOM, TABLES } from './layout'
@@ -51,8 +52,13 @@ function Walls({ cutaway, hideBack }: { cutaway: boolean; hideBack: boolean }) {
           <RBox size={[ROOM / 2 - 1.2, WALL_H, T]} pos={[-(ROOM / 4 + 0.6), WALL_H / 2, H]} color={C.wall} r={0.1} />
           <RBox size={[ROOM / 2 - 1.2, WALL_H, T]} pos={[ROOM / 4 + 0.6, WALL_H / 2, H]} color={C.wall} r={0.1} />
           <RBox size={[2.4, 1.0, T]} pos={[0, WALL_H - 0.5, H]} color={C.wall} r={0.1} />
-          <RBox size={[1.0, 3.0, 0.1]} pos={[-0.52, 1.5, H]} color={C.purple} r={0.05} />
-          <RBox size={[1.0, 3.0, 0.1]} pos={[0.52, 1.5, H]} color={C.purple} r={0.05} />
+          {/* front doors swing inward (anim.doorIn) */}
+          <Swing pos={[-1.04, 0, H]} dir={1} src="doorIn"><RBox size={[1.0, 3.0, 0.1]} pos={[0.52, 1.5, 0]} color={C.purple} r={0.05} /></Swing>
+          <Swing pos={[1.04, 0, H]} dir={-1} src="doorIn"><RBox size={[1.0, 3.0, 0.1]} pos={[-0.52, 1.5, 0]} color={C.purple} r={0.05} /></Swing>
+          {/* the café ceiling: soft plaster with mauve wood beams */}
+          <RBox size={[ROOM + T, 0.16, ROOM + T]} pos={[0, WALL_H + 0.12, 0]} color={C.wall} r={0.05} shadow={false} />
+          {[-5, -2.5, 0, 2.5, 5].map((z) => <RBox key={z} size={[ROOM, 0.28, 0.32]} pos={[0, WALL_H - 0.08, z]} color={C.wood} r={0.08} shadow={false} />)}
+          <StringLights from={[H - 0.25, WALL_H - 0.1, -H + 0.3]} to={[H - 0.25, WALL_H - 0.1, H - 0.3]} n={18} />
           <RBox size={[T, WALL_H, ROOM + T]} pos={[H, WALL_H / 2, 0]} color={C.wall} r={0.1} />
         </group>
       )}
@@ -133,13 +139,16 @@ function Counter({ showDrawerTags }: { showDrawerTags: boolean }) {
       <RBox size={[w + 0.15, 0.1, depth + 0.15]} pos={[cx, top + 0.04, z]} color={C.counterTop} r={0.05} />
       {/* drawers on the barista side = the customisation menu */}
       {drawers.map(([label, x, col]) => (
-        <group key={label} position={[x, 0.55, z - depth / 2 - 0.03]}>
+        <group key={label} position={[x, 0.55, z - depth / 2 - 0.03]}><Slide id={label}>
           <RBox size={[1.2, 0.7, 0.08]} color={col} r={0.06} />
+          {/* drawer body + contents, seen when it slides open */}
+          <RBox size={[1.1, 0.5, 0.55]} pos={[0, -0.02, 0.3]} color={C.counterTop} r={0.04} shadow={false} />
+          {[-0.3, 0, 0.3].map((dx, i) => <mesh key={dx} position={[dx, 0.25, 0.3]} material={mat([C.counter, C.butter, C.mint, C.lilac][(i + label.length) % 4])}><sphereGeometry args={[0.13, 10, 8]} /></mesh>)}
           <mesh position={[0, 0.18, -0.07]} rotation={[0, 0, Math.PI / 2]} material={mat(C.plum)}>
             <capsuleGeometry args={[0.035, 0.3, 4, 8]} />
           </mesh>
           {showDrawerTags && <Html position={[0, -0.12, -0.12]} center className="tag">{label}</Html>}
-        </group>
+        </Slide></group>
       ))}
       <CounterTop />
       <PastryCase x={0.25} z={-2.3} w={5.3} />
