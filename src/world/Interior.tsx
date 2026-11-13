@@ -7,14 +7,13 @@ import { Reveal } from './Reveal'
 import { Swing, Slide } from './Swing'
 import { useGame } from '../systems/store'
 import { ArchWindow, Chalkboard, Clock, PendantLamp, Plant, RoundTable, Rug, Shelf, Stool, StringLights } from './Props'
-import { BACK_DZ, COUNTER, FRIDGE_DX, H, KITCHEN_DX, PLUS_SPOTS, ROOM, TABLES } from './layout'
+import { BACK_DZ, COUNTER, FRIDGE_DX, FRIDGE_DZ, H, KITCHEN_DX, KITCHEN_DZ, PLUS_SPOTS, ROOM, TABLES, WALL_H } from './layout'
 
-const WALL_H = 4.2
 const T = 0.3 // wall thickness
 
 // Diorama base + mauve plank floor (like a little dollhouse slab)
 function Floor() {
-  const n = 14
+  const n = 20
   return (
     <group>
       <RBox size={[ROOM + 0.5, 0.5, ROOM + 0.5]} pos={[0, -0.22, 0]} color={C.plum} r={0.15} />
@@ -42,8 +41,9 @@ function Walls({ cutaway, hideBack }: { cutaway: boolean; hideBack: boolean }) {
       {/* corner post */}
       <RBox size={[0.42, WALL_H + 0.2, 0.42]} pos={[-H, WALL_H / 2, -H]} color={C.wood} r={0.1} />
 
-      <ArchWindow pos={[-H + T / 2 + 0.02, 2.2, 0.6]} rotY={Math.PI / 2} />
-      <ArchWindow pos={[-H + T / 2 + 0.02, 2.2, 2.9]} rotY={Math.PI / 2} />
+      <ArchWindow pos={[-H + T / 2 + 0.02, 2.4, -2.0]} rotY={Math.PI / 2} />
+      <ArchWindow pos={[-H + T / 2 + 0.02, 2.4, 1.8]} rotY={Math.PI / 2} />
+      <ArchWindow pos={[-H + T / 2 + 0.02, 2.4, 5.6]} rotY={Math.PI / 2} />
       <StringLights from={[-H + 0.25, WALL_H - 0.1, -H + 0.3]} to={[-H + 0.25, WALL_H - 0.1, H - 0.3]} n={18} />
       {!hideBack && <StringLights from={[-H + 0.3, WALL_H - 0.1, -H + 0.25]} to={[H - 0.3, WALL_H - 0.1, -H + 0.25]} n={18} />}
 
@@ -57,7 +57,7 @@ function Walls({ cutaway, hideBack }: { cutaway: boolean; hideBack: boolean }) {
           <Swing pos={[1.04, 0, H]} dir={-1} src="doorIn"><RBox size={[1.0, 3.0, 0.1]} pos={[-0.52, 1.5, 0]} color={C.purple} r={0.05} /></Swing>
           {/* the café ceiling: soft plaster with mauve wood beams */}
           <RBox size={[ROOM + T, 0.16, ROOM + T]} pos={[0, WALL_H + 0.12, 0]} color={C.wall} r={0.05} shadow={false} />
-          {[-5, -2.5, 0, 2.5, 5].map((z) => <RBox key={z} size={[ROOM, 0.28, 0.32]} pos={[0, WALL_H - 0.08, z]} color={C.wood} r={0.08} shadow={false} />)}
+          {[-8, -4, 0, 4, 8].map((z) => <RBox key={z} size={[ROOM, 0.28, 0.32]} pos={[0, WALL_H - 0.08, z]} color={C.wood} r={0.08} shadow={false} />)}
           <StringLights from={[H - 0.25, WALL_H - 0.1, -H + 0.3]} to={[H - 0.25, WALL_H - 0.1, H - 0.3]} n={18} />
           <RBox size={[T, WALL_H, ROOM + T]} pos={[H, WALL_H / 2, 0]} color={C.wall} r={0.1} />
         </group>
@@ -211,31 +211,31 @@ function Decor({ hideBack }: { hideBack: boolean }) {
     <group>
       {!hideBack && (
         <group>
-          <Shelf pos={[-1.6, 2.75, -H + 0.35]} w={2.6} />
-          <Shelf pos={[1.9, 2.35, -H + 0.35]} w={1.8} />
-          <Shelf pos={[-4.2, 3.2, -H + 0.35]} w={1.6} />
-          <Clock pos={[3.6, 3.35, -H + 0.2]} />
-          <Clock pos={[4.5, 3.35, -H + 0.2]} r={0.26} />
-          <Chalkboard pos={[5.5, 2.4, -H + 0.2]} />
+          <Shelf pos={[-1.6, 3.1, -H + 0.35]} w={2.6} />
+          <Shelf pos={[2.4, 2.6, -H + 0.35]} w={1.8} />
+          <Shelf pos={[-8.4, 3.4, -H + 0.35]} w={1.6} />
+          <Clock pos={[5.0, 3.7, -H + 0.2]} />
+          <Clock pos={[6.1, 3.7, -H + 0.2]} r={0.26} />
+          <Chalkboard pos={[5.6, 2.3, -H + 0.2]} />
         </group>
       )}
-      <Shelf pos={[-H + 0.35, 3.3, 1.75]} w={1.2} rotY={Math.PI / 2} />
-      <Shelf pos={[-H + 0.35, 3.3, 5.0]} w={1.4} rotY={Math.PI / 2} />
+      <Shelf pos={[-H + 0.35, 3.8, -0.1]} w={1.2} rotY={Math.PI / 2} />
+      <Shelf pos={[-H + 0.35, 3.8, 3.7]} w={1.4} rotY={Math.PI / 2} />
       {/* lamps over the counter */}
-      <PendantLamp pos={[-1.6, WALL_H + 0.1, -3.8]} color={C.counter} />
-      <PendantLamp pos={[0.4, WALL_H + 0.1, -3.8]} color={C.purple} />
-      <PendantLamp pos={[2.4, WALL_H + 0.1, -3.8]} color={C.counter} />
+      <PendantLamp pos={[-1.6, WALL_H + 0.1, -6.2]} color={C.counter} drop={2.0} />
+      <PendantLamp pos={[0.4, WALL_H + 0.1, -6.2]} color={C.purple} drop={2.0} />
+      <PendantLamp pos={[2.4, WALL_H + 0.1, -6.2]} color={C.counter} drop={2.0} />
       {/* one lamp per table */}
       {TABLES.map(([x, z], i) => <PendantLamp key={x} pos={[x, WALL_H + 0.1, z]} color={i % 2 ? C.counter : C.lilac} drop={1.6} />)}
-      <Plant pos={[-6.3, 0, -1.6]} s={1.3} />
-      <Plant pos={[-6.3, 0, 6.3]} s={1.1} pot={C.counter} />
-      <Plant pos={[6.3, 0, -2.6]} s={1.2} pot={C.lilac} />
-      <Plant pos={[-6.3, 0, 2.6]} s={0.9} pot={C.mint} />
-      <Rug pos={[0.4, 0.1, 0.8]} r={2.1} />
-      <Rug pos={[0.2, 0.1, 4.1]} r={2.6} color={C.counter} />
+      <Plant pos={[-9.2, 0, -3.8]} s={1.3} />
+      <Plant pos={[-9.2, 0, 9.2]} s={1.1} pot={C.counter} />
+      <Plant pos={[9.2, 0, -4.2]} s={1.2} pot={C.lilac} />
+      <Plant pos={[9.2, 0, 9.2]} s={0.9} pot={C.mint} />
+      <Rug pos={[-0.8, 0.1, -1.2]} r={2.4} />
+      <Rug pos={[0.4, 0.1, 4.8]} r={2.8} color={C.counter} />
       {/* bar stools along the side of the counter */}
-      <Stool pos={[4.0, 0, -3.6]} />
-      <Stool pos={[4.0, 0, -2.7]} color={C.purple} />
+      <Stool pos={[4.2, 0, -7.6]} />
+      <Stool pos={[4.2, 0, -6.6]} color={C.purple} />
     </group>
   )
 }
@@ -245,9 +245,9 @@ export function Interior({ cutaway, pov }: { cutaway: boolean; pov: boolean }) {
     <group>
       <Reveal id="floor"><Floor /></Reveal>
       <Reveal id="walls"><Walls cutaway={cutaway} hideBack={pov} /></Reveal>
-      <Reveal id="kitchen" at={[-5.5, 0, -5.5]}><group position={[KITCHEN_DX, 0, BACK_DZ]}><Kitchen /></group></Reveal>
-      <Reveal id="counter" at={[0.2, 0, -5.4]}><group position={[0, 0, BACK_DZ]}><Counter showDrawerTags={pov} /></group></Reveal>
-      <Reveal id="fridge" at={[7, 0, -6.4]}><group position={[FRIDGE_DX, 0, BACK_DZ]}><Fridge /></group></Reveal>
+      <Reveal id="kitchen" at={[-8.5, 0, -8.5]}><group position={[KITCHEN_DX, 0, KITCHEN_DZ]}><Kitchen /></group></Reveal>
+      <Reveal id="counter" at={[0.2, 0, -7.2]}><group position={[0, 0, BACK_DZ]}><Counter showDrawerTags={pov} /></group></Reveal>
+      <Reveal id="fridge" at={[9.5, 0, -9.4]}><group position={[FRIDGE_DX, 0, FRIDGE_DZ]}><Fridge /></group></Reveal>
       <Reveal id="decor"><Decor hideBack={pov} /></Reveal>
       {TABLES.map(([x, z], i) => (
         <Reveal key={x} id="tables" at={[x, 0, z]}>
@@ -257,8 +257,10 @@ export function Interior({ cutaway, pov }: { cutaway: boolean; pov: boolean }) {
         </Reveal>
       ))}
       {PLUS_SPOTS.map(([x, z]) => <Reveal key={`${x}${z}`} id="plus" at={[x, 0, z]}><PlusSpot position={[x, 0, z]} /></Reveal>)}
-      <pointLight position={[-1, 3.4, -2]} intensity={9} distance={11} color="#ffd7e8" />
-      <pointLight position={[1, 3.4, 3.5]} intensity={8} distance={11} color="#ffe6f2" />
+      <pointLight position={[-4, 4.2, -4]} intensity={11} distance={15} color="#ffd7e8" />
+      <pointLight position={[4, 4.2, -4]} intensity={11} distance={15} color="#ffd7e8" />
+      <pointLight position={[-3, 4.2, 5]} intensity={10} distance={15} color="#ffe6f2" />
+      <pointLight position={[4, 4.2, 5]} intensity={10} distance={15} color="#ffe6f2" />
     </group>
   )
 }

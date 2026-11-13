@@ -9,8 +9,8 @@ import { anim } from '../systems/anim'
 // Kozie on set: stands in the café (on the path outside, on the floor inside), turns to face the camera.
 // The reel page drives talking/poses through window.cafe.kozie.
 const SPOT = {
-  exterior: { pos: new THREE.Vector3(-3.8, 0, 18.4), s: 1.45 }, // 0.7 x the 2.05x outside scale
-  inside: { pos: new THREE.Vector3(4.3, 0.12, 4.6), s: 0.7 }, // ~1.7 m: human-sized next to tables (0.8) and stools (0.6)
+  exterior: { pos: new THREE.Vector3(-5.5, 0, 26.5), s: 2.07 }, // 0.7 x the 2.95x outside scale
+  inside: { pos: new THREE.Vector3(2.8, 0.12, 7.2), s: 0.7 }, // ~1.7 m: human-sized next to tables (0.8) and stools (0.6)
 }
 export const kozieCtl: { m?: Mascot; hopT: number; hopReq: boolean } = { hopT: -9, hopReq: false }
 

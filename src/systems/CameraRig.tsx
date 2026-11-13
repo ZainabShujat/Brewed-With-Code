@@ -6,11 +6,11 @@ import { anim, stepTweens } from './anim'
 
 // Fixed shots per mode. Walk mode follows the barista instead.
 const SHOTS: Record<Exclude<CamMode, 'walk' | 'vlog'>, { pos: THREE.Vector3; look: THREE.Vector3 }> = {
-  exterior: { pos: new THREE.Vector3(29, 17, 48), look: new THREE.Vector3(0, 6.5, 4) },
+  exterior: { pos: new THREE.Vector3(42, 24.5, 69), look: new THREE.Vector3(0, 9.4, 5.8) },
   // outro: pull back from the dollhouse to the full exterior while the pot walls fade in
-  outro: { pos: new THREE.Vector3(29, 17, 48), look: new THREE.Vector3(0, 6.5, 4) },
-  dollhouse: { pos: new THREE.Vector3(16.5, 17.5, 22), look: new THREE.Vector3(-0.3, 0.4, -0.3) },
-  pov: { pos: new THREE.Vector3(0.1, 3.4, -12.2), look: new THREE.Vector3(0.1, 0.8, -5.3) },
+  outro: { pos: new THREE.Vector3(42, 24.5, 69), look: new THREE.Vector3(0, 9.4, 5.8) },
+  dollhouse: { pos: new THREE.Vector3(23.5, 25, 31.5), look: new THREE.Vector3(-0.3, 0.4, -0.3) },
+  pov: { pos: new THREE.Vector3(0.1, 3.4, -14.0), look: new THREE.Vector3(0.1, 0.8, -7.1) },
 }
 
 const SNAP = typeof location !== 'undefined' && location.search.includes('snap')
@@ -46,11 +46,11 @@ export function CameraRig() {
     if (mode === 'walk') {
       step(player, dt)
       // stay inside the room so the front wall never blocks the view
-      wantPos.set(player.x * 0.85, 6.0, Math.min(player.z + 5.0, 6.6))
+      wantPos.set(player.x * 0.85, 4.4, Math.min(player.z + 5.0, 9.4)) // under the 5 m ceiling, above the lamps
       wantLook.set(player.x, 1.0, player.z - 1.2)
     } else if (mode === 'pov') {
       // POV = the barista standing behind the counter
-      player.x = 0.3; player.z = -6.6; player.facing = 0
+      player.x = 0.3; player.z = -8.4; player.facing = 0
       wantPos.copy(SHOTS.pov.pos); wantLook.copy(SHOTS.pov.look)
     } else if (mode !== 'vlog') {
       wantPos.copy(SHOTS[mode].pos); wantLook.copy(SHOTS[mode].look)

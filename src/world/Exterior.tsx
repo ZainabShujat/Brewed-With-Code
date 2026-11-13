@@ -9,7 +9,7 @@ import { FadeIn } from './FadeIn'
 import { Swing } from './Swing'
 
 // The outside world is scaled so the coffee pot is big enough to hold the 14 m interior.
-export const OUT_SCALE = 2.05
+export const OUT_SCALE = 2.95 // pot base radius 4.9 x 2.95 = 14.5 m: contains the 20 m room's corners
 
 // Coffee-pot café from references/sketches/02-exterior-coffee-pot.jpg
 const POT_PROFILE: [number, number][] = [
