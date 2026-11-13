@@ -45,6 +45,8 @@ function paint(text: string) {
   return out
 }
 
+const r3f: { state?: any } = {}
+
 // ?embed: only the café, full size, remote-controlled by the parent reel page via window.cafe
 function Embedded() {
   useEffect(() => {
@@ -60,6 +62,10 @@ function Embedded() {
         pose: (p: any) => kozieCtl.m?.pose(p),
         hop: () => { kozieCtl.hopReq = true },
       },
+      // BUILDS #003: show every triangle (wireframe), fake frame drops, and the real per-frame numbers
+      wire: (on: boolean) => r3f.state?.scene.traverse((o: any) => { if (o.isMesh) [].concat(o.material).forEach((m: any) => { m.wireframe = on }) }),
+      stutter: (on: boolean) => { anim.stutter = on },
+      stats: () => { const gl = r3f.state.gl; return { triangles: gl.info.render.triangles, calls: gl.info.render.calls } },
       showAll: () => flushSync(() => useGame.setState({ revealed: null })),
       // vlog controls (BUILDS #002 tour)
       vlog: {
@@ -80,7 +86,7 @@ function Embedded() {
   }, [])
   return (
     <div style={{ position: 'fixed', inset: 0 }}>
-      <Canvas flat shadows dpr={1} camera={{ fov: 45, position: [20, 12, 33] }} gl={{ antialias: true, preserveDrawingBuffer: true }}>
+      <Canvas onCreated={(s) => { r3f.state = s }} flat shadows dpr={1} camera={{ fov: 45, position: [20, 12, 33] }} gl={{ antialias: true, preserveDrawingBuffer: true }}>
         <color attach="background" args={['#e2c9fb']} />
         <World />
       </Canvas>

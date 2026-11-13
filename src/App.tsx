@@ -62,7 +62,7 @@ export default function App() {
 
   return (
     <>
-      <Canvas flat shadows dpr={[1, 1.5]} camera={{ fov: 45, position: [15, 9, 25] }} gl={{ antialias: true }}>
+      <Canvas onCreated={(s) => { (window as any).__r3f = s }} flat shadows dpr={[1, 1.5]} camera={{ fov: 45, position: [15, 9, 25] }} gl={{ antialias: true }}>
         <color attach="background" args={['#e2c9fb']} />
         <World />
       </Canvas>

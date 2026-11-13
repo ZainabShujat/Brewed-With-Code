@@ -4,7 +4,7 @@ import * as THREE from 'three'
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js'
 import { makeMascot3D, type Mascot } from './kozie/notey3d.js'
 import { useGame } from '../systems/store'
-import { anim } from '../systems/anim'
+import { anim, frozen } from '../systems/anim'
 
 // Kozie on set: stands in the café (on the path outside, on the floor inside), turns to face the camera.
 // The reel page drives talking/poses through window.cafe.kozie.
@@ -27,6 +27,7 @@ export function Kozie() {
   const tmp = useMemo(() => new THREE.Vector3(), [])
   useFrame(({ camera, clock }) => {
     const g = ref.current; if (!g) return
+    if (frozen()) return // stutter: Kozie holds her pose too
     const t = clock.elapsedTime
     if (kozieCtl.hopReq) { kozieCtl.hopT = t; kozieCtl.hopReq = false }
     const hop = Math.max(0, Math.sin(Math.min(1, (t - kozieCtl.hopT) / 0.45) * Math.PI))

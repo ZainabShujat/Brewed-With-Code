@@ -3,6 +3,8 @@ import * as THREE from 'three'
 // Mutable animation state read every frame (no React re-renders), so reels driven by the
 // exporter's virtual clock stay frame-exact. Tweens are advanced by <AnimDriver/> in World.
 export const anim = {
+  // reel effect: fake frame drops (camera + Kozie freeze in chunks) to show what a missed frame budget looks like
+  stutter: false,
   doorOut: 0,          // exterior arch doors: 0 shut → 1 open (outward)
   doorIn: 0,           // interior front doors: 0 shut → 1 open (inward)
   drawers: { fillers: 0, sprinkles: 0, ingredients: 0, food: 0 } as Record<string, number>,
@@ -19,6 +21,9 @@ const smooth = (x: number) => x * x * (3 - 2 * x)
 export function tween(get: () => number, set: (v: number) => void, to: number, dur: number, done?: () => void, ease = smooth) {
   tweens.push({ set, from: get(), to, t: 0, dur: Math.max(0.001, dur), ease, done })
 }
+
+// true on the frames a stutter 'drops' (2 of every 3 slices of ~1/7 s are frozen)
+export const frozen = () => anim.stutter && Math.floor((performance.now() / 1000) * 7) % 3 !== 0
 
 export function stepTweens(dt: number) {
   for (let i = tweens.length - 1; i >= 0; i--) {
