@@ -75,7 +75,11 @@ function Embedded() {
         walk: (x: number, z: number, dur: number) => walkTo(x, z, dur),
         face: (cam: boolean, heading?: number) => { anim.kozie.faceCam = cam; if (heading !== undefined) anim.kozie.heading = heading },
         follow: (ox: number, oy: number, oz: number, speed = 3) => Object.assign(anim.cam, { active: true, follow: true, speed, dist: 1.4, off: anim.cam.off.set(ox, oy, oz) }),
-        shot: (p: number[], l: number[], speed = 3, dist = 1.4) => { Object.assign(anim.cam, { active: true, follow: false, speed, dist }); anim.cam.pos.set(p[0], p[1], p[2]); anim.cam.look.set(l[0], l[1], l[2]) },
+        shot: (p: number[], l: number[], speed = 3, dist = 1.4) => { Object.assign(anim.cam, { active: true, follow: false, speed, dist }); anim.cam.pos.set(p[0], p[1], p[2]); anim.cam.look.set(l[0], l[1], l[2])
+          // a cut (speed >= 100) moves the real camera right now, so even the very first frame is framed
+          const cam = r3f.state?.camera
+          if (cam && speed >= 100) { cam.position.set(p[0], p[1], p[2]).sub(anim.cam.look).multiplyScalar(dist).add(anim.cam.look); cam.lookAt(anim.cam.look); cam.fov = anim.cam.fov; cam.updateProjectionMatrix() }
+        },
         sway: (v: number) => (anim.cam.sway = v),
         off: () => { anim.cam.active = false; anim.kozie.free = false },
       },
