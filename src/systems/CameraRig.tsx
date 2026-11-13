@@ -10,7 +10,7 @@ const SHOTS: Record<Exclude<CamMode, 'walk' | 'vlog'>, { pos: THREE.Vector3; loo
   // outro: pull back from the dollhouse to the full exterior while the pot walls fade in
   outro: { pos: new THREE.Vector3(42, 24.5, 69), look: new THREE.Vector3(0, 9.4, 5.8) },
   dollhouse: { pos: new THREE.Vector3(17.5, 19, 23.5), look: new THREE.Vector3(-0.3, 0.2, -0.6) },
-  pov: { pos: new THREE.Vector3(0.1, 4.3, -11.4), look: new THREE.Vector3(0.1, 0.7, -6.4) } // looking down into the cup,
+  pov: { pos: new THREE.Vector3(0.1, 2.6, -11.0), look: new THREE.Vector3(0.1, 0.95, -6.0) } // a barista's eye height, stepped back so the whole counter fits,
 }
 
 const SNAP = typeof location !== 'undefined' && location.search.includes('snap')
@@ -43,7 +43,7 @@ export function CameraRig() {
       setFov(camera as THREE.PerspectiveCamera, c.fov)   // vlog = wider lens (tall 9:16 frame)
       return
     }
-    setFov(camera as THREE.PerspectiveCamera, 45)
+    setFov(camera as THREE.PerspectiveCamera, mode === 'pov' ? 54 : 45) // barista view: a slightly wider, human field of view
     if (mode === 'walk') {
       step(player, dt)
       // stay inside the room so the front wall never blocks the view
