@@ -2,7 +2,7 @@ import { useMemo, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { Html } from '@react-three/drei'
 import * as THREE from 'three'
-import { Queue } from '../systems/queue'
+import { PriorityQueue } from '../systems/queue'
 import { anim } from '../systems/anim'
 import { mat } from './mats'
 import { useShop } from '../systems/shop'
@@ -16,7 +16,7 @@ const IN_LANE = 2.6, OUT_LANE = 3.1
 export const SLOTS: [number, number][] = Array.from({ length: 6 }, (_, i) => [1.8, -5.3 + i * 1.15])
 
 type Phase = 'off' | 'in' | 'line' | 'out'
-export type Cust = { id: number; phase: Phase; pos: THREE.Vector3; path: THREE.Vector3[]; look: number; served: number }
+export type Cust = { id: number; phase: Phase; pos: THREE.Vector3; path: THREE.Vector3[]; look: number; served: number; hurry: boolean }
 
 export const LOOKS = [
   { shirt: '#6fe0c4', hair: '#3b2a22', skin: '#f6cdb4' }, { shirt: '#ffcf5c', hair: '#1d1838', skin: '#c98a62' },
@@ -29,14 +29,16 @@ const V = (x: number, z: number) => new THREE.Vector3(x, 0, z)
 
 // shared state: the pool, the queue, and controls (used by the game loop and by reel pages)
 export const cafe = {
-  pool: Array.from({ length: POOL }, (_, id): Cust => ({ id, phase: 'off', pos: V(...DOOR), path: [], look: id % LOOKS.length, served: 0 })),
-  line: new Queue<Cust>(),
+  pool: Array.from({ length: POOL }, (_, id): Cust => ({ id, phase: 'off', pos: V(...DOOR), path: [], look: id % LOOKS.length, served: 0, hurry: false })),
+  line: new PriorityQueue<Cust>(),   // in-a-hurry customers (priority 1) go ahead of normal ones (0)
+  hurryChance: 0.2,
   auto: false,            // normal game: customers keep arriving and getting served on their own
   spawnEvery: 3.2, serveEvery: 3.8, _spawnT: 0, _serveT: 0,
-  spawn() {
+  spawn(hurry?: boolean) {
     const c = this.pool.find((p) => p.phase === 'off'); if (!c || this.line.size >= SLOTS.length) return false
     c.phase = 'in'; c.pos.copy(V(...DOOR)); c.served = 0
-    this.line.enqueue(c)                                 // ← joins the back of the line
+    c.hurry = hurry ?? Math.random() < this.hurryChance
+    this.line.enqueue(c, c.hurry ? 1 : 0)               // ← joins the line by urgency (the back, unless in a hurry)
     c.path = [V(IN_LANE, 7.6), V(IN_LANE, 1.2)]
     anim.doorIn = 1
     return true
@@ -48,10 +50,10 @@ export const cafe = {
   },
   // reel helper: n customers already standing in line (teleported to their slots, no walk-in)
   fill(n: number) {
-    for (let i = 0; i < n; i++) { if (!this.spawn()) break; const c = this.line.at(this.line.size - 1)!; c.path = []; c.phase = 'line'; c.pos.copy(V(...SLOTS[this.line.size - 1])) }
+    for (let i = 0; i < n; i++) { if (!this.spawn(false)) break; const c = this.line.at(this.line.size - 1)!; c.path = []; c.phase = 'line'; c.pos.copy(V(...SLOTS[this.line.size - 1])) }
   },
   // who is in line, front first, with their shirt colour (for the queue strip in reels)
-  order() { const out: { id: number; color: string }[] = []; for (let i = 0; i < this.line.size; i++) { const c = this.line.at(i)!; out.push({ id: c.id, color: LOOKS[c.look].shirt }) } return out },
+  order() { const out: { id: number; color: string; hurry: boolean }[] = []; for (let i = 0; i < this.line.size; i++) { const c = this.line.at(i)!; out.push({ id: c.id, color: LOOKS[c.look].shirt, hurry: c.hurry }) } return out },
   reset() { this.pool.forEach((p) => { p.phase = 'off'; p.path = [] }); while (this.line.dequeue()); },
 }
 
@@ -73,7 +75,7 @@ function Body({ c }: { c: Cust }) {
     let moving = false
     if (target) {
       const d = target.clone().sub(c.pos); d.y = 0
-      const dist = d.length(), step = 2.4 * dt
+      const dist = d.length(), step = (c.hurry ? 4.6 : 2.4) * dt // in a hurry = walks faster
       if (dist > 0.02) {
         moving = true
         c.pos.addScaledVector(d.normalize(), Math.min(step, dist))
@@ -90,7 +92,7 @@ function Body({ c }: { c: Cust }) {
     g.position.set(c.pos.x, moving ? Math.abs(Math.sin(t * 10 + c.id)) * 0.08 : 0, c.pos.z)
     g.rotation.z = moving ? Math.sin(t * 10 + c.id) * 0.06 : 0
     if (bubble.current) { const o = useShop.getState().orders[c.id]; const txt = o && idx === 0 ? o.label : ''; if (bubble.current.textContent !== txt) bubble.current.textContent = txt }
-    if (tag.current) { tag.current.textContent = idx >= 0 ? String(idx + 1) : ''; tag.current.style.opacity = idx >= 0 ? '1' : '0' }
+    if (tag.current) { tag.current.textContent = idx >= 0 ? (c.hurry ? '⚡' : '') + String(idx + 1) : ''; tag.current.style.opacity = idx >= 0 ? '1' : '0' }
   })
   return (
     <group ref={ref} visible={false}>

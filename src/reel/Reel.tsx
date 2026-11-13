@@ -70,7 +70,7 @@ function Embedded() {
       stats: () => { const gl = r3f.state.gl; return { triangles: gl.info.render.triangles, calls: gl.info.render.calls } },
       // BUILDS #004: the customer queue
       q: {
-        spawn: () => line.spawn(),
+        spawn: (hurry = false) => line.spawn(hurry),
         serve: () => line.serve(),
         auto: (on: boolean, spawnEvery = 3.2, serveEvery = 3.8) => Object.assign(line, { auto: on, spawnEvery, serveEvery }),
         reset: () => line.reset(),
