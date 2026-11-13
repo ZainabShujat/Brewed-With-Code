@@ -5,7 +5,9 @@ export const C = {
   wallTrim: '#b77ee0',  // lilac wainscot
   wood: '#d77a9a',      // mauve wood
   woodDark: '#b65a7e',  // darker mauve plank
-  plum: '#5e2a75',      // darkest accent (trim, frames, coffee)
+  plum: '#5e2a75',
+  // floor planks: warm honey wood (contrast with all the pink)
+  plank1: '#c98d5a', plank2: '#b0774a', plank3: '#d9a46e', plank4: '#a86c43',      // darkest accent (trim, frames, coffee)
   counter: '#ff7fb6',   // candy pink counter
   counterTop: '#ffe4f0',
   purple: '#8a4fe0',    // machine, lid

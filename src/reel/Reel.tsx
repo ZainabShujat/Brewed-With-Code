@@ -6,6 +6,8 @@ import { useGame } from '../systems/store'
 import { EPISODES, type Step } from './eps/s01'
 import { kozieCtl } from '../world/Kozie'
 import { anim, tween, walkTo } from '../systems/anim'
+import { cafe as line } from '../world/Customers'
+import { cascade, CascadeDriver } from './Cascade'
 
 // 1080x1920 split screen: code typing on top, the café building itself below.
 // Driven by performance.now(), so the notes-brain frame-stepped exporter can capture it exactly.
@@ -66,6 +68,21 @@ function Embedded() {
       wire: (on: boolean) => r3f.state?.scene.traverse((o: any) => { if (o.isMesh) [].concat(o.material).forEach((m: any) => { m.wireframe = on }) }),
       stutter: (on: boolean) => { anim.stutter = on },
       stats: () => { const gl = r3f.state.gl; return { triangles: gl.info.render.triangles, calls: gl.info.render.calls } },
+      // BUILDS #004: the customer queue
+      q: {
+        spawn: () => line.spawn(),
+        serve: () => line.serve(),
+        auto: (on: boolean, spawnEvery = 3.2, serveEvery = 3.8) => Object.assign(line, { auto: on, spawnEvery, serveEvery }),
+        reset: () => line.reset(),
+        size: () => line.line.size,
+      },
+      // BUILDS #00A: the café assembles itself, piece by piece
+      cascade: {
+        prepare: () => { document.body.classList.add('notags'); return cascade.prepare() },
+        play: (dur: number) => cascade.play(dur, 1),
+        fold: (dur: number) => cascade.play(dur, -1),
+      },
+      kozieHidden: (on: boolean) => { anim.kozie.hidden = on },
       showAll: () => flushSync(() => useGame.setState({ revealed: null })),
       // vlog controls (BUILDS #002 tour)
       vlog: {
@@ -75,7 +92,7 @@ function Embedded() {
         walk: (x: number, z: number, dur: number) => walkTo(x, z, dur),
         face: (cam: boolean, heading?: number) => { anim.kozie.faceCam = cam; if (heading !== undefined) anim.kozie.heading = heading },
         follow: (ox: number, oy: number, oz: number, speed = 3) => Object.assign(anim.cam, { active: true, follow: true, speed, dist: 1.4, off: anim.cam.off.set(ox, oy, oz) }),
-        shot: (p: number[], l: number[], speed = 3, dist = 1.4) => { Object.assign(anim.cam, { active: true, follow: false, speed, dist }); anim.cam.pos.set(p[0], p[1], p[2]); anim.cam.look.set(l[0], l[1], l[2])
+        shot: (p: number[], l: number[], speed = 3, dist = 1.4, fov = 62) => { Object.assign(anim.cam, { active: true, follow: false, speed, dist, fov }); anim.cam.pos.set(p[0], p[1], p[2]); anim.cam.look.set(l[0], l[1], l[2])
           // a cut (speed >= 100) moves the real camera right now, so even the very first frame is framed
           const cam = r3f.state?.camera
           if (cam && speed >= 100) { cam.position.set(p[0], p[1], p[2]).sub(anim.cam.look).multiplyScalar(dist).add(anim.cam.look); cam.lookAt(anim.cam.look); cam.fov = anim.cam.fov; cam.updateProjectionMatrix() }
@@ -93,6 +110,7 @@ function Embedded() {
       <Canvas onCreated={(s) => { r3f.state = s }} flat shadows dpr={1} camera={{ fov: 45, position: [20, 12, 33] }} gl={{ antialias: true, preserveDrawingBuffer: true }}>
         <color attach="background" args={['#e2c9fb']} />
         <World />
+        <CascadeDriver />
       </Canvas>
     </div>
   )

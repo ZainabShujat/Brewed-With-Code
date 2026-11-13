@@ -7,6 +7,10 @@ import { Interior } from './world/Interior'
 import { Barista } from './world/Barista'
 import { Reveal } from './world/Reveal'
 import { Kozie } from './world/Kozie'
+import { Customers, cafe as cafeLine } from './world/Customers'
+
+// the playable game: customers arrive and get served on their own
+cafeLine.auto = !location.pathname.includes('reel')
 
 const MODES: { id: CamMode; label: string; key: string }[] = [
   { id: 'exterior', label: 'Outside', key: '1' },
@@ -31,6 +35,7 @@ export function World() {
       <Exterior showPot={!inside || outro} fadeIn={outro} />
       {inside && <Interior cutaway={mode === 'dollhouse' || mode === 'pov' || outro} pov={mode === 'pov'} />}
       {inside && mode !== 'pov' && mode !== 'vlog' && <Reveal id="barista" at={[0.4, 0, 2.4]}><Barista /></Reveal>}
+      {inside && <Customers />}
       {kozie && <Kozie />}
       <CameraRig />
       <FpsProbe />

@@ -28,6 +28,7 @@ export function Kozie() {
   useFrame(({ camera, clock }) => {
     const g = ref.current; if (!g) return
     if (frozen()) return // stutter: Kozie holds her pose too
+    g.visible = !anim.kozie.hidden
     const t = clock.elapsedTime
     if (kozieCtl.hopReq) { kozieCtl.hopT = t; kozieCtl.hopReq = false }
     const hop = Math.max(0, Math.sin(Math.min(1, (t - kozieCtl.hopT) / 0.45) * Math.PI))

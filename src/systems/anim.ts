@@ -9,7 +9,7 @@ export const anim = {
   doorIn: 0,           // interior front doors: 0 shut → 1 open (inward)
   drawers: { fillers: 0, sprinkles: 0, ingredients: 0, food: 0 } as Record<string, number>,
   // Kozie free-roam (vlog). When `free` is false Kozie uses her fixed on-set spots.
-  kozie: { free: false, pos: new THREE.Vector3(), s: 1, heading: 0, walking: false, faceCam: true },
+  kozie: { hidden: false, free: false, pos: new THREE.Vector3(), s: 1, heading: 0, walking: false, faceCam: true },
   // Camera override. `follow` = trail Kozie like a handheld vlog cam; otherwise glide to pos/look.
   cam: { active: false, follow: false, pos: new THREE.Vector3(), look: new THREE.Vector3(), off: new THREE.Vector3(0, 2.6, 4.2), sway: 1, speed: 3, fov: 62, dist: 1.4 }, // dist: pull every vlog shot further back from its subject
 }

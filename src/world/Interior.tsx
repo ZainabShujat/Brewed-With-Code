@@ -12,14 +12,33 @@ import { BACK_DZ, COUNTER, FRIDGE_DX, FRIDGE_DZ, H, KITCHEN_DX, KITCHEN_DZ, PLUS
 const T = 0.3 // wall thickness
 
 // Diorama base + mauve plank floor (like a little dollhouse slab)
+// staggered planks: every 1 m row is cut into boards of 2.5 to 4.5 m, offset row to row (deterministic, no Math.random)
+// furniture scale: matches the ~2 m customers/barista and the 1.7 m Kozie
+const FURN = 1.3
+
+const PLANKS = (() => {
+  const out: { x: number; z: number; len: number; c: string }[] = []
+  const cols = [C.plank1, C.plank2, C.plank3, C.plank4]
+  const rows = ROOM, w = ROOM / rows
+  for (let i = 0; i < rows; i++) {
+    let z = -H, k = 0
+    const first = 1 + ((i * 7) % 5) * 0.6            // stagger the first board in each row
+    while (z < H - 0.01) {
+      const want = k === 0 ? first : 2.5 + ((i * 13 + k * 5) % 5) * 0.5
+      const len = Math.min(want, H - z)
+      out.push({ x: -H + (i + 0.5) * w, z: z + len / 2, len, c: cols[(i * 3 + k) % 4] })
+      z += len; k++
+    }
+  }
+  return out
+})()
+
 function Floor() {
-  const n = 20
   return (
     <group>
       <RBox size={[ROOM + 0.5, 0.5, ROOM + 0.5]} pos={[0, -0.22, 0]} color={C.plum} r={0.15} />
-      {Array.from({ length: n }, (_, i) => (
-        <RBox key={i} size={[ROOM / n - 0.04, 0.08, ROOM]} pos={[-H + (i + 0.5) * (ROOM / n), 0.05, 0]}
-          color={i % 2 ? C.wood : C.woodDark} r={0.03} shadow={false} />
+      {PLANKS.map((p, i) => (
+        <RBox key={i} size={[ROOM / ROOM - 0.05, 0.08, p.len - 0.05]} pos={[p.x, 0.05, p.z]} color={p.c} r={0.025} shadow={false} />
       ))}
     </group>
   )
@@ -222,11 +241,11 @@ function Decor({ hideBack }: { hideBack: boolean }) {
       <Shelf pos={[-H + 0.35, 3.8, -0.1]} w={1.2} rotY={Math.PI / 2} />
       <Shelf pos={[-H + 0.35, 3.8, 3.7]} w={1.4} rotY={Math.PI / 2} />
       {/* lamps over the counter */}
-      <PendantLamp pos={[-1.6, WALL_H + 0.1, -6.2]} color={C.counter} drop={2.0} />
-      <PendantLamp pos={[0.4, WALL_H + 0.1, -6.2]} color={C.purple} drop={2.0} />
-      <PendantLamp pos={[2.4, WALL_H + 0.1, -6.2]} color={C.counter} drop={2.0} />
+      <PendantLamp pos={[-1.6, WALL_H + 0.1, -6.2]} color={C.counter} drop={0.9} />
+      <PendantLamp pos={[0.4, WALL_H + 0.1, -6.2]} color={C.purple} drop={0.9} />
+      <PendantLamp pos={[2.4, WALL_H + 0.1, -6.2]} color={C.counter} drop={0.9} />
       {/* one lamp per table */}
-      {TABLES.map(([x, z], i) => <PendantLamp key={x} pos={[x, WALL_H + 0.1, z]} color={i % 2 ? C.counter : C.lilac} drop={1.6} />)}
+      {TABLES.map(([x, z], i) => <PendantLamp key={x} pos={[x, WALL_H + 0.1, z]} color={i % 2 ? C.counter : C.lilac} drop={0.8} />)}
       <Plant pos={[-9.2, 0, -3.8]} s={1.3} />
       <Plant pos={[-9.2, 0, 9.2]} s={1.1} pot={C.counter} />
       <Plant pos={[9.2, 0, -4.2]} s={1.2} pot={C.lilac} />
@@ -234,15 +253,15 @@ function Decor({ hideBack }: { hideBack: boolean }) {
       <Rug pos={[-0.8, 0.1, -1.2]} r={2.4} />
       <Rug pos={[0.4, 0.1, 4.8]} r={2.8} color={C.counter} />
       {/* bar stools along the side of the counter */}
-      <Stool pos={[4.2, 0, -7.6]} />
-      <Stool pos={[4.2, 0, -6.6]} color={C.purple} />
+      <group position={[4.2, 0, -7.6]} scale={FURN}><Stool pos={[0, 0, 0]} /></group>
+      <group position={[4.2, 0, -6.2]} scale={FURN}><Stool pos={[0, 0, 0]} color={C.purple} /></group>
     </group>
   )
 }
 
 export function Interior({ cutaway, pov }: { cutaway: boolean; pov: boolean }) {
   return (
-    <group>
+    <group name="interior">
       <Reveal id="floor"><Floor /></Reveal>
       <Reveal id="walls"><Walls cutaway={cutaway} hideBack={pov} /></Reveal>
       <Reveal id="kitchen" at={[-8.5, 0, -8.5]}><group position={[KITCHEN_DX, 0, KITCHEN_DZ]}><Kitchen /></group></Reveal>
@@ -251,9 +270,12 @@ export function Interior({ cutaway, pov }: { cutaway: boolean; pov: boolean }) {
       <Reveal id="decor"><Decor hideBack={pov} /></Reveal>
       {TABLES.map(([x, z], i) => (
         <Reveal key={x} id="tables" at={[x, 0, z]}>
-          <RoundTable pos={[x, 0, z]} top={i ? C.cream : C.counterTop} />
-          <Stool pos={[x - 0.85, 0, z + 0.2]} color={C.purple} />
-          <Stool pos={[x + 0.85, 0, z - 0.2]} color={C.counter} />
+          {/* FURN: tables + stools sized for ~2 m characters (table ~1.05 m, seat ~0.8 m) */}
+          <group position={[x, 0, z]} scale={FURN}>
+            <RoundTable pos={[0, 0, 0]} top={i ? C.cream : C.counterTop} />
+            <Stool pos={[-0.95, 0, 0.2]} color={C.purple} />
+            <Stool pos={[0.95, 0, -0.2]} color={C.counter} />
+          </group>
         </Reveal>
       ))}
       {PLUS_SPOTS.map(([x, z]) => <Reveal key={`${x}${z}`} id="plus" at={[x, 0, z]}><PlusSpot position={[x, 0, z]} /></Reveal>)}

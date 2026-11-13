@@ -9,7 +9,7 @@ const SHOTS: Record<Exclude<CamMode, 'walk' | 'vlog'>, { pos: THREE.Vector3; loo
   exterior: { pos: new THREE.Vector3(42, 24.5, 69), look: new THREE.Vector3(0, 9.4, 5.8) },
   // outro: pull back from the dollhouse to the full exterior while the pot walls fade in
   outro: { pos: new THREE.Vector3(42, 24.5, 69), look: new THREE.Vector3(0, 9.4, 5.8) },
-  dollhouse: { pos: new THREE.Vector3(23.5, 25, 31.5), look: new THREE.Vector3(-0.3, 0.4, -0.3) },
+  dollhouse: { pos: new THREE.Vector3(17.5, 19, 23.5), look: new THREE.Vector3(-0.3, 0.2, -0.6) },
   pov: { pos: new THREE.Vector3(0.1, 3.4, -14.0), look: new THREE.Vector3(0.1, 0.8, -7.1) },
 }
 
