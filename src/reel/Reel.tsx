@@ -74,6 +74,8 @@ function Embedded() {
         serve: () => line.serve(),
         auto: (on: boolean, spawnEvery = 3.2, serveEvery = 3.8) => Object.assign(line, { auto: on, spawnEvery, serveEvery }),
         reset: () => line.reset(),
+        fill: (n: number) => line.fill(n),
+        order: () => line.order(),
         size: () => line.line.size,
       },
       // BUILDS #00A: the café assembles itself, piece by piece

@@ -8,6 +8,9 @@ import { Barista } from './world/Barista'
 import { Reveal } from './world/Reveal'
 import { Kozie } from './world/Kozie'
 import { Customers, cafe as cafeLine } from './world/Customers'
+import { ShopHud } from './ui/ShopHud'
+import { useShop } from './systems/shop'
+;(window as any).game = { shop: useShop, line: cafeLine } // handy for testing in the console
 
 // the playable game: customers arrive and get served on their own
 cafeLine.auto = !location.pathname.includes('reel')
@@ -82,6 +85,7 @@ export default function App() {
         </div>
         {mode === 'walk' && <div className="hint">WASD / arrows to walk</div>}
       </div>
+      <ShopHud />
       <div className="fps">{shownFps} fps</div>
     </>
   )

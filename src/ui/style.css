@@ -19,3 +19,25 @@ body { font-family: 'Trebuchet MS', system-ui, sans-serif; }
 .qtag { min-width: 34px; padding: 2px 10px; border-radius: 14px; background: #2a1830; color: #ffcf5c; font: 900 22px 'Trebuchet MS', sans-serif; text-align: center; box-shadow: 0 3px 0 #ff7fb6; transition: none; }
 .qtag:empty { display: none; }
 .notags .tag, .notags .qtag { display: none !important; }
+
+/* ---- café mode HUD ---- */
+.openbtn { position: fixed; left: 50%; bottom: 40px; transform: translateX(-50%); border: 0; border-radius: 22px; padding: 16px 30px; font: 900 22px 'Trebuchet MS', sans-serif; background: #ff7fb6; color: #fff; box-shadow: 0 5px 0 #c4528a; cursor: pointer; }
+.openbtn.small { font-size: 16px; padding: 10px 18px; bottom: 20px; }
+.ticket { position: fixed; right: 16px; top: 16px; width: 290px; background: #fff6ee; border-radius: 18px; padding: 16px 18px; color: #5e2a75; font-family: 'Trebuchet MS', sans-serif; box-shadow: 0 6px 0 #ff7fb6, 0 12px 30px rgba(0,0,0,.2); }
+.tk-h { font-size: 12px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; color: #b77ee0; }
+.tk-name { font-size: 20px; font-weight: 900; margin-top: 4px; }
+.tk-note { font-size: 13px; opacity: .75; margin-top: 2px; }
+.tk-cup { font-size: 15px; font-weight: 700; margin-top: 4px; }
+.tk-milk { font-size: 12px; opacity: .7; margin-top: 4px; }
+.tk-row { display: flex; gap: 8px; margin-top: 12px; }
+.tk-row button, .menu button { flex: 1; border: 0; border-radius: 12px; padding: 9px 10px; font: 800 14px 'Trebuchet MS', sans-serif; background: #ffe4f0; color: #5e2a75; box-shadow: 0 3px 0 #ff7fb6; cursor: pointer; }
+.tk-row button:disabled { opacity: .4; cursor: default; }
+.coins { position: fixed; right: 16px; bottom: 34px; font: 900 18px 'Trebuchet MS', sans-serif; color: #5e2a75; background: #fff6ee; padding: 8px 14px; border-radius: 14px; }
+.result { position: fixed; left: 50%; top: 18%; transform: translateX(-50%); background: #2a1830; color: #ffcf5c; font: 900 30px 'Trebuchet MS', sans-serif; padding: 14px 24px; border-radius: 20px; text-align: center; }
+.result small { display: block; font-size: 14px; color: #ffe4f0; font-weight: 700; margin-top: 4px; }
+.menu { position: fixed; left: 50%; bottom: 90px; transform: translateX(-50%); display: flex; gap: 8px; align-items: center; background: #2a1830; padding: 12px; border-radius: 18px; }
+.menu-h { color: #ffcf5c; font: 900 14px 'Trebuchet MS', sans-serif; padding: 0 8px; white-space: nowrap; }
+.menu .x { flex: 0; background: #6e3f78; color: #fff; box-shadow: none; }
+.howto { position: fixed; left: 16px; bottom: 34px; font: 700 13px 'Trebuchet MS', sans-serif; color: #5e2a75; background: #fff6eecc; padding: 6px 12px; border-radius: 10px; }
+.obubble:empty { display: none; }
+.obubble { background: #fff6ee; color: #5e2a75; font: 900 16px 'Trebuchet MS', sans-serif; padding: 8px 14px; border-radius: 16px; white-space: nowrap; box-shadow: 0 4px 0 #ff7fb6; }

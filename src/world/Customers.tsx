@@ -5,6 +5,7 @@ import * as THREE from 'three'
 import { Queue } from '../systems/queue'
 import { anim } from '../systems/anim'
 import { mat } from './mats'
+import { useShop } from '../systems/shop'
 
 // Customers walk in the front door, join the line at the counter (a FIFO queue), get served
 // at the front, then walk out. Fixed pool of bodies so nothing re-renders mid-reel (frame-exact).
@@ -17,7 +18,7 @@ export const SLOTS: [number, number][] = Array.from({ length: 6 }, (_, i) => [1.
 type Phase = 'off' | 'in' | 'line' | 'out'
 export type Cust = { id: number; phase: Phase; pos: THREE.Vector3; path: THREE.Vector3[]; look: number; served: number }
 
-const LOOKS = [
+export const LOOKS = [
   { shirt: '#6fe0c4', hair: '#3b2a22', skin: '#f6cdb4' }, { shirt: '#ffcf5c', hair: '#1d1838', skin: '#c98a62' },
   { shirt: '#c99cff', hair: '#7a3b2a', skin: '#f1c9a5' }, { shirt: '#ff9a78', hair: '#2b2024', skin: '#8d5a3b' },
   { shirt: '#9fd8ff', hair: '#5a3166', skin: '#f6cdb4' }, { shirt: '#ff7fb6', hair: '#3b2a22', skin: '#d9a07a' },
@@ -45,12 +46,19 @@ export const cafe = {
     c.phase = 'out'; c.path = [V(OUT_LANE, c.pos.z), V(OUT_LANE, 7.6), V(...DOOR)]
     return true
   },
+  // reel helper: n customers already standing in line (teleported to their slots, no walk-in)
+  fill(n: number) {
+    for (let i = 0; i < n; i++) { if (!this.spawn()) break; const c = this.line.at(this.line.size - 1)!; c.path = []; c.phase = 'line'; c.pos.copy(V(...SLOTS[this.line.size - 1])) }
+  },
+  // who is in line, front first, with their shirt colour (for the queue strip in reels)
+  order() { const out: { id: number; color: string }[] = []; for (let i = 0; i < this.line.size; i++) { const c = this.line.at(i)!; out.push({ id: c.id, color: LOOKS[c.look].shirt }) } return out },
   reset() { this.pool.forEach((p) => { p.phase = 'off'; p.path = [] }); while (this.line.dequeue()); },
 }
 
 function Body({ c }: { c: Cust }) {
   const ref = useRef<THREE.Group>(null)
   const tag = useRef<HTMLDivElement>(null)
+  const bubble = useRef<HTMLDivElement>(null)
   const look = LOOKS[c.look]
   useFrame(({ clock }, dtRaw) => {
     const g = ref.current; if (!g) return
@@ -81,6 +89,7 @@ function Body({ c }: { c: Cust }) {
     const t = clock.elapsedTime
     g.position.set(c.pos.x, moving ? Math.abs(Math.sin(t * 10 + c.id)) * 0.08 : 0, c.pos.z)
     g.rotation.z = moving ? Math.sin(t * 10 + c.id) * 0.06 : 0
+    if (bubble.current) { const o = useShop.getState().orders[c.id]; const txt = o && idx === 0 ? o.label : ''; if (bubble.current.textContent !== txt) bubble.current.textContent = txt }
     if (tag.current) { tag.current.textContent = idx >= 0 ? String(idx + 1) : ''; tag.current.style.opacity = idx >= 0 ? '1' : '0' }
   })
   return (
@@ -91,6 +100,7 @@ function Body({ c }: { c: Cust }) {
       <mesh position={[0, 1.75, -0.05]} scale={[1.04, 0.8, 1.04]} material={mat(look.hair)}><sphereGeometry args={[0.36, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2]} /></mesh>
       {[-0.12, 0.12].map((x) => <mesh key={x} position={[x, 1.65, 0.33]} material={mat('#2b2024')}><sphereGeometry args={[0.04, 6, 4]} /></mesh>)}
       <Html position={[0, 2.35, 0]} center><div ref={tag} className="qtag" /></Html>
+      <Html position={[0, 3.0, 0]} center><div ref={bubble} className="obubble" /></Html>
     </group>
   )
 }
