@@ -71,7 +71,7 @@ export default function App() {
   return (
     <>
       <Canvas onCreated={(s) => { (window as any).__r3f = s }} flat shadows dpr={[1, 1.5]} camera={{ fov: 45, position: [15, 9, 25] }} gl={{ antialias: true }}>
-        <color attach="background" args={['#e4d9ee']} />
+        <color attach="background" args={['#dfccf6']} />
         <World />
       </Canvas>
       <div className="hud">

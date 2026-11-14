@@ -12,7 +12,7 @@ const SHOTS: Record<Exclude<CamMode, 'walk' | 'vlog'>, { pos: THREE.Vector3; loo
   // the cake bench in the kitchen: close, slightly above, like leaning over the turntable
   cake: { pos: new THREE.Vector3(-7.0, 3.2, -6.0), look: new THREE.Vector3(-7.0, 1.35, -9.3) }, // the bakery corner: cake, backsplash, shelf
   dollhouse: { pos: new THREE.Vector3(17.5, 19, 23.5), look: new THREE.Vector3(-0.3, 0.2, -0.6) },
-  pov: { pos: new THREE.Vector3(0.1, 2.6, -11.0), look: new THREE.Vector3(0.1, 0.95, -6.0) } // a barista's eye height, stepped back so the whole counter fits,
+  pov: { pos: new THREE.Vector3(0.1, 3.05, -11.3), look: new THREE.Vector3(0.1, 1.0, -7.0) } // looking down at the workspace: every tool readable,
 }
 
 const SNAP = typeof location !== 'undefined' && location.search.includes('snap')

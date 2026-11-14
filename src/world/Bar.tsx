@@ -4,15 +4,17 @@ import * as THREE from 'three'
 import { useShop, type Pour } from '../systems/shop'
 import { COUNTER } from './layout'
 import { C } from '../data/palette'
-import { mat } from './mats'
+import { mat, glass } from './mats'
+import { Html } from '@react-three/drei'
+import { useGame } from '../systems/store'
 
 // The playable bar. Coordinates are the counter's local space (the Counter group in Interior).
 // Every station is clickable: R3F casts a ray from the mouse into the scene (raycasting) and
 // calls onClick on the first mesh it hits.
 const TOP = COUNTER.top + 0.1, Z = COUNTER.z - 0.1
 // the working cup sits front and centre on the barista's side, big enough to watch it fill
-export const CUP_AT: [number, number, number] = [0.0, TOP + 0.1, COUNTER.z - 0.38]
-const CUP_SCALE = 1.7
+export const CUP_AT: [number, number, number] = [0.2, TOP + 0.06, COUNTER.z - 0.3]
+const CUP_SCALE = 0.62 // a big café mug, in proportion with the pitcher and the machine
 
 function Hit({ pos, size, onClick, children, label }: { pos: [number, number, number]; size: [number, number, number]; onClick: () => void; children?: ReactNode; label: string }) {
   const [hover, setHover] = useState(false)
@@ -126,30 +128,98 @@ function OnePour({ p }: { p: Pour }) {
   )
 }
 
+const BZ = COUNTER.z - 0.32   // front row (barista side)
+const RZ = COUNTER.z + 0.22   // back row (shakers, bottles)
+
+// a small floating label under each tool, only in the barista view
+function Label({ text, y = -0.04, z = -0.18 }: { text: string; y?: number; z?: number }) {
+  const pov = useGame((s) => s.mode === 'pov')
+  if (!pov) return null
+  return <Html position={[0, y, z]} center className="tag tool">{text}</Html>
+}
+
+function MilkBottle({ x, milk, color, cap }: { x: number; milk: 'whole' | 'oat' | 'almond'; color: string; cap: string }) {
+  const s = useShop.getState
+  const picked = useShop((st) => st.milkType === milk)
+  return (
+    <Hit label={`milk-${milk}`} pos={[x, TOP + 0.2, RZ]} size={[0.2, 0.42, 0.2]} onClick={() => s().pickMilk(milk)}>
+      <mesh material={glass()}><cylinderGeometry args={[0.075, 0.075, 0.3, 18]} /></mesh>
+      <mesh position={[0, -0.03, 0]} material={mat(color)}><cylinderGeometry args={[0.068, 0.068, 0.22, 18]} /></mesh>
+      <mesh position={[0, 0.19, 0]} material={mat(cap)}><cylinderGeometry args={[0.045, 0.045, 0.06, 14]} /></mesh>
+      {picked && <mesh position={[0, -0.2, 0]} rotation={[-Math.PI / 2, 0, 0]} material={mat(C.butter, { emissive: C.butter })}><ringGeometry args={[0.09, 0.115, 24]} /></mesh>}
+      <Label text={milk} y={-0.24} z={-0.12} />
+    </Hit>
+  )
+}
+
+function Shaker({ x, label, color, onClick }: { x: number; label: string; color: string; onClick: () => void }) {
+  return (
+    <Hit label={label} pos={[x, TOP + 0.13, RZ]} size={[0.18, 0.3, 0.18]} onClick={onClick}>
+      <mesh position={[0, -0.02, 0]} material={glass()}><cylinderGeometry args={[0.06, 0.06, 0.18, 16]} /></mesh>
+      <mesh position={[0, -0.04, 0]} material={mat(color)}><cylinderGeometry args={[0.054, 0.054, 0.12, 16]} /></mesh>
+      <mesh position={[0, 0.09, 0]} material={mat(C.steel)}><cylinderGeometry args={[0.06, 0.06, 0.05, 16]} /></mesh>
+      <Label text={label} y={-0.17} z={-0.12} />
+    </Hit>
+  )
+}
+
 export function Bar() {
   const s = useShop.getState
   useFrame(() => s().tick(performance.now() / 1000))
   return (
     <group>
-      {/* cup stack (take a cup) */}
-      <Hit label="cups" pos={[1.3, TOP + 0.3, Z]} size={[0.6, 0.7, 0.6]} onClick={() => s().takeCup()}>
-        {[0, 1, 2, 3].map((i) => <mesh key={i} position={[0.0, -0.25 + i * 0.09, 0]} material={mat(C.cream)}><cylinderGeometry args={[0.2, 0.17, 0.16, 18, 1, true]} /></mesh>)}
+      {/* ── left → right as the barista sees it ── */}
+      {/* cup stack */}
+      <Hit label="cups" pos={[2.55, TOP + 0.12, BZ]} size={[0.3, 0.32, 0.3]} onClick={() => s().takeCup()}>
+        {[0, 1, 2].map((i) => <group key={i} position={[0, -0.08 + i * 0.07, 0]}><mesh material={mat(C.cream)}><cylinderGeometry args={[0.11, 0.09, 0.1, 20, 1, true]} /></mesh></group>)}
+        <mesh position={[0, -0.13, 0]} material={mat(C.cream)}><cylinderGeometry args={[0.16, 0.16, 0.015, 24]} /></mesh>
+        <Label text="cups" y={-0.17} />
+      </Hit>
+      {/* milk bottles: pick a milk */}
+      <MilkBottle x={2.2} milk="whole" color="#fbf8f2" cap="#4a90c2" />
+      <MilkBottle x={1.95} milk="oat" color="#eedcb8" cap="#c9a24a" />
+      <MilkBottle x={1.7} milk="almond" color="#f2e6d2" cap="#9a6a4a" />
+      {/* steel pitcher: steam the milk */}
+      <Hit label="milk" pos={[1.55, TOP + 0.12, BZ]} size={[0.26, 0.3, 0.26]} onClick={() => s().setMenu('milk')}>
+        <mesh material={mat(C.steel)}><cylinderGeometry args={[0.075, 0.095, 0.22, 20, 1, true]} /></mesh>
+        <mesh position={[0, -0.11, 0]} material={mat(C.steel)}><cylinderGeometry args={[0.095, 0.095, 0.01, 20]} /></mesh>
+        <mesh position={[0.1, 0.02, 0]} rotation={[0, 0, Math.PI / 2]} material={mat(C.steel)}><torusGeometry args={[0.05, 0.012, 6, 12, Math.PI]} /></mesh>
+        <mesh position={[-0.085, 0.1, 0]} rotation={[0, 0, 0.6]} material={mat(C.steel)}><coneGeometry args={[0.025, 0.06, 8]} /></mesh>
+        <Label text="steam milk" y={-0.16} />
+      </Hit>
+      {/* toppings (back row) */}
+      <Shaker x={1.25} label="cocoa" color="#5b2e1c" onClick={() => s().top('cocoa')} />
+      <Shaker x={1.0} label="cinnamon" color="#b0602a" onClick={() => s().top('cinnamon')} />
+      <Shaker x={0.75} label="sprinkles" color={C.counter} onClick={() => s().top('sprinkles')} />
+      <Hit label="whipped" pos={[0.5, TOP + 0.17, RZ]} size={[0.16, 0.38, 0.16]} onClick={() => s().top('whipped')}>
+        <mesh material={mat(C.white)}><cylinderGeometry args={[0.05, 0.05, 0.26, 16]} /></mesh>
+        <mesh position={[0, 0.16, 0]} material={mat(C.steel)}><coneGeometry args={[0.035, 0.07, 10]} /></mesh>
+        <Label text="whipped" y={-0.2} z={-0.12} />
+      </Hit>
+      {/* chocolate sauce + hot-water kettle */}
+      <Hit label="choc" pos={[-0.35, TOP + 0.14, BZ]} size={[0.18, 0.32, 0.18]} onClick={() => s().choc()}>
+        <mesh material={mat('#5a3424', { rough: 0.3 })}><cylinderGeometry args={[0.055, 0.06, 0.22, 16]} /></mesh>
+        <mesh position={[0, 0.14, 0]} material={mat('#3b1d12')}><coneGeometry args={[0.035, 0.07, 10]} /></mesh>
+        <Label text="chocolate" y={-0.17} />
+      </Hit>
+      <Hit label="water" pos={[-0.7, TOP + 0.12, BZ]} size={[0.3, 0.3, 0.26]} onClick={() => s().water()}>
+        <mesh material={mat(C.steel)}><cylinderGeometry args={[0.08, 0.1, 0.16, 20]} /></mesh>
+        <mesh position={[0, 0.09, 0]} material={mat(C.steel)}><sphereGeometry args={[0.08, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2]} /></mesh>
+        <mesh position={[-0.12, 0.05, 0]} rotation={[0, 0, 0.9]} material={mat(C.steel)}><cylinderGeometry args={[0.01, 0.012, 0.2, 8]} /></mesh>
+        <Label text="hot water" y={-0.15} />
       </Hit>
       {/* espresso machine (pull a shot) */}
-      <Hit label="machine" pos={[-1.6, TOP + 0.6, Z - 0.05]} size={[1.4, 1.3, 1.0]} onClick={() => s().shot()} />
-      {/* milk jug (steam milk: opens a little menu) */}
-      <Hit label="milk" pos={[2.2, TOP + 0.3, Z]} size={[0.6, 0.7, 0.6]} onClick={() => s().setMenu('milk')} />
-      {/* whipped cream can */}
-      <Hit label="whipped" pos={[0.4, TOP + 0.35, Z]} size={[0.4, 0.8, 0.4]} onClick={() => s().top('whipped')} />
-      {/* drawers: the customisation menus */}
-      <Hit label="fillers" pos={[2.2, 0.55, COUNTER.z - COUNTER.depth / 2 - 0.1]} size={[1.25, 0.75, 0.3]} onClick={() => s().setMenu('fillers')} />
-      <Hit label="sprinkles" pos={[0.8, 0.55, COUNTER.z - COUNTER.depth / 2 - 0.1]} size={[1.25, 0.75, 0.3]} onClick={() => s().setMenu('sprinkles')} />
-      <Hit label="ingredients" pos={[-0.6, 0.55, COUNTER.z - COUNTER.depth / 2 - 0.1]} size={[1.25, 0.75, 0.3]} onClick={() => s().setMenu('ingredients')} />
-      {/* service bell (serve the drink to the front of the line) */}
-      <Hit label="bell" pos={[-0.75, TOP + 0.12, COUNTER.z - 0.4]} size={[0.5, 0.4, 0.5]} onClick={() => s().serve()}>
-        <mesh position={[0, -0.05, 0]} material={mat(C.plum)}><cylinderGeometry args={[0.16, 0.18, 0.05, 16]} /></mesh>
-        <mesh position={[0, 0.03, 0]} material={mat(C.butter, { rough: 0.25 })}><sphereGeometry args={[0.13, 16, 10, 0, Math.PI * 2, 0, Math.PI / 2]} /></mesh>
+      <Hit label="machine" pos={[-1.6, TOP + 0.6, Z - 0.05]} size={[1.4, 1.3, 1.0]} onClick={() => s().shot()}>
+        <Label text="espresso (1 shot per click)" y={-0.42} z={-0.6} />
       </Hit>
+      {/* service bell */}
+      <Hit label="bell" pos={[0.85, TOP + 0.06, BZ]} size={[0.3, 0.2, 0.3]} onClick={() => s().serve()}>
+        <mesh position={[0, -0.03, 0]} material={mat(C.plum)}><cylinderGeometry args={[0.1, 0.11, 0.03, 16]} /></mesh>
+        <mesh position={[0, 0.01, 0]} material={mat(C.butter, { rough: 0.25 })}><sphereGeometry args={[0.08, 16, 10, 0, Math.PI * 2, 0, Math.PI / 2]} /></mesh>
+        <Label text="serve 🔔" y={-0.12} />
+      </Hit>
+      {/* your cup on a saucer, front and centre */}
+      <mesh position={[CUP_AT[0], TOP + 0.005, CUP_AT[2]]} material={mat(C.cream)}><cylinderGeometry args={[0.2, 0.17, 0.02, 28]} /></mesh>
       <Cup />
       <PourFx />
     </group>

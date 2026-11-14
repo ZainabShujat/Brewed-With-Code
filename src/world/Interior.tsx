@@ -158,7 +158,6 @@ function Counter({ showDrawerTags }: { showDrawerTags: boolean }) {
           <mesh position={[0, 0.16, -0.08]} rotation={[0, 0, Math.PI / 2]} material={BRASS}>
             <capsuleGeometry args={[0.022, 0.36, 4, 10]} />
           </mesh>
-          {showDrawerTags && <Html position={[0, -0.12, -0.12]} center className="tag">{label}</Html>}
         </Slide></group>
       ))}
       <CounterTop />
@@ -173,16 +172,6 @@ function CounterTop() {
   const y = COUNTER.top + 0.1, z = COUNTER.z - 0.1
   return (
     <group>
-      <group position={[2.2, y, z]}>
-        <mesh position={[0, 0.25, 0]} material={mat(C.steel, { rough: 0.3 })} castShadow><cylinderGeometry args={[0.18, 0.24, 0.5, 18]} /></mesh>
-        <mesh position={[0.24, 0.28, 0]} material={mat(C.steel)}><torusGeometry args={[0.11, 0.03, 6, 12]} /></mesh>
-      </group>
-      <mesh position={[1.3, y + 0.25, z]} material={glass()}><cylinderGeometry args={[0.2, 0.15, 0.5, 18]} /></mesh>
-      <group position={[0.4, y, z]}>
-        <mesh position={[0, 0.3, 0]} material={mat(C.white)} castShadow><capsuleGeometry args={[0.12, 0.35, 4, 12]} /></mesh>
-        <mesh position={[0, 0.62, 0]} material={mat(C.counter)}><coneGeometry args={[0.07, 0.16, 10]} /></mesh>
-      </group>
-      <mesh position={[-0.4, y + 0.1, z]} material={glass()}><cylinderGeometry args={[0.09, 0.075, 0.2, 14]} /></mesh>
       {/* espresso machine: a real two-group machine, facing the barista (-z) */}
       <group position={[-1.6, y, z - 0.05]}>
         {/* brushed-steel body with a pastel enamel side panel, sitting on short feet */}

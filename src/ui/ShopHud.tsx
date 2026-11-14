@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useShop } from '../systems/shop'
 import { useGame } from '../systems/store'
-import { anim } from '../systems/anim'
 import { cafe } from '../world/Customers'
 import type { Drink } from '../data/recipes'
 
@@ -16,63 +15,80 @@ function describe(d: Drink) {
   return p.length ? p.join(' · ') : 'empty cup'
 }
 
-const MENUS = {
-  milk: { title: 'steam the milk', opts: [['steamed', 'steamed (latte)'], ['foamy', 'thick foam (cappuccino)'], ['micro', 'microfoam (flat white)']] },
-  fillers: { title: 'fridge: pick a milk', opts: [['whole', '🥛 whole'], ['oat', '🌾 oat'], ['almond', '🌰 almond']] },
-  ingredients: { title: 'ingredients', opts: [['water', '💧 hot water'], ['choc', '🍫 chocolate']] },
-  sprinkles: { title: 'toppings', opts: [['cocoa', 'cocoa dust'], ['cinnamon', 'cinnamon'], ['sprinkles', '🌈 sprinkles']] },
-} as const
+type Tab = 'shots' | 'extras' | 'milk' | 'topping'
+const TABS: Tab[] = ['shots', 'extras', 'milk', 'topping']
+
+function Swatch({ color, label, onClick, icon, on }: { color?: string; label: string; onClick: () => void; icon?: string; on?: boolean }) {
+  return (
+    <button className={'sw' + (on ? ' picked' : '')} onClick={onClick}>
+      <span className="dot" style={{ background: color ?? '#fff6ee' }}>{icon}</span>
+      <span className="lbl">{label}</span>
+    </button>
+  )
+}
 
 export function ShopHud() {
   const shop = useShop()
   const mode = useGame((s) => s.mode), setMode = useGame((s) => s.setMode)
+  const [tab, setTab] = useState<Tab>('shots')
   const [, force] = useState(0)
-  // re-read the queue a few times a second (it lives outside React)
   useEffect(() => { const id = setInterval(() => force((n) => n + 1), 250); return () => clearInterval(id) }, [])
-  // the drawer you're using slides open
-  useEffect(() => { Object.keys(anim.drawers).forEach((k) => (anim.drawers[k] = k === shop.menu ? 1 : 0)) }, [shop.menu])
+  // clicking the steel pitcher in 3D jumps the tray to the milk step
+  useEffect(() => { if (shop.menu === 'milk') { setTab('milk'); shop.setMenu(null) } }, [shop.menu])
+  useEffect(() => { if (shop.cup) setTab('shots') }, [shop.cup])
 
-  if (!shop.open) return (
-    <button className="openbtn" onClick={() => { shop.openShop(true); setMode('pov') }}>☕ Open the café</button>
-  )
+  if (!shop.open) return <button className="openbtn" onClick={() => { shop.openShop(true); setMode('pov') }}>☕ Open the café</button>
   const front = cafe.line.peek()
   const order = front ? shop.orders[front.id] : undefined
   const fresh = shop.last && performance.now() / 1000 - shop.last.t < 3
-  const pick = (k: string) => {
-    const m = shop.menu
-    if (m === 'milk') shop.milk(k as Drink['milk'])
-    else if (m === 'fillers') shop.pickMilk(k as Drink['milkType'])
-    else if (m === 'ingredients') k === 'water' ? shop.water() : shop.choc()
-    else if (m === 'sprinkles') shop.top(k as Drink['topping'])
-    shop.setMenu(null)
-  }
+  const d = shop.drink
   return (
     <>
-      <div className="ticket">
+      <div className="cake-card">
         <div className="tk-h">order</div>
-        {order ? <><div className="tk-name">{order.label}</div><div className="tk-note">{order.recipe.note}</div></>
+        {order ? <><div className="cc-name">{order.label}</div><div className="tk-note">{order.recipe.note}</div></>
                : <div className="tk-note">{cafe.line.size ? 'customer walking up…' : 'waiting for customers…'}</div>}
-        <div className="tk-h" style={{ marginTop: 12 }}>your cup</div>
-        <div className="tk-cup">{shop.cup ? describe(shop.drink) : 'no cup yet: click the cups'}</div>
-        <div className="tk-milk">next milk: {shop.milkType}</div>
-        <div className="tk-row">
-          <button onClick={() => shop.serve()} disabled={!shop.cup || !order}>🔔 serve</button>
-          <button onClick={() => shop.trash()} disabled={!shop.cup}>🗑 bin</button>
-        </div>
+        <div className="tk-h" style={{ marginTop: 8 }}>your cup</div>
+        <div className="tk-cup">{shop.cup ? describe(d) : '—'}</div>
       </div>
       <div className="coins">💰 {shop.coins} · served {shop.served}</div>
+      {mode === 'pov' && (
+        <div className="tray">
+          {!shop.cup ? (
+            <div className="opts"><button className="boxbtn" onClick={() => shop.takeCup()}>☕ take a cup</button></div>
+          ) : (
+            <>
+              <div className="steps">{TABS.map((t) => <span key={t} className={t === tab ? 'on' : ''} style={{ cursor: 'pointer' }} onClick={() => setTab(t)}>{t}</span>)}</div>
+              <div className="opts">
+                {tab === 'shots' && <Swatch color="#5b2e1c" icon="☕" label={`add a shot (${d.shots})`} onClick={() => shop.shot()} />}
+                {tab === 'extras' && <>
+                  <Swatch color="#bfe3f2" icon="💧" label="hot water" on={d.water} onClick={() => shop.water()} />
+                  <Swatch color="#5a3424" icon="🍫" label="chocolate" on={d.chocolate} onClick={() => shop.choc()} />
+                </>}
+                {tab === 'milk' && <>
+                  {(['whole', 'oat', 'almond'] as const).map((m) => <Swatch key={m} color={m === 'whole' ? '#fbf8f2' : m === 'oat' ? '#eedcb8' : '#f2e6d2'} label={m} on={shop.milkType === m} onClick={() => shop.pickMilk(m)} />)}
+                  <span className="or">then →</span>
+                  <Swatch color="#d8b48c" label="steamed" on={d.milk === 'steamed'} onClick={() => shop.milk('steamed')} />
+                  <Swatch color="#fffaf2" label="thick foam" on={d.milk === 'foamy'} onClick={() => shop.milk('foamy')} />
+                  <Swatch color="#efe2cf" label="microfoam" on={d.milk === 'micro'} onClick={() => shop.milk('micro')} />
+                </>}
+                {tab === 'topping' && <>
+                  <Swatch color="#5b2e1c" label="cocoa" on={d.topping === 'cocoa'} onClick={() => shop.top('cocoa')} />
+                  <Swatch color="#b0602a" label="cinnamon" on={d.topping === 'cinnamon'} onClick={() => shop.top('cinnamon')} />
+                  <Swatch icon="🌈" label="sprinkles" on={d.topping === 'sprinkles'} onClick={() => shop.top('sprinkles')} />
+                  <Swatch color="#ffffff" label="whipped" on={d.topping === 'whipped'} onClick={() => shop.top('whipped')} />
+                </>}
+                <button className="boxbtn" disabled={!order} onClick={() => shop.serve()}>🔔 serve</button>
+                <button className="redo" onClick={() => shop.trash()} title="bin it">↺</button>
+              </div>
+            </>
+          )}
+        </div>
+      )}
       {fresh && shop.last && (
         <div className="result">{shop.last.mood} {shop.last.pct}% · +{shop.last.coins}💰{shop.last.misses.length ? <small>wanted: {shop.last.misses.join(', ')}</small> : <small>perfect!</small>}</div>
       )}
-      {shop.menu && (
-        <div className="menu">
-          <div className="menu-h">{MENUS[shop.menu].title}</div>
-          {MENUS[shop.menu].opts.map(([k, l]) => <button key={k} onClick={() => pick(k)}>{l}</button>)}
-          <button className="x" onClick={() => shop.setMenu(null)}>close</button>
-        </div>
-      )}
       {mode !== 'pov' && <button className="openbtn small" onClick={() => setMode('pov')}>back behind the bar</button>}
-      <div className="howto">click: cups → machine (shots) → milk jug / drawers → 🔔</div>
     </>
   )
 }

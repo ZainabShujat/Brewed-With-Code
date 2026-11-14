@@ -64,3 +64,6 @@ body { font-family: 'Trebuchet MS', system-ui, sans-serif; }
 .or { font: 800 12px 'Trebuchet MS', sans-serif; color: #ffcf5c; align-self: center; margin: 0 2px; }
 .boxbtn { border: 0; border-radius: 14px; padding: 12px 16px; font: 900 15px 'Trebuchet MS', sans-serif; background: #ffcf5c; color: #3a2230; box-shadow: 0 3px 0 #b8902e; cursor: pointer; align-self: center; margin-left: 6px; }
 .redo { border: 0; border-radius: 50%; width: 34px; height: 34px; font: 900 18px sans-serif; background: #6e3f78; color: #fff; cursor: pointer; align-self: center; }
+.tag.tool { font-size: 10px; padding: 1px 7px; opacity: .92; }
+.sw.picked .dot { box-shadow: 0 0 0 4px #ffcf5c, 0 3px 0 rgba(0,0,0,.35); }
+.boxbtn:disabled { opacity: .45; cursor: default; }
