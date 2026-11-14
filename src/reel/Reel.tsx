@@ -9,6 +9,7 @@ import { anim, tween, walkTo } from '../systems/anim'
 import { cafe as line } from '../world/Customers'
 import { cascade, CascadeDriver } from './Cascade'
 import { useCake } from '../systems/cake'
+import { cakeSvg } from '../ui/cakeSvg'
 
 // 1080x1920 split screen: code typing on top, the café building itself below.
 // Driven by performance.now(), so the notes-brain frame-stepped exporter can capture it exactly.
@@ -95,6 +96,9 @@ function Embedded() {
         top: (x: any) => flushSync(() => useCake.getState().topWith(x)),
         reset: () => flushSync(() => useCake.getState().reset()),
         spin: (on: boolean) => useCake.setState({ spin: on }),
+        // the order picture (SVG) for a given cake, so reel pages can show the expected output
+        picture: (cake: any, w = 260) => cakeSvg(cake, w),
+        setOrder: (cake: any, label: string) => flushSync(() => useCake.setState({ order: { want: cake, label } })),
       },
       showAll: () => flushSync(() => useGame.setState({ revealed: null })),
       // vlog controls (BUILDS #002 tour)

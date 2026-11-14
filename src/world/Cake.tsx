@@ -25,25 +25,37 @@ function Drop({ y, h, r, color, t0 }: { y: number; h: number; r: number; color: 
   return <mesh ref={ref} material={mat(color, { rough: 0.85 })} castShadow><cylinderGeometry args={[r, r, h, 40]} /></mesh>
 }
 
-// frosting: a shell that flows down from the top, a smooth top cap, and drips that run down the sides
+// drip-cake frosting: it spreads across the top, wraps a short collar round the edge, then drips
+// run part-way down the sides at different lengths (the sponge layers stay visible below)
 function Frosting({ height, color, t0 }: { height: number; color: string; t0: number }) {
-  const shell = useRef<THREE.Mesh>(null), cap = useRef<THREE.Mesh>(null), drips = useRef<THREE.Group>(null)
-  const D = useMemo(() => Array.from({ length: 18 }, (_, i) => ({ a: (i / 18) * Math.PI * 2 + (i % 3) * 0.07, len: 0.08 + ((i * 7) % 5) * 0.045 })), [])
-  const m = mat(color, { rough: 0.35 }) // glossy frosting
+  const collar = useRef<THREE.Mesh>(null), cap = useRef<THREE.Mesh>(null), drips = useRef<THREE.Group>(null)
+  const hash = (n: number) => { const v = Math.sin(n * 91.345) * 47453.21; return v - Math.floor(v) }
+  const D = useMemo(() => Array.from({ length: 22 }, (_, i) => ({
+    a: (i / 22) * Math.PI * 2 + (hash(i) - 0.5) * 0.18,
+    len: Math.min(height * 0.62, 0.05 + hash(i + 50) * height * 0.55), // uneven, never all the way down
+    w: 0.03 + hash(i + 90) * 0.012,
+  })), [height])
+  const m = mat(color, { rough: 0.3 }) // glossy frosting
+  const COLLAR = 0.075
   useFrame(() => {
-    const k = clamp01((now() - t0) / 1.1), e = 1 - Math.pow(1 - k, 2)
-    if (cap.current) { cap.current.visible = now() >= t0; cap.current.scale.set(0.3 + 0.7 * clamp01(k * 2.5), 1, 0.3 + 0.7 * clamp01(k * 2.5)) }
-    if (shell.current) { const h = Math.max(0.001, height * e); shell.current.scale.y = h; shell.current.position.y = height - h / 2 + 0.01; shell.current.visible = now() >= t0 }
-    drips.current?.children.forEach((c, i) => { const d = D[i], kk = clamp01((now() - t0 - 0.8 - (i % 4) * 0.08) / 0.7); c.visible = kk > 0; c.scale.y = Math.max(0.001, kk) })
+    const t = now() - t0, k = clamp01(t / 0.6)
+    if (cap.current) { cap.current.visible = t >= 0; const r = 0.25 + 0.75 * (1 - Math.pow(1 - k, 2)); cap.current.scale.set(r, 1, r) }
+    if (collar.current) { const kc = clamp01((t - 0.45) / 0.35); collar.current.visible = kc > 0; collar.current.scale.y = Math.max(0.001, kc) }
+    drips.current?.children.forEach((c, i) => {
+      const kk = clamp01((t - 0.75 - hash(i + 7) * 0.5) / 0.9), e = 1 - Math.pow(1 - kk, 3) // each drip runs at its own pace, easing to a stop
+      c.visible = kk > 0; c.scale.y = Math.max(0.001, e)
+    })
   })
   return (
     <group>
-      <mesh ref={shell} material={m}><cylinderGeometry args={[R + 0.025, R + 0.025, 1, 48, 1, true]} /></mesh>
-      <mesh ref={cap} position={[0, height + 0.02, 0]} material={m}><cylinderGeometry args={[R + 0.03, R + 0.03, 0.04, 48]} /></mesh>
-      <group ref={drips} position={[0, height, 0]}>
+      <mesh ref={cap} position={[0, height + 0.02, 0]} material={m}><cylinderGeometry args={[R + 0.03, R + 0.03, 0.045, 48]} /></mesh>
+      <mesh ref={collar} position={[0, height - COLLAR / 2 + 0.01, 0]} material={m}><cylinderGeometry args={[R + 0.018, R + 0.018, COLLAR, 48, 1, true]} /></mesh>
+      <group ref={drips} position={[0, height - COLLAR + 0.02, 0]}>
         {D.map((d, i) => (
-          <group key={i} position={[Math.cos(d.a) * (R + 0.012), 0, Math.sin(d.a) * (R + 0.012)]}>
-            <mesh position={[0, -d.len / 2, 0]} scale={[1, 1, 0.55]} material={m}><capsuleGeometry args={[0.028, d.len, 4, 8]} /></mesh>
+          // rotate each drip so its flat side lies against the cake
+          <group key={i} position={[Math.cos(d.a) * (R + 0.012), 0, Math.sin(d.a) * (R + 0.012)]} rotation={[0, Math.PI / 2 - d.a, 0]}>
+            <mesh position={[0, -d.len / 2, 0]} scale={[1, 1, 0.6]} material={m}><capsuleGeometry args={[d.w, d.len, 4, 10]} /></mesh>
+            <mesh position={[0, -d.len - d.w * 0.4, 0]} scale={[1, 1, 0.65]} material={m}><sphereGeometry args={[d.w * 1.25, 12, 8]} /></mesh>
           </group>
         ))}
       </group>

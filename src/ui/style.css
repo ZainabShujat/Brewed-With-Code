@@ -67,3 +67,4 @@ body { font-family: 'Trebuchet MS', system-ui, sans-serif; }
 .tag.tool { font-size: 10px; padding: 1px 7px; opacity: .92; }
 .sw.picked .dot { box-shadow: 0 0 0 4px #ffcf5c, 0 3px 0 rgba(0,0,0,.35); }
 .boxbtn:disabled { opacity: .45; cursor: default; }
+.cc-pic { display: flex; justify-content: center; margin: 4px 0 2px; }

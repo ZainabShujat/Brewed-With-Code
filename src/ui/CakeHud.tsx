@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useCake, SPONGE_COL, FILL_COL, FROST_COL, PIPE_COL } from '../systems/cake'
 import { useGame } from '../systems/store'
+import { cakeSvg } from './cakeSvg'
 
 // A slim step-by-step tray: only the choices that make sense right now, as colour swatches.
 const STEPS = ['sponge', 'filling', 'frosting', 'rosettes', 'topping', 'box'] as const
@@ -33,6 +34,8 @@ export function CakeHud() {
     <>
       <div className="cake-card">
         <div className="tk-h">cake order</div>
+        {/* the expected output: what the finished cake should look like */}
+        <div className="cc-pic" dangerouslySetInnerHTML={{ __html: cakeSvg(k.order.want, 180) }} />
         <div className="cc-name">{k.order.label}</div>
       </div>
       <div className="tray">
