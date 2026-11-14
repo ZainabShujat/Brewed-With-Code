@@ -13,12 +13,12 @@ export function Lighting() {
   const { gl, scene } = useThree()
   useEffect(() => {
     gl.toneMapping = THREE.NeutralToneMapping
-    gl.toneMappingExposure = 1.05
+    gl.toneMappingExposure = HQ ? 0.74 : 1.05 // reels: a touch darker so whites (tiles, plates, frosting) never clip
     gl.shadowMap.type = THREE.PCFSoftShadowMap
     const pmrem = new THREE.PMREMGenerator(gl)
     const env = pmrem.fromScene(new RoomEnvironment(), 0.04).texture
     scene.environment = env
-    ;(scene as any).environmentIntensity = 0.55
+    ;(scene as any).environmentIntensity = HQ ? 0.42 : 0.55
     return () => { env.dispose(); pmrem.dispose(); scene.environment = null }
   }, [gl, scene])
   const map = HQ ? 4096 : 2048 // reels render offline, so they can afford sharper shadows

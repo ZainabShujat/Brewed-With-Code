@@ -8,6 +8,7 @@ import { kozieCtl } from '../world/Kozie'
 import { anim, tween, walkTo } from '../systems/anim'
 import { cafe as line } from '../world/Customers'
 import { cascade, CascadeDriver } from './Cascade'
+import { useCake } from '../systems/cake'
 
 // 1080x1920 split screen: code typing on top, the café building itself below.
 // Driven by performance.now(), so the notes-brain frame-stepped exporter can capture it exactly.
@@ -85,6 +86,16 @@ function Embedded() {
         fold: (dur: number) => cascade.play(dur, -1),
       },
       kozieHidden: (on: boolean) => { anim.kozie.hidden = on },
+      // cake bench (flushSync: commit right away so the frame-stepped render never lags the state)
+      cake: {
+        layer: (x: any) => flushSync(() => useCake.getState().addLayer(x)),
+        fill: (x: any) => flushSync(() => useCake.getState().addFilling(x)),
+        frost: (x: any) => flushSync(() => useCake.getState().frost(x)),
+        pipe: (x: any) => flushSync(() => useCake.getState().pipe(x)),
+        top: (x: any) => flushSync(() => useCake.getState().topWith(x)),
+        reset: () => flushSync(() => useCake.getState().reset()),
+        spin: (on: boolean) => useCake.setState({ spin: on }),
+      },
       showAll: () => flushSync(() => useGame.setState({ revealed: null })),
       // vlog controls (BUILDS #002 tour)
       vlog: {
