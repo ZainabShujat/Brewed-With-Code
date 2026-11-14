@@ -6,6 +6,7 @@ import { PlusSpot } from './PlusSpot'
 import { RBox, Puck } from './Soft'
 import { Reveal } from './Reveal'
 import { Bar } from './Bar'
+import { CakeBench } from './Cake'
 import { Swing, Slide } from './Swing'
 import { useGame } from '../systems/store'
 import { ArchWindow, Chalkboard, Clock, PendantLamp, Plant, RoundTable, Rug, Shelf, Stool, StringLights } from './Props'
@@ -297,6 +298,7 @@ export function Interior({ cutaway, pov }: { cutaway: boolean; pov: boolean }) {
       <Reveal id="counter" at={[0.2, 0, -7.2]}><group position={[0, 0, BACK_DZ]}><Counter showDrawerTags={pov} /><Bar /></group></Reveal>
       <Reveal id="fridge" at={[9.5, 0, -9.4]}><group position={[FRIDGE_DX, 0, FRIDGE_DZ]}><Fridge /></group></Reveal>
       <Reveal id="decor"><Decor hideBack={pov} /></Reveal>
+      <CakeBench />
       {TABLES.map(([x, z], i) => (
         <Reveal key={x} id="tables" at={[x, 0, z]}>
           {/* FURN: tables + stools sized for ~2 m characters (table ~1.05 m, seat ~0.8 m) */}

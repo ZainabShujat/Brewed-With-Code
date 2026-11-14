@@ -10,8 +10,11 @@ import { Lighting } from './world/Lighting'
 import { Kozie } from './world/Kozie'
 import { Customers, cafe as cafeLine } from './world/Customers'
 import { ShopHud } from './ui/ShopHud'
+import { CakeHud } from './ui/CakeHud'
+import { useCake } from './systems/cake'
 import { useShop } from './systems/shop'
 ;(window as any).game = { shop: useShop, line: cafeLine } // handy for testing in the console
+;(window as any).__cake = useCake
 
 // the playable game: customers arrive and get served on their own
 cafeLine.auto = !location.pathname.includes('reel')
@@ -21,6 +24,7 @@ const MODES: { id: CamMode; label: string; key: string }[] = [
   { id: 'dollhouse', label: 'Dollhouse', key: '2' },
   { id: 'walk', label: 'Walk', key: '3' },
   { id: 'pov', label: 'Barista', key: '4' },
+  { id: 'cake', label: 'Cakes', key: '5' },
 ]
 
 export function World() {
@@ -81,7 +85,8 @@ export default function App() {
         </div>
         {mode === 'walk' && <div className="hint">WASD / arrows to walk</div>}
       </div>
-      <ShopHud />
+      {mode !== 'cake' && <ShopHud />}
+      <CakeHud />
       <div className="fps">{shownFps} fps</div>
     </>
   )

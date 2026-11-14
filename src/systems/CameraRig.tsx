@@ -9,6 +9,8 @@ const SHOTS: Record<Exclude<CamMode, 'walk' | 'vlog'>, { pos: THREE.Vector3; loo
   exterior: { pos: new THREE.Vector3(42, 24.5, 69), look: new THREE.Vector3(0, 9.4, 5.8) },
   // outro: pull back from the dollhouse to the full exterior while the pot walls fade in
   outro: { pos: new THREE.Vector3(42, 24.5, 69), look: new THREE.Vector3(0, 9.4, 5.8) },
+  // the cake bench in the kitchen: close, slightly above, like leaning over the turntable
+  cake: { pos: new THREE.Vector3(-7.4, 3.55, -5.0), look: new THREE.Vector3(-7.4, 1.1, -7.15) },
   dollhouse: { pos: new THREE.Vector3(17.5, 19, 23.5), look: new THREE.Vector3(-0.3, 0.2, -0.6) },
   pov: { pos: new THREE.Vector3(0.1, 2.6, -11.0), look: new THREE.Vector3(0.1, 0.95, -6.0) } // a barista's eye height, stepped back so the whole counter fits,
 }

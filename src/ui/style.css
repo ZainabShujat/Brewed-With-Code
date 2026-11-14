@@ -41,3 +41,11 @@ body { font-family: 'Trebuchet MS', system-ui, sans-serif; }
 .howto { position: fixed; left: 16px; bottom: 34px; font: 700 13px 'Trebuchet MS', sans-serif; color: #5e2a75; background: #fff6eecc; padding: 6px 12px; border-radius: 10px; }
 .obubble:empty { display: none; }
 .obubble { background: #fff6ee; color: #5e2a75; font: 900 16px 'Trebuchet MS', sans-serif; padding: 8px 14px; border-radius: 16px; white-space: nowrap; box-shadow: 0 4px 0 #ff7fb6; }
+
+/* ---- cake bench ---- */
+.cakebar { position: fixed; left: 16px; bottom: 70px; display: flex; flex-direction: column; gap: 6px; background: #2a1830e6; padding: 12px; border-radius: 18px; }
+.cb-row { display: flex; gap: 6px; align-items: center; }
+.cb-row span { width: 96px; color: #ffcf5c; font: 900 13px 'Trebuchet MS', sans-serif; }
+.cb-row button { border: 0; border-radius: 10px; padding: 8px 12px; font: 800 13px 'Trebuchet MS', sans-serif; background: #fff1f6; color: #3a2230; box-shadow: 0 3px 0 rgba(0,0,0,.35); cursor: pointer; }
+.cb-row button:disabled { opacity: .35; cursor: default; }
+.cake-ticket { width: 320px; }
