@@ -66,3 +66,15 @@ export const brushedTex = () => make('brushed', 512, 512, (x, w, h) => {
   x.fillStyle = '#d8d8dc'; x.fillRect(0, 0, w, h)
   for (let i = 0; i < 1400; i++) { const g = 190 + r() * 60; x.strokeStyle = `rgba(${g},${g},${g + 4},.35)`; x.lineWidth = 1; x.beginPath(); const y = r() * h; x.moveTo(r() * w * 0.3, y); x.lineTo(w * (0.6 + r() * 0.4), y + (r() - 0.5) * 2); x.stroke() }
 })
+
+// Subway tiles: glossy off-white bricks with grout lines (bakery backsplash)
+export const tileTex = () => make('tiles', 512, 512, (x, w, h) => {
+  const r = rng(31), rows = 8, cols = 4, th = h / rows, tw = w / cols
+  x.fillStyle = '#d9d2cc'; x.fillRect(0, 0, w, h) // grout
+  for (let j = 0; j < rows; j++) for (let i = -1; i < cols + 1; i++) {
+    const off = j % 2 ? tw / 2 : 0, px = i * tw + off + 3, py = j * th + 3
+    const g = 244 + r() * 10; x.fillStyle = `rgb(${g},${g - 2},${g - 4})`
+    x.beginPath(); x.roundRect(px, py, tw - 6, th - 6, 6); x.fill()
+    x.fillStyle = 'rgba(255,255,255,.55)'; x.fillRect(px + 6, py + 5, tw - 24, 4) // a glint along the top edge
+  }
+})

@@ -64,3 +64,18 @@ pre { margin: 0; padding: 28px 40px; font-size: 33px; line-height: 1.5; color: #
 .cb-row button { border: 0; border-radius: 10px; padding: 8px 12px; font: 800 13px 'Trebuchet MS', sans-serif; background: #fff1f6; color: #3a2230; box-shadow: 0 3px 0 rgba(0,0,0,.35); cursor: pointer; }
 .cb-row button:disabled { opacity: .35; cursor: default; }
 .cake-ticket { width: 320px; }
+
+/* ---- cake tray v2: slim, step-by-step ---- */
+.cake-card { position: fixed; right: 16px; top: 16px; max-width: 300px; background: rgba(255,246,238,.94); border-radius: 16px; padding: 12px 16px; color: #5e2a75; font-family: 'Trebuchet MS', sans-serif; box-shadow: 0 4px 0 #e48fae, 0 10px 24px rgba(0,0,0,.15); }
+.cc-name { font: 900 15px 'Trebuchet MS', sans-serif; margin-top: 3px; line-height: 1.3; }
+.tray { position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%); background: rgba(42,24,48,.82); backdrop-filter: blur(6px); border-radius: 22px; padding: 10px 16px 12px; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.steps { display: flex; gap: 14px; font: 800 11px 'Trebuchet MS', sans-serif; letter-spacing: 1.5px; text-transform: uppercase; color: #8a7896; }
+.steps .on { color: #ffcf5c; } .steps .done { color: #c9b6d6; text-decoration: line-through; }
+.opts { display: flex; gap: 10px; align-items: flex-end; }
+.sw { border: 0; background: none; display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; padding: 0; }
+.sw .dot { width: 44px; height: 44px; border-radius: 50%; border: 3px solid #fff; box-shadow: 0 3px 0 rgba(0,0,0,.35); display: flex; align-items: center; justify-content: center; font-size: 22px; transition: transform .12s; }
+.sw:hover .dot { transform: translateY(-3px) scale(1.06); }
+.sw .lbl { font: 800 11px 'Trebuchet MS', sans-serif; color: #fff1f6; white-space: nowrap; }
+.or { font: 800 12px 'Trebuchet MS', sans-serif; color: #ffcf5c; align-self: center; margin: 0 2px; }
+.boxbtn { border: 0; border-radius: 14px; padding: 12px 16px; font: 900 15px 'Trebuchet MS', sans-serif; background: #ffcf5c; color: #3a2230; box-shadow: 0 3px 0 #b8902e; cursor: pointer; align-self: center; margin-left: 6px; }
+.redo { border: 0; border-radius: 50%; width: 34px; height: 34px; font: 900 18px sans-serif; background: #6e3f78; color: #fff; cursor: pointer; align-self: center; }

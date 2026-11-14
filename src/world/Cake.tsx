@@ -5,10 +5,13 @@ import { useCake, SPONGE_COL, FILL_COL, FROST_COL, PIPE_COL } from '../systems/c
 import { C } from '../data/palette'
 import { mat, glow } from './mats'
 import { RBox } from './Soft'
+import { Shelf } from './Props'
+import { tileTex } from './textures'
 
 // The cake bench lives in the kitchen (back-left corner). Everything on the turntable is drawn
 // from useCake state; each new part animates in using the time it was added (t[...]).
-export const CAKE_AT: [number, number, number] = [-7.4, 0, -7.0]
+// the turntable sits on the bakery counter run along the back wall
+export const CAKE_AT: [number, number, number] = [-7.0, 0, -9.05]
 const R = 0.55, LH = 0.2, FH = 0.045, TOP = 1.02 // cake radius, layer height, filling height, turntable top
 
 const now = () => performance.now() / 1000
@@ -110,27 +113,78 @@ function TheCake() {
   )
 }
 
+const BRASS = new THREE.MeshStandardMaterial({ color: '#c9a24a', metalness: 0.9, roughness: 0.3 })
+const TILES = (() => { const m = new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 0.18 }); const t = tileTex().clone(); t.repeat.set(7, 2.4); t.needsUpdate = true; m.map = t; return m })()
+const DARK_GLASS = new THREE.MeshStandardMaterial({ color: '#2a1a14', roughness: 0.08, metalness: 0.2, emissive: '#ff9a4a', emissiveIntensity: 0.18 })
+
+// The open bakery corner along the back wall: a counter run with a built-in oven, the turntable,
+// a stand mixer, flour/sugar canisters, a tiled backsplash and a jar shelf.
+function BakeryCorner() {
+  const x0 = -9.85, x1 = -4.35, cx = (x0 + x1) / 2, w = x1 - x0, z = -9.2, d = 1.3, top = 0.93
+  return (
+    <group>
+      {/* tiled backsplash on the back wall */}
+      <mesh position={[cx, 1.75, -9.83]} material={TILES} receiveShadow><planeGeometry args={[w, 1.6]} /></mesh>
+      {/* base cabinets + marble top */}
+      <RBox size={[w, 0.88, d]} pos={[cx, 0.44, z]} color={C.wood} r={0.03} />
+      <RBox size={[w + 0.08, 0.07, d + 0.08]} pos={[cx, top, z]} color={C.counterTop} r={0.015} />
+      {/* painted cabinet doors with brass knobs (skipping the oven bay) */}
+      {[-7.7, -6.6, -5.5, -4.95].map((x, i) => (
+        <group key={x} position={[x, 0.45, z + d / 2 + 0.01]}>
+          <RBox size={[i === 3 ? 0.7 : 1.0, 0.72, 0.04]} color="#8fb8a8" r={0.015} />
+          <mesh position={[i === 3 ? -0.24 : 0.38, 0.22, 0.04]} material={BRASS}><sphereGeometry args={[0.03, 12, 8]} /></mesh>
+        </group>
+      ))}
+      {/* built-in oven: steel front, warm glowing glass door, handle bar, knobs */}
+      <group position={[-9.05, 0.47, z + d / 2 + 0.015]}>
+        <RBox size={[1.2, 0.84, 0.05]} color={C.steel} r={0.02} />
+        <RBox size={[0.9, 0.46, 0.02]} pos={[0, -0.06, 0.03]} material={DARK_GLASS} r={0.02} shadow={false} />
+        <mesh position={[0, 0.25, 0.07]} rotation={[0, 0, Math.PI / 2]} material={BRASS}><capsuleGeometry args={[0.018, 0.7, 4, 10]} /></mesh>
+        {[-0.4, -0.25, 0.25, 0.4].map((kx) => <mesh key={kx} position={[kx, 0.36, 0.04]} rotation={[Math.PI / 2, 0, 0]} material={mat(C.plum)}><cylinderGeometry args={[0.03, 0.03, 0.03, 14]} /></mesh>)}
+      </group>
+      {/* stand mixer (dusty-rose enamel, steel bowl) */}
+      <group position={[-5.1, top + 0.03, z - 0.15]}>
+        <RBox size={[0.42, 0.08, 0.6]} pos={[0, 0.04, 0]} color={C.counter} r={0.04} />
+        <RBox size={[0.18, 0.55, 0.18]} pos={[0, 0.34, -0.2]} color={C.counter} r={0.07} />
+        <mesh position={[0, 0.66, -0.02]} rotation={[Math.PI / 2, 0, 0]} material={mat(C.counter, { rough: 0.3 })}><capsuleGeometry args={[0.13, 0.36, 6, 16]} /></mesh>
+        <mesh position={[0, 0.2, 0.08]} material={mat(C.steel)}><cylinderGeometry args={[0.17, 0.11, 0.24, 24, 1, true]} /></mesh>
+        <mesh position={[0, 0.42, 0.1]} material={mat(C.steel)}><cylinderGeometry args={[0.012, 0.012, 0.24, 8]} /></mesh>
+      </group>
+      {/* flour + sugar canisters */}
+      {[[-8.35, 'flour'], [-7.95, 'sugar']].map(([x], i) => (
+        <group key={String(x)} position={[x as number, top + 0.17, z - 0.32]}>
+          <mesh material={mat(C.cream)} castShadow><cylinderGeometry args={[0.13, 0.13, 0.3 - i * 0.06, 24]} /></mesh>
+          <mesh position={[0, 0.16 - i * 0.03, 0]} material={mat(C.woodDark)}><cylinderGeometry args={[0.135, 0.135, 0.03, 24]} /></mesh>
+          <mesh position={[0, 0.0, 0.131]} material={mat('#e9d5c4')}><planeGeometry args={[0.14, 0.08]} /></mesh>
+        </group>
+      ))}
+      {/* jar shelf above the backsplash */}
+      <Shelf pos={[-7.1, 2.95, -9.62]} w={3.4} vines={false} />
+    </group>
+  )
+}
+
 export function CakeBench() {
   const spin = useRef<THREE.Group>(null)
   useFrame((_, dt) => { if (spin.current && useCake.getState().spin) spin.current.rotation.y += dt * 0.35 })
   return (
-    <group position={CAKE_AT}>
-      {/* wooden work table with a marble top */}
-      <RBox size={[2.2, 0.9, 1.4]} pos={[0, 0.45, 0]} color={C.wood} r={0.04} />
-      <RBox size={[2.3, 0.07, 1.5]} pos={[0, 0.93, 0]} color={C.counterTop} r={0.02} />
-      {/* bowls of frosting + a piping bag, just for looks */}
-      {[[-0.8, C.counter], [-0.45, C.lilac], [0.75, '#5a3424']].map(([x, c]) => (
-        <group key={String(x)} position={[x as number, 1.0, 0.45]}>
-          <mesh material={mat(C.cream)}><cylinderGeometry args={[0.15, 0.1, 0.12, 20, 1, true]} /></mesh>
-          <mesh position={[0, 0.03, 0]} material={mat(c as string, { rough: 0.35 })}><cylinderGeometry args={[0.135, 0.135, 0.02, 20]} /></mesh>
+    <group>
+      <BakeryCorner />
+      <group position={CAKE_AT}>
+        {/* bowls of frosting + a piping bag beside the turntable */}
+        {[[-0.95, C.counter], [0.95, C.lilac]].map(([x, c]) => (
+          <group key={String(x)} position={[x as number, 1.02, 0.25]}>
+            <mesh material={mat(C.cream)}><cylinderGeometry args={[0.15, 0.1, 0.12, 20, 1, true]} /></mesh>
+            <mesh position={[0, 0.03, 0]} material={mat(c as string, { rough: 0.35 })}><cylinderGeometry args={[0.135, 0.135, 0.02, 20]} /></mesh>
+          </group>
+        ))}
+        <mesh position={[1.25, 1.05, -0.15]} rotation={[0, 0.4, 1.2]} material={mat(C.white, { rough: 0.5 })}><coneGeometry args={[0.07, 0.35, 14]} /></mesh>
+        {/* turntable: steel pedestal + white plate, spins slowly */}
+        <mesh position={[0, 0.98, 0]} material={mat(C.steel)}><cylinderGeometry args={[0.12, 0.2, 0.06, 20]} /></mesh>
+        <group ref={spin} position={[0, TOP, 0]}>
+          <mesh material={mat(C.white, { rough: 0.25 })} receiveShadow><cylinderGeometry args={[0.72, 0.72, 0.03, 48]} /></mesh>
+          <group position={[0, 0.015, 0]}><TheCake /></group>
         </group>
-      ))}
-      <mesh position={[0.82, 1.05, -0.4]} rotation={[0, 0, 1.2]} material={mat(C.white, { rough: 0.5 })}><coneGeometry args={[0.07, 0.35, 14]} /></mesh>
-      {/* turntable: steel pedestal + white plate, spins slowly */}
-      <mesh position={[0, 0.98, 0]} material={mat(C.steel)}><cylinderGeometry args={[0.12, 0.2, 0.06, 20]} /></mesh>
-      <group ref={spin} position={[0, TOP, 0]}>
-        <mesh material={mat(C.white, { rough: 0.25 })} receiveShadow><cylinderGeometry args={[0.72, 0.72, 0.03, 48]} /></mesh>
-        <group position={[0, 0.015, 0]}><TheCake /></group>
       </group>
     </group>
   )

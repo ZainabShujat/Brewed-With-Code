@@ -91,24 +91,9 @@ function Walls({ cutaway, hideBack }: { cutaway: boolean; hideBack: boolean }) {
   )
 }
 
+// The old boxed-in kitchen corner was replaced by the open bakery corner (world/Cake.tsx: BakeryCorner)
 function Kitchen() {
-  return (
-    <group>
-      <RBox size={[1.3, WALL_H, 0.22]} pos={[-3.95, WALL_H / 2, -2.4]} color={C.wall} r={0.08} />
-      <RBox size={[0.4, WALL_H, 0.22]} pos={[-4.75, WALL_H / 2, -2.4]} color={C.wall} r={0.08} />
-      <RBox size={[0.8, 1.0, 0.22]} pos={[-2.95, WALL_H - 0.5, -2.4]} color={C.wall} r={0.08} />
-      <mesh position={[-2.95, WALL_H - 1.0, -2.4]} rotation={[Math.PI / 2, 0, 0]} material={mat(C.wood)}>
-        <torusGeometry args={[0.36, 0.06, 8, 16, Math.PI]} />
-      </mesh>
-      {/* oven, toaster, little sign */}
-      <RBox size={[1.0, 1.4, 1.0]} pos={[-4.0, 0.7, -4.0]} color={C.lilac} r={0.12} />
-      <RBox size={[0.7, 0.45, 0.06]} pos={[-4.0, 0.7, -3.48]} color={C.plum} r={0.05} />
-      <mesh position={[-4.0, 0.7, -3.44]} material={glow(C.peach)}><planeGeometry args={[0.5, 0.25]} /></mesh>
-      <RBox size={[0.9, 0.9, 0.7]} pos={[-3.0, 0.45, -4.2]} color={C.counter} r={0.1} />
-      <RBox size={[0.55, 0.4, 0.38]} pos={[-3.0, 1.1, -4.2]} color={C.mint} r={0.12} />
-      {!useGame((s) => s.mode === 'outro') && <Html position={[-3.6, 3.1, -2.25]} center className="tag">kitchen</Html>}
-    </group>
-  )
+  return <group />
 }
 
 function Treats({ w, y }: { w: number; y: number }) {
@@ -262,7 +247,6 @@ function Decor({ hideBack }: { hideBack: boolean }) {
         <group>
           <Shelf pos={[-1.6, 3.1, -H + 0.35]} w={2.6} />
           <Shelf pos={[2.4, 2.6, -H + 0.35]} w={1.8} />
-          <Shelf pos={[-8.4, 3.4, -H + 0.35]} w={1.6} />
           <Clock pos={[5.0, 3.7, -H + 0.2]} />
           <Clock pos={[6.1, 3.7, -H + 0.2]} r={0.26} />
           <Chalkboard pos={[5.6, 2.3, -H + 0.2]} />
