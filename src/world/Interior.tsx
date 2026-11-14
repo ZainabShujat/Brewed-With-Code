@@ -1,3 +1,4 @@
+import * as THREE from 'three'
 import { Html } from '@react-three/drei'
 import { C } from '../data/palette'
 import { mat, glass, glow } from './mats'
@@ -33,6 +34,9 @@ const PLANKS = (() => {
   }
   return out
 })()
+
+// polished brass for handles and trims
+const BRASS = new THREE.MeshStandardMaterial({ color: '#c9a24a', metalness: 0.9, roughness: 0.3 })
 
 function Floor() {
   return (
@@ -137,7 +141,7 @@ function Treats({ w, y }: { w: number; y: number }) {
   )
 }
 
-function PastryCase({ x, z, w, rot = 0, body = C.purple }: { x: number; z: number; w: number; rot?: number; body?: string }) {
+function PastryCase({ x, z, w, rot = 0, body = C.wood }: { x: number; z: number; w: number; rot?: number; body?: string }) {
   return (
     <group position={[x, 0, z]} rotation={[0, rot, 0]}>
       <RBox size={[w, 0.95, 0.6]} pos={[0, 0.48, 0]} color={body} r={0.1} />
@@ -152,27 +156,28 @@ function PastryCase({ x, z, w, rot = 0, body = C.purple }: { x: number; z: numbe
 function Counter({ showDrawerTags }: { showDrawerTags: boolean }) {
   const { x0, x1, z, depth, top } = COUNTER
   const w = x1 - x0, cx = (x0 + x1) / 2
-  const drawers: [string, number, string][] = [['fillers', 2.2, C.mint], ['sprinkles', 0.8, C.butter], ['ingredients', -0.6, C.lilac], ['food', -2.0, C.peach]]
+  const drawers: [string, number, string][] = [['fillers', 2.2, '#8fb8a8'], ['sprinkles', 0.8, '#d8b86a'], ['ingredients', -0.6, '#a996c4'], ['food', -2.0, '#c99078']]
   return (
     <group>
-      <RBox size={[w, top, depth]} pos={[cx, top / 2, z]} color={C.counter} r={0.12} />
-      <RBox size={[w + 0.15, 0.1, depth + 0.15]} pos={[cx, top + 0.04, z]} color={C.counterTop} r={0.05} />
+      <RBox size={[w, top, depth]} pos={[cx, top / 2, z]} color={C.woodDark} r={0.05} />
+      <RBox size={[w + 0.15, 0.1, depth + 0.15]} pos={[cx, top + 0.04, z]} color={C.counterTop} r={0.02} />
       {/* drawers on the barista side = the customisation menu */}
       {drawers.map(([label, x, col]) => (
         <group key={label} position={[x, 0.55, z - depth / 2 - 0.03]}><Slide id={label}>
-          <RBox size={[1.2, 0.7, 0.08]} color={col} r={0.06} />
+          <RBox size={[1.2, 0.7, 0.08]} color={col} r={0.025} />
+          <RBox size={[1.08, 0.58, 0.02]} pos={[0, 0, -0.045]} color={col} r={0.01} shadow={false} />
           {/* drawer body + contents, seen when it slides open */}
           <RBox size={[1.1, 0.5, 0.55]} pos={[0, -0.02, 0.3]} color={C.counterTop} r={0.04} shadow={false} />
           {[-0.3, 0, 0.3].map((dx, i) => <mesh key={dx} position={[dx, 0.25, 0.3]} material={mat([C.counter, C.butter, C.mint, C.lilac][(i + label.length) % 4])}><sphereGeometry args={[0.13, 10, 8]} /></mesh>)}
-          <mesh position={[0, 0.18, -0.07]} rotation={[0, 0, Math.PI / 2]} material={mat(C.plum)}>
-            <capsuleGeometry args={[0.035, 0.3, 4, 8]} />
+          <mesh position={[0, 0.16, -0.08]} rotation={[0, 0, Math.PI / 2]} material={BRASS}>
+            <capsuleGeometry args={[0.022, 0.36, 4, 10]} />
           </mesh>
           {showDrawerTags && <Html position={[0, -0.12, -0.12]} center className="tag">{label}</Html>}
         </Slide></group>
       ))}
       <CounterTop />
       <PastryCase x={0.25} z={-2.3} w={5.3} />
-      <PastryCase x={-3.2} z={-1.65} w={1.5} rot={0.75} body={C.counter} />
+      <PastryCase x={-3.2} z={-1.65} w={1.5} rot={0.75} />
     </group>
   )
 }
@@ -192,23 +197,46 @@ function CounterTop() {
         <mesh position={[0, 0.62, 0]} material={mat(C.counter)}><coneGeometry args={[0.07, 0.16, 10]} /></mesh>
       </group>
       <mesh position={[-0.4, y + 0.1, z]} material={glass()}><cylinderGeometry args={[0.09, 0.075, 0.2, 14]} /></mesh>
-      {/* espresso machine: rounded, chunky */}
+      {/* espresso machine: a real two-group machine, facing the barista (-z) */}
       <group position={[-1.6, y, z - 0.05]}>
-        <RBox size={[1.3, 1.1, 0.85]} pos={[0, 0.55, 0]} color={C.purple} r={0.2} />
-        <RBox size={[1.1, 0.12, 0.7]} pos={[0, 1.16, 0]} color={C.steel} r={0.05} />
-        {[-0.3, 0.3].map((x) => (
-          <group key={x} position={[x, 0.45, 0.45]}>
-            <mesh rotation={[Math.PI / 2, 0, 0]} material={mat(C.plum)}><cylinderGeometry args={[0.08, 0.08, 0.2, 12]} /></mesh>
-            <mesh position={[0, 0, 0.12]} rotation={[0, 0, Math.PI / 2]} material={mat(C.plum)}><capsuleGeometry args={[0.03, 0.22, 4, 8]} /></mesh>
+        {/* brushed-steel body with a pastel enamel side panel, sitting on short feet */}
+        <RBox size={[1.34, 0.95, 0.8]} pos={[0, 0.62, 0]} color={C.steel} r={0.07} />
+        <RBox size={[1.36, 0.6, 0.6]} pos={[0, 0.66, 0.03]} color={C.counter} r={0.05} />
+        {[-0.55, 0.55].map((x) => <mesh key={x} position={[x, 0.07, 0]} material={mat(C.plum)}><cylinderGeometry args={[0.05, 0.06, 0.14, 10]} /></mesh>)}
+        {/* cup-warmer rail on top with three warming cups */}
+        <RBox size={[1.24, 0.05, 0.68]} pos={[0, 1.12, 0]} color={C.steel} r={0.02} />
+        {[-0.62, 0.62].map((x) => <RBox key={x} size={[0.04, 0.14, 0.68]} pos={[x, 1.2, 0]} color={C.steel} r={0.015} />)}
+        {[-0.32, 0, 0.32].map((x) => (
+          <group key={x} position={[x, 1.24, 0]}>
+            <mesh material={mat(C.cream)}><cylinderGeometry args={[0.1, 0.075, 0.13, 18]} /></mesh>
+            <mesh position={[0.11, 0, 0]} rotation={[0, 0, Math.PI / 2]} material={mat(C.cream)}><torusGeometry args={[0.04, 0.012, 6, 12]} /></mesh>
           </group>
         ))}
-        {[-0.35, 0, 0.35].map((x, i) => (
-          <mesh key={x} position={[x, 0.85, 0.43]} material={i === 1 ? glow(C.mint) : mat(C.plum)}><sphereGeometry args={[0.06, 10, 8]} /></mesh>
+        {/* two group heads + portafilters with wooden handles, pointing at the barista */}
+        {[-0.32, 0.32].map((x) => (
+          <group key={x} position={[x, 0.42, -0.44]}>
+            <mesh material={mat(C.steel)}><cylinderGeometry args={[0.11, 0.1, 0.12, 20]} /></mesh>
+            <mesh position={[0, -0.09, 0]} material={mat(C.steel)}><cylinderGeometry args={[0.1, 0.08, 0.08, 20]} /></mesh>
+            <mesh position={[0, -0.09, -0.2]} rotation={[Math.PI / 2, 0, 0]} material={mat(C.woodDark)}><capsuleGeometry args={[0.035, 0.28, 4, 10]} /></mesh>
+            <mesh position={[0, -0.18, -0.02]} material={mat(C.steel)}><cylinderGeometry args={[0.015, 0.012, 0.06, 8]} /></mesh>
+          </group>
         ))}
-        {/* cups warming on top */}
-        {[-0.3, 0, 0.3].map((x) => (
-          <mesh key={x} position={[x, 1.3, 0]} material={mat(C.cream)}><cylinderGeometry args={[0.09, 0.07, 0.14, 12]} /></mesh>
-        ))}
+        {/* steam wand (angled) + hot-water spout */}
+        <group position={[0.56, 0.62, -0.42]} rotation={[0.35, 0, -0.2]}>
+          <mesh position={[0, -0.22, 0]} material={mat(C.steel)}><cylinderGeometry args={[0.022, 0.018, 0.48, 10]} /></mesh>
+          <mesh position={[0, 0.05, 0]} material={mat(C.steel)}><sphereGeometry args={[0.04, 10, 8]} /></mesh>
+        </group>
+        <mesh position={[-0.58, 0.5, -0.43]} rotation={[0.25, 0, 0]} material={mat(C.steel)}><cylinderGeometry args={[0.02, 0.02, 0.24, 10]} /></mesh>
+        {/* pressure gauge + two buttons on the front */}
+        <group position={[0, 0.84, -0.41]}>
+          <mesh rotation={[Math.PI / 2, 0, 0]} material={mat(C.steel)}><cylinderGeometry args={[0.1, 0.1, 0.04, 24]} /></mesh>
+          <mesh position={[0, 0, -0.022]} rotation={[Math.PI / 2, 0, 0]} material={mat(C.cream)}><cylinderGeometry args={[0.085, 0.085, 0.01, 24]} /></mesh>
+          <mesh position={[0.02, 0.02, -0.03]} rotation={[0, 0, -0.8]} material={mat(C.plum)}><boxGeometry args={[0.012, 0.07, 0.005]} /></mesh>
+        </group>
+        {[-0.32, 0.32].map((x) => <mesh key={x} position={[x, 0.84, -0.41]} rotation={[Math.PI / 2, 0, 0]} material={glow(C.butter)}><cylinderGeometry args={[0.03, 0.03, 0.02, 12]} /></mesh>)}
+        {/* drip tray with a grate */}
+        <RBox size={[1.2, 0.06, 0.3]} pos={[0, 0.14, -0.5]} color={C.steel} r={0.02} />
+        {Array.from({ length: 9 }, (_, i) => <mesh key={i} position={[-0.52 + i * 0.13, 0.175, -0.5]} material={mat(C.plum)}><boxGeometry args={[0.03, 0.01, 0.26]} /></mesh>)}
       </group>
     </group>
   )
@@ -280,10 +308,10 @@ export function Interior({ cutaway, pov }: { cutaway: boolean; pov: boolean }) {
         </Reveal>
       ))}
       {PLUS_SPOTS.map(([x, z]) => <Reveal key={`${x}${z}`} id="plus" at={[x, 0, z]}><PlusSpot position={[x, 0, z]} /></Reveal>)}
-      <pointLight position={[-4, 4.2, -4]} intensity={11} distance={15} color="#ffd7e8" />
-      <pointLight position={[4, 4.2, -4]} intensity={11} distance={15} color="#ffd7e8" />
-      <pointLight position={[-3, 4.2, 5]} intensity={10} distance={15} color="#ffe6f2" />
-      <pointLight position={[4, 4.2, 5]} intensity={10} distance={15} color="#ffe6f2" />
+      <pointLight position={[-4, 4.2, -4]} intensity={4.5} distance={13} color="#ffd9c2" />
+      <pointLight position={[4, 4.2, -4]} intensity={4.5} distance={13} color="#ffd9c2" />
+      <pointLight position={[-3, 4.2, 5]} intensity={4} distance={13} color="#ffe2c8" />
+      <pointLight position={[4, 4.2, 5]} intensity={4} distance={13} color="#ffe2c8" />
     </group>
   )
 }

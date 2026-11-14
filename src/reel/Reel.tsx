@@ -110,7 +110,7 @@ function Embedded() {
   return (
     <div style={{ position: 'fixed', inset: 0 }}>
       <Canvas onCreated={(s) => { r3f.state = s }} flat shadows dpr={1} camera={{ fov: 45, position: [20, 12, 33] }} gl={{ antialias: true, preserveDrawingBuffer: true }}>
-        <color attach="background" args={['#e2c9fb']} />
+        <color attach="background" args={['#e4d9ee']} />
         <World />
         <CascadeDriver />
       </Canvas>
@@ -186,7 +186,7 @@ function SplitReel() {
       <div className="seam"><span>code</span><span className="arrow">▼</span><span>café</span></div>
       <div className="stage">
         <Canvas flat shadows dpr={1} resize={{ offsetSize: true }} camera={{ fov: 45, position: [20, 12, 33] }} gl={{ antialias: true, preserveDrawingBuffer: true }}>
-          <color attach="background" args={['#e2c9fb']} />
+          <color attach="background" args={['#e4d9ee']} />
           <World />
         </Canvas>
       </div>

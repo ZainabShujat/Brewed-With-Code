@@ -6,6 +6,7 @@ import { Exterior } from './world/Exterior'
 import { Interior } from './world/Interior'
 import { Barista } from './world/Barista'
 import { Reveal } from './world/Reveal'
+import { Lighting } from './world/Lighting'
 import { Kozie } from './world/Kozie'
 import { Customers, cafe as cafeLine } from './world/Customers'
 import { ShopHud } from './ui/ShopHud'
@@ -29,12 +30,7 @@ export function World() {
   const kozie = useGame((s) => s.kozie)
   return (
     <>
-      <hemisphereLight args={['#ffe6f6', '#b48ac0', 0.75]} />
-      <directionalLight
-        position={[12, 18, 10]} intensity={1.35} color="#ffe9e0" castShadow
-        shadow-mapSize={[1024, 1024]} shadow-camera-left={-20} shadow-camera-right={20}
-        shadow-camera-top={20} shadow-camera-bottom={-20}
-      />
+      <Lighting />
       <Exterior showPot={!inside || outro} fadeIn={outro} />
       {inside && <Interior cutaway={mode === 'dollhouse' || mode === 'pov' || outro} pov={mode === 'pov'} />}
       {inside && mode !== 'pov' && mode !== 'vlog' && <Reveal id="barista" at={[0.4, 0, 2.4]}><Barista /></Reveal>}
@@ -71,7 +67,7 @@ export default function App() {
   return (
     <>
       <Canvas onCreated={(s) => { (window as any).__r3f = s }} flat shadows dpr={[1, 1.5]} camera={{ fov: 45, position: [15, 9, 25] }} gl={{ antialias: true }}>
-        <color attach="background" args={['#e2c9fb']} />
+        <color attach="background" args={['#e4d9ee']} />
         <World />
       </Canvas>
       <div className="hud">

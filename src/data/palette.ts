@@ -1,30 +1,30 @@
 // Single source of colour. Pinks, purples, mauves, candy accents (see DESIGN_BIBLE.md).
 export const C = {
   // structure
-  wall: '#fbd3e4',      // blush cream walls
-  wallTrim: '#b77ee0',  // lilac wainscot
-  wood: '#d77a9a',      // mauve wood
-  woodDark: '#b65a7e',  // darker mauve plank
+  wall: '#f3dfe3',      // blush cream walls
+  wallTrim: '#a58bc9',  // lilac wainscot
+  wood: '#b07a52',      // mauve wood
+  woodDark: '#7d4f35',  // darker mauve plank
   plum: '#5e2a75',
   // floor planks: warm honey wood (contrast with all the pink)
-  plank1: '#c98d5a', plank2: '#b0774a', plank3: '#d9a46e', plank4: '#a86c43',      // darkest accent (trim, frames, coffee)
-  counter: '#ff7fb6',   // candy pink counter
+  plank1: '#b98d68', plank2: '#a27756', plank3: '#c89f78', plank4: '#94694d', // natural oak tones      // darkest accent (trim, frames, coffee)
+  counter: '#e48fae',   // candy pink counter
   counterTop: '#ffe4f0',
-  purple: '#8a4fe0',    // machine, lid
-  lilac: '#c99cff',
-  mint: '#6fe0c4',      // fresh accent
-  butter: '#ffcf5c',    // warm lights
-  peach: '#ff9a78',
+  purple: '#8a6cc0',    // machine, lid
+  lilac: '#bba6d8',
+  mint: '#8cc7b2',      // fresh accent
+  butter: '#f2c66a',    // warm lights
+  peach: '#e9a184',
   cream: '#fff6ee',
   white: '#ffffff',
   steel: '#d9d3e3',
   leaf: '#5fcf86',
   leafDark: '#3fae6e',
   // outside
-  potBody: '#ff9ec8',
-  grass: '#9fdc78',
+  potBody: '#e9a8c0',
+  grass: '#88ab66',
   path: '#f7d2bd',
-  road: '#7a6a92',
-  sky: '#e2c9fb',
+  road: '#6e6874',
+  sky: '#e4d9ee',
   glass: '#d9bfff',
 } as const
