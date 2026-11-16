@@ -10,6 +10,7 @@ import { cafe as line } from '../world/Customers'
 import { cascade, CascadeDriver } from './Cascade'
 import { useCake } from '../systems/cake'
 import { cakeSvg } from '../ui/cakeSvg'
+import { machine, ST } from '../world/CakeMachine'
 
 // 1080x1920 split screen: code typing on top, the café building itself below.
 // Driven by performance.now(), so the notes-brain frame-stepped exporter can capture it exactly.
@@ -99,6 +100,11 @@ function Embedded() {
         // the order picture (SVG) for a given cake, so reel pages can show the expected output
         picture: (cake: any, w = 260) => cakeSvg(cake, w),
         setOrder: (cake: any, label: string) => flushSync(() => useCake.setState({ order: { want: cake, label } })),
+        // the cake machine (BUILDS #008): roll to a station, dip a dispenser, show/hide the order screen
+        go: (station: string) => { const i = ['start', 'layer', 'frost', 'pipe', 'top', 'star'].indexOf(station); machine.idx = i; machine.target = (ST as any)[station] },
+        dropAt: (station: string, fn: () => void) => machine.run(station as any, () => flushSync(fn)),
+        showOrder: (ms: number) => flushSync(() => useCake.setState({ orderUntil: performance.now() + ms })),
+        resetMachine: () => { machine.queue.length = 0; machine.dipT = -1; machine.active = ''; machine.idx = 0; machine.target = machine.x = ST.start },
       },
       showAll: () => flushSync(() => useGame.setState({ revealed: null })),
       // vlog controls (BUILDS #002 tour)

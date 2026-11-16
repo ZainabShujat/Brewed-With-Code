@@ -6,6 +6,7 @@ import { step, stick, keys } from './movement'
 export const TOUCH = typeof window !== 'undefined' && matchMedia('(pointer: coarse)').matches
 import { anim, stepTweens, frozen } from './anim'
 import { WORLD } from '../world/layout'
+import { machine } from '../world/CakeMachine'
 
 // Fixed shots per mode. Walk mode follows the barista instead.
 const SHOTS: Record<Exclude<CamMode, 'walk' | 'vlog'>, { pos: THREE.Vector3; look: THREE.Vector3 }> = {
@@ -151,7 +152,7 @@ export function CameraRig() {
       return
     }
     const asp = (camera as THREE.PerspectiveCamera).aspect
-    setFov(camera as THREE.PerspectiveCamera, (mode === 'pov' ? 55 : mode === 'dollhouse' ? 19 : 45) * (asp < 1 ? Math.min(1.7, 1 / asp * 0.95) : 1)) // portrait phone = wider lens // barista view: a slightly wider, human field of view
+    setFov(camera as THREE.PerspectiveCamera, mode === 'cake' && asp < 1 ? 58 : (mode === 'pov' ? 55 : mode === 'dollhouse' ? 19 : 45) * (asp < 1 ? Math.min(1.7, 1 / asp * 0.95) : 1)) // portrait phone = wider lens // barista view: a slightly wider, human field of view
     if (mode === 'walk') {
       // first person at eye height (~1.65 m): the mouse turns you, W walks where you look
       step(player, dt, view.mode === 'walk' ? view.yaw : 0)
@@ -176,7 +177,9 @@ export function CameraRig() {
       wantPos.set(povX, 2.0, -9.4); wantLook.set(povX, 0.95, -6.9)
     }
     // portrait phone: step back from the stations so the whole machine / bar fits the narrow screen
-    if ((camera as THREE.PerspectiveCamera).aspect < 1 && mode === 'cake') wantPos.sub(wantLook).multiplyScalar(1.45).add(wantLook)
+    // portrait phone at the cake machine: don't squeeze the whole machine in; follow the cake and
+    // frame the dispenser it's under, gliding left/right as ◀ ▶ move it along the belt
+    if ((camera as THREE.PerspectiveCamera).aspect < 1 && mode === 'cake') { const x = machine.target; wantLook.set(x, 1.85, -9.05); wantPos.set(x + 0.15, 2.75, -5.8) }
     wantPos.multiplyScalar(WORLD); wantLook.multiplyScalar(WORLD)
     applyLook(mode, dt)
     // ?snap = jump straight to the shot (used for footage capture and tests)
