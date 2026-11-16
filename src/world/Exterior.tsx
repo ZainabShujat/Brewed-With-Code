@@ -1,4 +1,3 @@
-import { Model } from './Models'
 import * as THREE from 'three'
 import { useMemo } from 'react'
 import { C } from '../data/palette'
@@ -194,9 +193,6 @@ function LockedWings() {
 }
 
 function Tree({ x, z, s = 1, c = C.leaf }: { x: number; z: number; s?: number; c?: string }) {
-  void c
-  return <group position={[x, 0, z]} rotation={[0, x * 1.7, 0]}><Model name="island_tree_01" scale={s * 0.8} /></group>
-  // eslint-disable-next-line no-unreachable
   return (
     <group position={[x, 0, z]} scale={s}>
       <mesh position={[0, 0.8, 0]} material={mat(C.woodDark)} castShadow><cylinderGeometry args={[0.22, 0.32, 1.6, 12]} /></mesh>

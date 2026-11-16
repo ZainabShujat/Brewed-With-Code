@@ -21,7 +21,7 @@ export function Lighting() {
     ;(scene as any).environmentIntensity = HQ ? 0.42 : 0.55
     return () => { env.dispose(); pmrem.dispose(); scene.environment = null }
   }, [gl, scene])
-  const map = HQ ? 4096 : 2048 // reels render offline, so they can afford sharper shadows
+  const map = HQ ? 4096 : 1024 // reels render offline, so they can afford sharper shadows
   return (
     <>
       <hemisphereLight args={['#fff1f7', '#7a5a6e', 0.35]} />

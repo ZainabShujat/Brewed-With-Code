@@ -3,5 +3,5 @@ dist
 footage
 
 # CC0 models from Poly Haven: re-download with
-#   python scripts/fetch_assets.py bar_chair_round_01,coffee_table_round_01,potted_plant_01,potted_plant_02,island_tree_01,tea_set_01,metal_jug,croissant,strawberry_chocolate_cake,carrot_cake,modern_ceiling_lamp_01,CashRegister_01,wall_clock
+#   python scripts/fetch_assets.py bar_chair_round_01,coffee_table_round_01,potted_plant_01,potted_plant_02,tea_set_01,metal_jug,croissant,strawberry_chocolate_cake,carrot_cake,modern_ceiling_lamp_01,CashRegister_01,wall_clock
 public/assets/
