@@ -16,6 +16,7 @@ export function Lighting() {
     gl.toneMappingExposure = HQ ? 0.74 : 1.05 // reels: a touch darker so whites (tiles, plates, frosting) never clip
     gl.shadowMap.type = HQ ? THREE.PCFSoftShadowMap : THREE.PCFShadowMap
     gl.shadowMap.autoUpdate = HQ // game: shadows redraw ~6×/s (below), the biggest GPU saving
+    if (!HQ) return // game: no environment map (halves the cost of every pixel on laptop GPUs)
     const pmrem = new THREE.PMREMGenerator(gl)
     const env = pmrem.fromScene(new RoomEnvironment(), 0.04).texture
     scene.environment = env
@@ -27,7 +28,8 @@ export function Lighting() {
   const map = HQ ? 4096 : 1024 // reels render offline, so they can afford sharper shadows
   return (
     <>
-      <hemisphereLight args={['#fff1f7', '#7a5a6e', 0.35]} />
+      <hemisphereLight args={['#fff1f7', '#7a5a6e', HQ ? 0.35 : 1.25]} />
+      {!HQ && <ambientLight intensity={0.35} color="#ffe9f0" />}
       <directionalLight
         position={[14, 20, 9]} intensity={2.3} color="#ffe4cf" castShadow
         shadow-mapSize={[map, map]} shadow-bias={-0.0004} shadow-normalBias={0.03} shadow-radius={HQ ? 4 : 1}

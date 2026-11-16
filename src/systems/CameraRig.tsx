@@ -82,6 +82,7 @@ export function useMouseLook() {
   }, [gl])
 }
 let povX = 0.1
+export const brewCam = { x: null as number | null } // set by the coffee flow: which station to stand at
 function applyLook(mode: string, dt: number) {
   // Q / E (or ← → in barista view) turn your head like a person would; it eases back when you let go
   if (mode !== 'dollhouse' && mode !== 'exterior') {
@@ -155,7 +156,9 @@ export function CameraRig() {
       // you ARE the barista: eye height ~1.7 m, standing right at the back edge of the counter;
       // A / D (or the joystick) step left and right along the bar to reach each station
       const side = (keys.has('d') || keys.has('arrowright') ? 1 : 0) - (keys.has('a') || keys.has('arrowleft') ? 1 : 0) + stick.x
-      povX = Math.max(-1.6, Math.min(2.4, povX + side * dt * 2.2))
+      povX = Math.max(-2.4, Math.min(2.4, povX + side * dt * 2.2))
+      if (brewCam.x !== null && !side) povX += (brewCam.x - povX) * Math.min(1, dt * 3) // glide to the current station
+      // lean in a little: each station fills the screen instead of the whole bar at once
       wantPos.set(povX, 2.0, -9.4); wantLook.set(povX, 0.95, -6.9)
     }
     wantPos.multiplyScalar(WORLD); wantLook.multiplyScalar(WORLD)

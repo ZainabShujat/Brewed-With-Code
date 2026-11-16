@@ -11,6 +11,7 @@ import { Lighting } from './world/Lighting'
 import { Kozie } from './world/Kozie'
 import { Customers, cafe as cafeLine } from './world/Customers'
 import { ShopHud } from './ui/ShopHud'
+import { BrewHud } from './ui/BrewHud'
 import { CakeHud } from './ui/CakeHud'
 import { Joystick } from './ui/Joystick'
 import { Credits } from './ui/Credits'
@@ -66,6 +67,13 @@ function FpsProbe() {
   return null
 }
 
+// our own game loop: at most 40 frames a second (30 on Low), so the GPU isn't flat out and the laptop stays cool
+function startLoop(s: { advance: (t: number) => void }) {
+  const cap = 1000 / (quality.high ? 40 : 30); let last = 0
+  const tick = (t: number) => { if (t - last >= cap - 1) { last = t; s.advance(t) } requestAnimationFrame(tick) }
+  requestAnimationFrame(tick)
+}
+
 export default function App() {
   const mode = useGame((s) => s.mode)
   const setMode = useGame((s) => s.setMode)
@@ -81,7 +89,7 @@ export default function App() {
 
   return (
     <>
-      <Canvas frameloop={SNAP ? 'always' : 'demand'} onCreated={(s) => { (window as any).__r3f = s; if (!SNAP) { const cap = quality.high ? 40 : 30; setInterval(() => s.invalidate(), 1000 / cap) } }} flat shadows={quality.high} dpr={quality.high ? 1 : 0.75} camera={{ fov: 45, position: [15, 9, 25] }} gl={{ antialias: quality.high, powerPreference: 'high-performance' }}>
+      <Canvas frameloop={SNAP ? 'always' : 'never'} onCreated={(s) => { (window as any).__r3f = s; if (!SNAP) startLoop(s) }} flat shadows={quality.high} dpr={quality.high ? 1 : 0.75} camera={{ fov: 45, position: [15, 9, 25] }} gl={{ antialias: quality.high, powerPreference: 'high-performance' }}>
         <color attach="background" args={['#dfccf6']} />
         <World />
       </Canvas>
@@ -89,10 +97,11 @@ export default function App() {
       {SNAP && <div className="hud"><div className="modes">
         {MODES.map((m) => <button key={m.id} className={m.id === mode ? 'on' : ''} onClick={() => setMode(m.id)}><span>{m.key}</span>{m.label}</button>)}
       </div></div>}
-      {playing && mode !== 'cake' && <ShopHud />}
+      {playing && mode === 'pov' && <BrewHud />}
+      {playing && mode !== 'cake' && mode !== 'pov' && <ShopHud />}
       {playing && <CakeHud />}
       {SNAP && <Credits />}
-      {playing && (TOUCH ? <Joystick /> : <LookHint mode={mode} />)}
+      {playing && (TOUCH ? <Joystick /> : mode !== 'pov' && <LookHint mode={mode} />)}
       {playing && mode === 'walk' && <div className="crosshair" />}
       {!SNAP && <Menu screen={screen} setScreen={setScreen} />}
       <div className="fps">{shownFps} fps</div>

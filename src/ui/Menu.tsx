@@ -55,7 +55,7 @@ export function Menu({ screen, setScreen }: { screen: Screen; setScreen: (s: Scr
       {screen === 'title' && (
         <div className="title-wrap">
           <div className="logo">Brewed<br />With Code</div>
-          <div className="tag">a cosy café you run yourself</div>
+          <div className="tagline">a cosy café you run yourself</div>
           <div className="press">click or press any key</div>
         </div>
       )}

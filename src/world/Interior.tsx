@@ -1,3 +1,4 @@
+import { HQ } from './Lighting'
 import * as THREE from 'three'
 import { Html } from '@react-three/drei'
 import { C } from '../data/palette'
@@ -278,10 +279,10 @@ export function Interior({ cutaway, pov }: { cutaway: boolean; pov: boolean }) {
         </Reveal>
       ))}
       {PLUS_SPOTS.map(([x, z]) => <Reveal key={`${x}${z}`} id="plus" at={[x, 0, z]}><PlusSpot position={[x, 0, z]} /></Reveal>)}
-      <pointLight position={[-4, 4.2, -4]} intensity={4.5} distance={13} color="#ffd9c2" />
-      <pointLight position={[4, 4.2, -4]} intensity={4.5} distance={13} color="#ffd9c2" />
-      <pointLight position={[-3, 4.2, 5]} intensity={4} distance={13} color="#ffe2c8" />
-      <pointLight position={[4, 4.2, 5]} intensity={4} distance={13} color="#ffe2c8" />
+      {HQ && <pointLight position={[-4, 4.2, -4]} intensity={4.5} distance={13} color="#ffd9c2" />}
+      {HQ && <pointLight position={[4, 4.2, -4]} intensity={4.5} distance={13} color="#ffd9c2" />}
+      {HQ && <pointLight position={[-3, 4.2, 5]} intensity={4} distance={13} color="#ffe2c8" />}
+      {HQ && <pointLight position={[4, 4.2, 5]} intensity={4} distance={13} color="#ffe2c8" />}
     </group>
   )
 }
