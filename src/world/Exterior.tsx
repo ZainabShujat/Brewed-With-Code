@@ -234,12 +234,12 @@ export function Exterior({ showPot, fadeIn = false }: { showPot: boolean; fadeIn
       <Reveal id="road" at={[0, 0, 17.5]}><Road /></Reveal>
       {showPot && <Reveal id="wings"><LockedWings /></Reveal>}
       <Reveal id="trees">
-        <Tree x={-15} z={-4} s={1.2} />
-        <Tree x={-13} z={4} c={C.leafDark} />
-        <Tree x={14.5} z={-5} s={1.3} c={C.leafDark} />
-        <Tree x={16} z={3} />
-        <Tree x={-6} z={-10} s={1.4} c="#f2a9c9" />
-        <Tree x={7} z={-11} s={1.5} c="#d7b4ef" />
+        <Tree x={-19} z={-5} s={2.6} />
+        <Tree x={-17} z={5} s={2.2} c={C.leafDark} />
+        <Tree x={19} z={-6} s={2.8} c={C.leafDark} />
+        <Tree x={18} z={4} s={2.3} />
+        <Tree x={-8} z={-14} s={2.9} c="#f2a9c9" />
+        <Tree x={9} z={-14} s={3.1} c="#d7b4ef" />
       </Reveal>
       </group>
     </group>

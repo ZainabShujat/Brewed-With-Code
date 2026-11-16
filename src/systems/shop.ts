@@ -3,7 +3,7 @@ import { EMPTY, randomOrder, score, type Drink, type MilkType, type Order, type 
 import { cafe } from '../world/Customers'
 
 // The café's gameplay state: who ordered what, what's in the cup right now, coins, and the last result.
-export type Pour = { kind: 'shot' | 'water' | 'choc' | 'milk' | 'sprinkle' | 'whip'; t0: number; color: string }
+export type Pour = { kind: 'shot' | 'water' | 'choc' | 'milk' | 'sprinkle' | 'whip'; t0: number; color: string; tag?: string }
 export type Result = { pct: number; misses: string[]; coins: number; mood: string; t: number }
 
 type Shop = {
@@ -11,7 +11,9 @@ type Shop = {
   orders: Record<number, Order>  // customer id → their order
   cup: boolean                   // a cup is on the counter
   drink: Drink
-  milkType: MilkType             // milk picked from the fridge drawer, used by the next milk pour
+  milkType: MilkType             // milk poured into the pitcher (drag a bottle onto it)
+  milkStyle: Exclude<Drink['milk'], 'none'> // how the pitcher steams it: click the pitcher to change
+  cycleMilkStyle: () => void
   pours: Pour[]                  // running pour/sprinkle animations
   coins: number
   served: number
@@ -32,10 +34,10 @@ type Shop = {
 }
 
 const now = () => performance.now() / 1000
-const pour = (kind: Pour['kind'], color: string): Pour => ({ kind, t0: now(), color })
+const pour = (kind: Pour['kind'], color: string, tag?: string): Pour => ({ kind, t0: now(), color, tag })
 
 export const useShop = create<Shop>((set, get) => ({
-  open: false, orders: {}, cup: false, drink: { ...EMPTY }, milkType: 'whole', pours: [],
+  open: false, orders: {}, cup: false, drink: { ...EMPTY }, milkType: 'whole', milkStyle: 'steamed', pours: [],
   coins: 0, served: 0, last: null, menu: null,
   setMenu: (menu) => set({ menu }),
   openShop: (on) => { cafe.auto = on; cafe.serveEvery = 1e9; set({ open: on }) }, // customers arrive on their own; YOU serve them
@@ -45,7 +47,8 @@ export const useShop = create<Shop>((set, get) => ({
   choc: () => { const s = get(); if (!s.cup || s.drink.chocolate) return; set({ drink: { ...s.drink, chocolate: true }, pours: [...s.pours, pour('choc', '#3b1d12')] }) },
   milk: (kind) => { const s = get(); if (!s.cup || s.drink.milk !== 'none') return; set({ drink: { ...s.drink, milk: kind, milkType: s.milkType }, pours: [...s.pours, pour('milk', s.milkType === 'oat' ? '#f1e2c6' : s.milkType === 'almond' ? '#f5ead8' : '#fffaf2')] }) },
   pickMilk: (t) => set({ milkType: t, menu: null }),
-  top: (t) => { const s = get(); if (!s.cup || s.drink.topping !== 'none') return; set({ drink: { ...s.drink, topping: t }, menu: null, pours: [...s.pours, pour(t === 'whipped' ? 'whip' : 'sprinkle', t === 'cocoa' ? '#5b2e1c' : t === 'cinnamon' ? '#b0602a' : '#ff7fb6')] }) },
+  cycleMilkStyle: () => set((s) => ({ milkStyle: s.milkStyle === 'steamed' ? 'foamy' : s.milkStyle === 'foamy' ? 'micro' : 'steamed' })),
+  top: (t) => { const s = get(); if (!s.cup || s.drink.topping !== 'none') return; set({ drink: { ...s.drink, topping: t }, menu: null, pours: [...s.pours, pour(t === 'whipped' ? 'whip' : 'sprinkle', t === 'cocoa' ? '#5b2e1c' : t === 'cinnamon' ? '#b0602a' : '#ff7fb6', t)] }) },
   trash: () => set({ cup: false, drink: { ...EMPTY } }),
   serve: () => {
     const s = get(), front = cafe.line.peek()
@@ -62,6 +65,6 @@ export const useShop = create<Shop>((set, get) => ({
   tick: () => {
     const s = get(), front = cafe.line.peek()
     if (front && front.phase === 'line' && !s.orders[front.id]) set({ orders: { ...s.orders, [front.id]: randomOrder() } })
-    if (s.pours.length && now() - s.pours[0].t0 > 2) set({ pours: s.pours.filter((p) => now() - p.t0 < 2) })
+    if (s.pours.length && now() - s.pours[0].t0 > 3) set({ pours: s.pours.filter((p) => now() - p.t0 < 3) })
   },
 }))

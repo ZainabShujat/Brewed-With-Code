@@ -3,6 +3,7 @@ import * as THREE from 'three'
 import { useGame, type CamMode } from './store'
 import { step } from './movement'
 import { anim, stepTweens, frozen } from './anim'
+import { WORLD } from '../world/layout'
 
 // Fixed shots per mode. Walk mode follows the barista instead.
 const SHOTS: Record<Exclude<CamMode, 'walk' | 'vlog'>, { pos: THREE.Vector3; look: THREE.Vector3 }> = {
@@ -10,9 +11,9 @@ const SHOTS: Record<Exclude<CamMode, 'walk' | 'vlog'>, { pos: THREE.Vector3; loo
   // outro: pull back from the dollhouse to the full exterior while the pot walls fade in
   outro: { pos: new THREE.Vector3(42, 24.5, 69), look: new THREE.Vector3(0, 9.4, 5.8) },
   // the cake bench in the kitchen: close, slightly above, like leaning over the turntable
-  cake: { pos: new THREE.Vector3(-7.0, 3.2, -6.0), look: new THREE.Vector3(-7.0, 1.35, -9.3) }, // the bakery corner: cake, backsplash, shelf
+  cake: { pos: new THREE.Vector3(-7.0, 3.7, -4.3), look: new THREE.Vector3(-7.0, 1.25, -9.2) }, // stepped back: the whole bakery corner, calm and roomy // the bakery corner: cake, backsplash, shelf
   dollhouse: { pos: new THREE.Vector3(17.5, 19, 23.5), look: new THREE.Vector3(-0.3, 0.2, -0.6) },
-  pov: { pos: new THREE.Vector3(0.1, 3.05, -11.3), look: new THREE.Vector3(0.1, 1.0, -7.0) } // looking down at the workspace: every tool readable,
+  pov: { pos: new THREE.Vector3(0.1, 3.9, -14.3), look: new THREE.Vector3(0.1, 0.95, -6.7) } // looking down at the workspace: every tool readable,
 }
 
 const SNAP = typeof location !== 'undefined' && location.search.includes('snap')
@@ -38,6 +39,7 @@ export function CameraRig() {
         wantLook.set(k.pos.x, k.pos.y + 1.3 * k.s, k.pos.z)
       } else { wantPos.copy(c.pos); wantLook.copy(c.look) }
       wantPos.sub(wantLook).multiplyScalar(c.dist).add(wantLook)
+      wantPos.multiplyScalar(WORLD); wantLook.multiplyScalar(WORLD)
       const T = performance.now() / 1000
       wantPos.x += Math.sin(T * 1.3) * 0.06 * c.sway; wantPos.y += Math.sin(T * 1.9 + 1) * 0.05 * c.sway
       const kk = SNAP || c.speed >= 100 ? 1 : 1 - Math.exp(-dt * c.speed) // speed >= 100 = cut, not glide
@@ -45,7 +47,7 @@ export function CameraRig() {
       setFov(camera as THREE.PerspectiveCamera, c.fov)   // vlog = wider lens (tall 9:16 frame)
       return
     }
-    setFov(camera as THREE.PerspectiveCamera, mode === 'pov' ? 54 : 45) // barista view: a slightly wider, human field of view
+    setFov(camera as THREE.PerspectiveCamera, mode === 'pov' ? 46 : 45) // barista view: a slightly wider, human field of view
     if (mode === 'walk') {
       step(player, dt)
       // stay inside the room so the front wall never blocks the view
@@ -58,6 +60,8 @@ export function CameraRig() {
     } else if (mode !== 'vlog') {
       wantPos.copy(SHOTS[mode].pos); wantLook.copy(SHOTS[mode].look)
     }
+    if (mode === 'pov' || mode === 'cake') wantPos.sub(wantLook).multiplyScalar(0.9).add(wantLook)
+    wantPos.multiplyScalar(WORLD); wantLook.multiplyScalar(WORLD)
     // ?snap = jump straight to the shot (used for footage capture and tests)
     const k = SNAP ? 1 : 1 - Math.exp(-dt * (mode === 'outro' ? 1.4 : 4))
     camera.position.lerp(wantPos, k)

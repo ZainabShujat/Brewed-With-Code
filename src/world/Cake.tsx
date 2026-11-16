@@ -7,6 +7,8 @@ import { mat, glow } from './mats'
 import { RBox } from './Soft'
 import { Shelf } from './Props'
 import { tileTex } from './textures'
+import { Grab, DropTarget } from '../systems/drag'
+import { glass } from './mats'
 
 // The cake bench lives in the kitchen (back-left corner). Everything on the turntable is drawn
 // from useCake state; each new part animates in using the time it was added (t[...]).
@@ -18,17 +20,71 @@ const now = () => performance.now() / 1000
 const clamp01 = (x: number) => Math.min(1, Math.max(0, x))
 const bounce = (x: number) => { x = clamp01(x); return 1 - Math.pow(1 - x, 3) * Math.cos(x * 6) } // drop with a little settle
 
-// one sponge or filling disc that drops onto the stack
-function Drop({ y, h, r, color, t0 }: { y: number; h: number; r: number; color: string; t0: number }) {
-  const ref = useRef<THREE.Mesh>(null)
-  useFrame(() => { const m = ref.current; if (!m) return; const k = bounce((now() - t0) / 0.5); m.position.y = y + h / 2 + (1 - k) * 0.9; m.visible = now() >= t0 })
-  return <mesh ref={ref} material={mat(color, { rough: 0.85 })} castShadow><cylinderGeometry args={[r, r, h, 40]} /></mesh>
+// a sponge falls with gravity, squashes on landing, springs back, and puffs a little flour
+const FALL = 0.42
+function Sponge({ y, h, r, color, t0 }: { y: number; h: number; r: number; color: string; t0: number }) {
+  const ref = useRef<THREE.Mesh>(null), puff = useRef<THREE.Group>(null)
+  useFrame(() => {
+    const m = ref.current; if (!m) return
+    const t = now() - t0
+    m.visible = t >= 0
+    const f = clamp01(t / FALL)
+    m.position.y = y + h / 2 + (1 - f * f) * 1.1          // accelerating fall (y ∝ t²)
+    const s = t - FALL                                       // after impact: squash, then a damped wobble back
+    const sq = s > 0 ? Math.exp(-s * 9) * Math.cos(s * 26) * 0.22 : 0
+    m.scale.set(1 + sq * 0.5, 1 - sq, 1 + sq * 0.5)
+    puff.current?.children.forEach((c, i) => {
+      const k = clamp01(s / 0.6); c.visible = s > 0 && k < 1
+      const a = (i / 8) * Math.PI * 2, d = r * (0.95 + k * 0.35)
+      c.position.set(Math.cos(a) * d, y + 0.03 + k * 0.12, Math.sin(a) * d); c.scale.setScalar(0.4 + k * 1.4)
+      ;((c as THREE.Mesh).material as THREE.MeshStandardMaterial).opacity = (1 - k) * 0.55
+    })
+  })
+  const puffMat = useMemo(() => new THREE.MeshStandardMaterial({ color: '#fff8ee', transparent: true, opacity: 0.5, depthWrite: false }), [])
+  return (
+    <group>
+      <mesh ref={ref} material={mat(color, { rough: 0.85 })} castShadow><cylinderGeometry args={[r, r, h, 40]} /></mesh>
+      <group ref={puff}>{Array.from({ length: 8 }, (_, i) => <mesh key={i} material={puffMat} visible={false}><sphereGeometry args={[0.05, 8, 6]} /></mesh>)}</group>
+    </group>
+  )
+}
+
+// the piping bag: a white cone with a steel tip, moved around by whoever is "piping"
+function Bag({ bagRef, color }: { bagRef: React.RefObject<THREE.Group>; color: string }) {
+  return (
+    <group ref={bagRef} visible={false}>
+      <mesh position={[0, 0.2, 0]} rotation={[Math.PI, 0, 0]} material={mat('#fffaf4', { rough: 0.55 })} castShadow><coneGeometry args={[0.09, 0.32, 16]} /></mesh>
+      <mesh position={[0, 0.36, 0]} material={mat(color, { rough: 0.4 })}><sphereGeometry args={[0.085, 14, 8, 0, Math.PI * 2, 0, Math.PI / 2]} /></mesh>
+      <mesh position={[0, 0.02, 0]} material={mat(C.steel)}><coneGeometry args={[0.025, 0.05, 10]} /></mesh>
+    </group>
+  )
+}
+
+// cream/jam filling is piped in a spiral from the centre out, spreading as the bag moves
+function Filling({ y, h, r, color, t0 }: { y: number; h: number; r: number; color: string; t0: number }) {
+  const disc = useRef<THREE.Mesh>(null), bag = useRef<THREE.Group>(null)
+  const D = 0.75
+  useFrame(() => {
+    const t = now() - t0, k = clamp01(t / D)
+    if (disc.current) { disc.current.visible = t >= 0; const e = Math.sqrt(k); disc.current.scale.set(Math.max(0.001, e), 1, Math.max(0.001, e)) }
+    const g = bag.current
+    if (g) { g.visible = t >= 0 && t < D + 0.15; const a = k * Math.PI * 5, rr = Math.sqrt(k) * (r - 0.05); g.position.set(Math.cos(a) * rr, y + h + 0.02, Math.sin(a) * rr) }
+  })
+  return (
+    <group>
+      <mesh ref={disc} position={[0, y + h / 2, 0]} material={mat(color, { rough: 0.45 })}><cylinderGeometry args={[r, r, h, 40]} /></mesh>
+      <Bag bagRef={bag} color={color} />
+    </group>
+  )
 }
 
 // drip-cake frosting: it spreads across the top, wraps a short collar round the edge, then drips
 // run part-way down the sides at different lengths (the sponge layers stay visible below)
-function Frosting({ height, color, t0 }: { height: number; color: string; t0: number }) {
+function Frosting({ height, color, t0: tPour }: { height: number; color: string; t0: number }) {
+  const POUR = 0.45 // the bowl tips and pours first; the frosting lands and spreads after
+  const t0 = tPour + POUR
   const collar = useRef<THREE.Mesh>(null), cap = useRef<THREE.Mesh>(null), drips = useRef<THREE.Group>(null)
+  const bowl = useRef<THREE.Group>(null), stream = useRef<THREE.Mesh>(null)
   const hash = (n: number) => { const v = Math.sin(n * 91.345) * 47453.21; return v - Math.floor(v) }
   const D = useMemo(() => Array.from({ length: 22 }, (_, i) => ({
     a: (i / 22) * Math.PI * 2 + (hash(i) - 0.5) * 0.18,
@@ -38,6 +94,10 @@ function Frosting({ height, color, t0 }: { height: number; color: string; t0: nu
   const m = mat(color, { rough: 0.3 }) // glossy frosting
   const COLLAR = 0.075
   useFrame(() => {
+    // the bowl: glides in, tips, pours a thick ribbon onto the centre, then tilts back and leaves
+    const tb = now() - tPour, inK = clamp01(tb / 0.3), outK = clamp01((tb - 1.25) / 0.3), wb = inK * (1 - outK)
+    if (bowl.current) { bowl.current.visible = tb >= 0 && outK < 1; bowl.current.position.set(0.35, height + 0.75 + (1 - wb) * 0.4, 0); bowl.current.rotation.z = wb * 1.15 }
+    if (stream.current) { const on = tb > 0.3 && tb < 1.25; stream.current.visible = on; const len = Math.min(0.62, Math.max(0, tb - 0.3) * 3); stream.current.scale.set(1 + Math.sin(tb * 35) * 0.08, Math.max(0.001, len), 1); stream.current.position.set(0.08, height + 0.68 - len / 2, 0) }
     const t = now() - t0, k = clamp01(t / 0.6)
     if (cap.current) { cap.current.visible = t >= 0; const r = 0.25 + 0.75 * (1 - Math.pow(1 - k, 2)); cap.current.scale.set(r, 1, r) }
     if (collar.current) { const kc = clamp01((t - 0.45) / 0.35); collar.current.visible = kc > 0; collar.current.scale.y = Math.max(0.001, kc) }
@@ -48,6 +108,11 @@ function Frosting({ height, color, t0 }: { height: number; color: string; t0: nu
   })
   return (
     <group>
+      <group ref={bowl} visible={false}>
+        <mesh material={mat(C.cream, { rough: 0.3 })}><cylinderGeometry args={[0.22, 0.14, 0.16, 24, 1, true]} /></mesh>
+        <mesh position={[0, 0.04, 0]} material={m}><cylinderGeometry args={[0.2, 0.2, 0.04, 24]} /></mesh>
+      </group>
+      <mesh ref={stream} visible={false} material={m}><cylinderGeometry args={[0.05, 0.04, 1, 12]} /></mesh>
       <mesh ref={cap} position={[0, height + 0.02, 0]} material={m}><cylinderGeometry args={[R + 0.03, R + 0.03, 0.045, 48]} /></mesh>
       <mesh ref={collar} position={[0, height - COLLAR / 2 + 0.01, 0]} material={m}><cylinderGeometry args={[R + 0.018, R + 0.018, COLLAR, 48, 1, true]} /></mesh>
       <group ref={drips} position={[0, height - COLLAR + 0.02, 0]}>
@@ -63,20 +128,37 @@ function Frosting({ height, color, t0 }: { height: number; color: string; t0: nu
   )
 }
 
-// piped rosettes: a swirl of three shrinking rings + a tip, appearing one by one around the rim
+// piped rosettes: the piping bag travels round the rim; each rosette squeezes up and twists into shape
 function Rosettes({ y, color, t0 }: { y: number; color: string; t0: number }) {
-  const g = useRef<THREE.Group>(null)
-  const N = 14
-  useFrame(() => g.current?.children.forEach((c, i) => { const k = clamp01((now() - t0 - i * 0.11) / 0.25); c.visible = k > 0; c.scale.setScalar(Math.max(0.001, k < 1 ? k * 1.15 : 1)) }))
+  const g = useRef<THREE.Group>(null), bag = useRef<THREE.Group>(null)
+  const N = 14, STEP = 0.13, SQ = 0.22
+  useFrame(() => {
+    const t = now() - t0
+    g.current?.children.forEach((c, i) => {
+      const k = clamp01((t - i * STEP) / SQ); c.visible = k > 0
+      const e = 1 - Math.pow(1 - k, 3)
+      c.scale.set(0.6 + 0.4 * e, Math.max(0.001, e * (k < 1 ? 1.15 : 1)), 0.6 + 0.4 * e); c.rotation.y = e * 1.6
+    })
+    const bg = bag.current
+    if (bg) {
+      const i = Math.min(N - 1, Math.max(0, Math.floor(t / STEP))), into = clamp01((t - i * STEP) / STEP)
+      bg.visible = t >= 0 && t < N * STEP + 0.2
+      const a = ((i + into * 0.5) / N) * Math.PI * 2, rr = R - 0.07
+      bg.position.set(Math.cos(a) * rr, y + 0.12 + Math.abs(Math.sin(into * Math.PI)) * 0.06, Math.sin(a) * rr) // a little lift between rosettes
+    }
+  })
   const m = mat(color, { rough: 0.4 })
   return (
-    <group ref={g} position={[0, y, 0]}>
-      {Array.from({ length: N }, (_, i) => { const a = (i / N) * Math.PI * 2; return (
-        <group key={i} position={[Math.cos(a) * (R - 0.07), 0, Math.sin(a) * (R - 0.07)]}>
-          <mesh position={[0, 0.02, 0]} rotation={[Math.PI / 2, 0, 0]} material={m}><torusGeometry args={[0.055, 0.026, 8, 16]} /></mesh>
-          <mesh position={[0, 0.055, 0]} rotation={[Math.PI / 2, 0, 0]} material={m}><torusGeometry args={[0.035, 0.022, 8, 14]} /></mesh>
-          <mesh position={[0, 0.095, 0]} material={m}><coneGeometry args={[0.03, 0.06, 10]} /></mesh>
-        </group>) })}
+    <group>
+      <group ref={g} position={[0, y, 0]}>
+        {Array.from({ length: N }, (_, i) => { const a = (i / N) * Math.PI * 2; return (
+          <group key={i} position={[Math.cos(a) * (R - 0.07), 0, Math.sin(a) * (R - 0.07)]}>
+            <mesh position={[0, 0.02, 0]} rotation={[Math.PI / 2, 0, 0]} material={m}><torusGeometry args={[0.055, 0.026, 8, 16]} /></mesh>
+            <mesh position={[0, 0.055, 0]} rotation={[Math.PI / 2, 0, 0]} material={m}><torusGeometry args={[0.035, 0.022, 8, 14]} /></mesh>
+            <mesh position={[0, 0.095, 0]} material={m}><coneGeometry args={[0.03, 0.06, 10]} /></mesh>
+          </group>) })}
+      </group>
+      <Bag bagRef={bag} color={color} />
     </group>
   )
 }
@@ -90,7 +172,8 @@ function Toppings({ y, kind, t0 }: { y: number; kind: string; t0: number }) {
   const cols = [C.counter, C.mint, C.butter, C.lilac, '#ffffff']
   useFrame(() => g.current?.children.forEach((c, i) => {
     if (kind === 'sprinkles') { const s = S[i]; const k = clamp01((now() - t0 - s.d) / 0.6); c.visible = now() - t0 > s.d; c.position.set(s.x, y + 0.01 + (1 - k * k) * 1.4, s.z) }
-    else { const k = clamp01((now() - t0 - i * 0.12) / 0.3); c.visible = k > 0; c.scale.setScalar(Math.max(0.001, k)) }
+    else { const tt = now() - t0 - i * 0.12, k = clamp01(tt / 0.35); c.visible = tt > 0; c.scale.setScalar(1)
+      const base = (c.userData.y0 ??= c.position.y); c.position.y = base + (1 - bounce(k)) * 0.45 } // drop in with a little bounce
   }))
   if (kind === 'sprinkles') return <group ref={g}>{S.map((s, i) => <mesh key={i} rotation={[Math.PI / 2, 0, s.rot]} material={mat(cols[i % cols.length], { rough: 0.3 })}><capsuleGeometry args={[0.009, 0.035, 2, 4]} /></mesh>)}</group>
   const n = kind === 'candles' ? 5 : 7
@@ -108,16 +191,16 @@ function Toppings({ y, kind, t0 }: { y: number; kind: string; t0: number }) {
 function TheCake() {
   const { cake, t } = useCake()
   // stack bottom-up: layer, filling, layer, filling, layer…
-  const parts: { y: number; h: number; r: number; color: string; t0: number }[] = []
+  const parts: { y: number; h: number; r: number; color: string; t0: number; fill?: boolean }[] = []
   let y = 0
   cake.layers.forEach((s, i) => {
     parts.push({ y, h: LH, r: R, color: SPONGE_COL[s], t0: t[`L${i}`] ?? 0 }); y += LH
-    if (cake.fillings[i]) { parts.push({ y, h: FH, r: R - 0.02, color: FILL_COL[cake.fillings[i]], t0: t[`F${i}`] ?? 0 }); y += FH }
+    if (cake.fillings[i]) { parts.push({ y, h: FH, r: R - 0.02, color: FILL_COL[cake.fillings[i]], t0: t[`F${i}`] ?? 0, fill: true }); y += FH }
   })
   const topY = y + (cake.frosting !== 'none' ? 0.04 : 0)
   return (
     <group>
-      {parts.map((p, i) => <Drop key={i} {...p} />)}
+      {parts.map((p, i) => p.fill ? <Filling key={i} {...p} /> : <Sponge key={i} {...p} />)}
       {cake.frosting !== 'none' && <Frosting height={y} color={FROST_COL[cake.frosting]} t0={t.frost} />}
       {cake.piping !== 'none' && <Rosettes y={topY} color={PIPE_COL[cake.piping]} t0={t.pipe} />}
       {cake.top !== 'none' && <Toppings y={topY} kind={cake.top} t0={t.top} />}
@@ -176,21 +259,70 @@ function BakeryCorner() {
   )
 }
 
+// ── the ingredients, laid out on the bakery counter: drag each onto the turntable ──
+const BENCH = 0.97 // counter-top height
+const FRONT = -8.72, BACK = -9.45
+function CakeIngredients() {
+  const k = useCake.getState
+  const T = { turntable: () => {} }
+  const sponge = (x: number, f: 'vanilla' | 'chocolate' | 'strawberry') => (
+    <Grab key={f} id={`sponge-${f}`} tip={`${f} sponge: drag onto the turntable`} pos={[x, BENCH + 0.08, FRONT]} size={[0.3, 0.2, 0.3]} drops={{ turntable: () => k().addLayer(f) }}>
+      {[0, 1].map((i) => <mesh key={i} position={[0, -0.04 + i * 0.075, 0]} material={mat(SPONGE_COL[f], { rough: 0.85 })} castShadow><cylinderGeometry args={[0.13, 0.13, 0.07, 28]} /></mesh>)}
+    </Grab>
+  )
+  const bowl = (id: string, x: number, z: number, color: string, tip: string, act: () => void, big = false) => (
+    <Grab key={id} id={id} tip={tip} pos={[x, BENCH + 0.07, z]} size={[big ? 0.36 : 0.28, 0.2, big ? 0.36 : 0.28]} drops={{ turntable: act }}>
+      <mesh material={mat(C.cream, { rough: 0.3 })} castShadow><cylinderGeometry args={[big ? 0.15 : 0.12, big ? 0.1 : 0.08, 0.12, 24, 1, true]} /></mesh>
+      <mesh position={[0, -0.055, 0]} material={mat(C.cream)}><cylinderGeometry args={[big ? 0.1 : 0.08, big ? 0.1 : 0.08, 0.01, 20]} /></mesh>
+      <mesh position={[0, 0.035, 0]} material={mat(color, { rough: 0.35 })}><cylinderGeometry args={[big ? 0.14 : 0.11, big ? 0.14 : 0.11, 0.02, 24]} /></mesh>
+    </Grab>
+  )
+  const bag = (x: number, p: 'white' | 'pink' | 'chocolate') => (
+    <Grab key={p} id={`bag-${p}`} tip={`${p} rosettes: drag onto the cake`} pos={[x, BENCH + 0.07, BACK]} size={[0.22, 0.34, 0.22]} drops={{ turntable: () => k().pipe(p) }}>
+      <group rotation={[0, 0, 1.2]}>
+        <mesh position={[0, 0.0, 0]} rotation={[Math.PI, 0, 0]} material={mat('#fffaf4', { rough: 0.55 })}><coneGeometry args={[0.07, 0.26, 14]} /></mesh>
+        <mesh position={[0, 0.13, 0]} material={mat(PIPE_COL[p], { rough: 0.4 })}><sphereGeometry args={[0.066, 12, 8]} /></mesh>
+      </group>
+    </Grab>
+  )
+  const jar = (x: number, t: 'sprinkles' | 'cherries' | 'strawberries' | 'candles', fill: string) => (
+    <Grab key={t} id={`top-${t}`} tip={`${t}: drag onto the cake`} pos={[x, BENCH + 0.12, BACK]} size={[0.22, 0.3, 0.22]} drops={{ turntable: () => k().topWith(t) }}>
+      <mesh material={glass()}><cylinderGeometry args={[0.085, 0.085, 0.2, 18]} /></mesh>
+      <mesh position={[0, -0.03, 0]} material={mat(fill, { rough: 0.35 })}><cylinderGeometry args={[0.078, 0.078, 0.13, 18]} /></mesh>
+      <mesh position={[0, 0.115, 0]} material={mat(C.woodDark)}><cylinderGeometry args={[0.09, 0.09, 0.03, 18]} /></mesh>
+    </Grab>
+  )
+  void T
+  return (
+    <group>
+      <DropTarget id="turntable" pos={[CAKE_AT[0], TOP + 0.02, CAKE_AT[2]]} r={0.7} />
+      {/* left: sponges, fillings, piping bags */}
+      {sponge(-9.55, 'vanilla')}{sponge(-9.2, 'chocolate')}{sponge(-8.85, 'strawberry')}
+      {bowl('fill-cream', -8.45, FRONT, FILL_COL.cream, 'cream filling: drag onto the cake', () => k().addFilling('cream'))}
+      {bowl('fill-jam', -8.12, FRONT, FILL_COL.jam, 'jam filling: drag onto the cake', () => k().addFilling('jam'))}
+      {bag(-9.55, 'white')}{bag(-9.25, 'pink')}{bag(-8.95, 'chocolate')}
+      {/* right: frosting bowls, topping jars, the cake box */}
+      {bowl('frost-pink', -6.05, FRONT, FROST_COL.pink, 'pink frosting: drag onto the cake', () => k().frost('pink'), true)}
+      {bowl('frost-white', -5.68, FRONT, FROST_COL.white, 'white frosting: drag onto the cake', () => k().frost('white'), true)}
+      {bowl('frost-chocolate', -5.31, FRONT, FROST_COL.chocolate, 'chocolate frosting: drag onto the cake', () => k().frost('chocolate'), true)}
+      {bowl('frost-lavender', -4.94, FRONT, FROST_COL.lavender, 'lavender frosting: drag onto the cake', () => k().frost('lavender'), true)}
+      {jar(-6.3, 'sprinkles', C.counter)}{jar(-6.02, 'cherries', '#b3122e')}{jar(-5.74, 'strawberries', '#d8344a')}{jar(-5.46, 'candles', C.lilac)}
+      <Grab id="cakebox" tip="cake box: drag onto the cake to box it" pos={[-4.62, BENCH + 0.12, FRONT]} size={[0.3, 0.26, 0.3]} drops={{ turntable: () => k().box() }}>
+        <RBox size={[0.26, 0.2, 0.26]} color={C.counter} r={0.02} />
+        <RBox size={[0.27, 0.03, 0.27]} pos={[0, 0.11, 0]} color={C.cream} r={0.01} shadow={false} />
+      </Grab>
+    </group>
+  )
+}
+
 export function CakeBench() {
   const spin = useRef<THREE.Group>(null)
   useFrame((_, dt) => { if (spin.current && useCake.getState().spin) spin.current.rotation.y += dt * 0.35 })
   return (
     <group>
       <BakeryCorner />
+      <CakeIngredients />
       <group position={CAKE_AT}>
-        {/* bowls of frosting + a piping bag beside the turntable */}
-        {[[-0.95, C.counter], [0.95, C.lilac]].map(([x, c]) => (
-          <group key={String(x)} position={[x as number, 1.02, 0.25]}>
-            <mesh material={mat(C.cream)}><cylinderGeometry args={[0.15, 0.1, 0.12, 20, 1, true]} /></mesh>
-            <mesh position={[0, 0.03, 0]} material={mat(c as string, { rough: 0.35 })}><cylinderGeometry args={[0.135, 0.135, 0.02, 20]} /></mesh>
-          </group>
-        ))}
-        <mesh position={[1.25, 1.05, -0.15]} rotation={[0, 0.4, 1.2]} material={mat(C.white, { rough: 0.5 })}><coneGeometry args={[0.07, 0.35, 14]} /></mesh>
         {/* turntable: steel pedestal + white plate, spins slowly */}
         <mesh position={[0, 0.98, 0]} material={mat(C.steel)}><cylinderGeometry args={[0.12, 0.2, 0.06, 20]} /></mesh>
         <group ref={spin} position={[0, TOP, 0]}>

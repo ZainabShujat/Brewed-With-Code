@@ -1,3 +1,4 @@
+import { WORLD } from './world/layout'
 import { Canvas, useFrame } from '@react-three/fiber'
 import { useEffect, useRef, useState } from 'react'
 import { useGame, type CamMode } from './systems/store'
@@ -35,11 +36,13 @@ export function World() {
   return (
     <>
       <Lighting />
+      <group scale={WORLD}>
       <Exterior showPot={!inside || outro} fadeIn={outro} />
       {inside && <Interior cutaway={mode === 'dollhouse' || mode === 'pov' || outro} pov={mode === 'pov'} />}
       {inside && mode !== 'pov' && mode !== 'vlog' && <Reveal id="barista" at={[0.4, 0, 2.4]}><Barista /></Reveal>}
       {inside && <Customers />}
       {kozie && <Kozie />}
+      </group>
       <CameraRig />
       <FpsProbe />
     </>
