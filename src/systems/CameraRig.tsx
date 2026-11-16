@@ -138,10 +138,11 @@ export function CameraRig() {
     const asp = (camera as THREE.PerspectiveCamera).aspect
     setFov(camera as THREE.PerspectiveCamera, (mode === 'pov' ? 55 : 45) * (asp < 1 ? Math.min(1.7, 1 / asp * 0.95) : 1)) // portrait phone = wider lens // barista view: a slightly wider, human field of view
     if (mode === 'walk') {
-      step(player, dt)
-      // stay inside the room so the front wall never blocks the view
-      wantPos.set(player.x * 0.85, 4.4, Math.min(player.z + 5.0, 9.4)) // under the 5 m ceiling, above the lamps
-      wantLook.set(player.x, 1.0, player.z - 1.2)
+      // first person at eye height (~1.65 m): the mouse turns you, W walks where you look
+      step(player, dt, view.mode === 'walk' ? view.yaw : 0)
+      const bob = player.moving ? Math.sin(performance.now() / 160) * 0.025 : 0
+      wantPos.set(player.x, 1.65 + bob, player.z)
+      wantLook.set(player.x, 1.65, player.z - 1)
     } else if (mode === 'pov') {
       // POV = the barista standing behind the counter
       player.x = 0.3; player.z = -8.4; player.facing = 0

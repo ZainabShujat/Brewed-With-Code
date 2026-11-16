@@ -137,7 +137,7 @@ function Body({ c }: { c: Cust }) {
       <mesh position={[0, 1.62, 0]} scale={[1, 1.12, 1]} material={mat(look.skin)} castShadow><sphereGeometry args={[0.2, 16, 12]} /></mesh>
       <mesh position={[0, 1.7, -0.03]} scale={[1.06, 0.85, 1.08]} material={mat(look.hair)}><sphereGeometry args={[0.2, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2]} /></mesh>
       {[-0.07, 0.07].map((x) => <mesh key={x} position={[x, 1.64, 0.185]} material={mat('#2b2024')}><sphereGeometry args={[0.022, 6, 4]} /></mesh>)}
-      <Html position={[0, 2.35, 0]} center><div ref={tag} className="qtag" /></Html>
+      {EMBED && <Html position={[0, 2.35, 0]} center><div ref={tag} className="qtag" /></Html>}
       <Html position={[0, 3.0, 0]} center><div ref={bubble} className="obubble" /></Html>
     </group>
   )

@@ -11,7 +11,6 @@ const T = () => performance.now() / 1000
 export function liquidMat(color: string, opts: { clear?: boolean } = {}) {
   return new THREE.MeshPhysicalMaterial({
     color, roughness: 0.12, clearcoat: 1, clearcoatRoughness: 0.08,
-    transmission: opts.clear ? 0.85 : 0, thickness: 0.2, ior: 1.33,
     transparent: !!opts.clear, opacity: opts.clear ? 0.7 : 1,
   })
 }
@@ -51,6 +50,8 @@ export function Surface({ r, y, tex, last }: { r: number; y: number; tex: THREE.
     const m = ref.current; if (!m) return
     cur.current += (y - cur.current) * (1 - Math.exp(-dt * 1.8)); m.position.y = cur.current
     const age = T() - last, amp = age > 0 && age < 4 ? 0.012 * Math.exp(-age * 1.2) : 0
+    if (amp === 0 && m.userData.flat) return
+    m.userData.flat = amp === 0
     const p = geo.attributes.position as THREE.BufferAttribute
     for (let i = 0; i < p.count; i++) {
       const d = Math.hypot(base[i * 3], base[i * 3 + 1])
@@ -71,6 +72,8 @@ export function Stream({ color, w, top, bottom, on, x = 0, seed = 0 }: { color: 
   useFrame(() => {
     const m = ref.current; if (!m) return
     const k = on(); m.visible = k > 0.01
+    if (!m.visible) { if (drops.current) drops.current.visible = false; return }
+    if (drops.current) drops.current.visible = true
     const len = (top - bottom) * Math.min(1, k * 1.5), t = T() + seed
     m.position.set(x, top - len / 2, 0); m.scale.set(w, Math.max(0.001, len), w)
     const p = geo.attributes.position as THREE.BufferAttribute

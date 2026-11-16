@@ -18,13 +18,25 @@ function blocked(x: number, z: number) {
 }
 
 // Moves the player; tries each axis separately so you slide along counters instead of sticking.
-export function step(p: { x: number; z: number; facing: number; moving?: boolean }, dt: number) {
+export function step(p: { x: number; z: number; facing: number; moving?: boolean }, dt: number, heading?: number) {
   let dx = 0, dz = 0
-  if (keys.has('w') || keys.has('arrowup')) dz -= 1
-  if (keys.has('s') || keys.has('arrowdown')) dz += 1
-  if (keys.has('a') || keys.has('arrowleft')) dx -= 1
-  if (keys.has('d') || keys.has('arrowright')) dx += 1
-  if (stick.x || stick.y) { dx = stick.x; dz = stick.y }
+  if (heading !== undefined) {
+    // first person: W walks where you're looking, A/D strafe
+    let f = 0, r = 0
+    if (keys.has('w') || keys.has('arrowup')) f += 1
+    if (keys.has('s') || keys.has('arrowdown')) f -= 1
+    if (keys.has('a') || keys.has('arrowleft')) r -= 1
+    if (keys.has('d') || keys.has('arrowright')) r += 1
+    if (stick.x || stick.y) { r = stick.x; f = -stick.y }
+    dx = Math.cos(heading) * r - Math.sin(heading) * f
+    dz = -Math.sin(heading) * r - Math.cos(heading) * f
+  } else {
+    if (keys.has('w') || keys.has('arrowup')) dz -= 1
+    if (keys.has('s') || keys.has('arrowdown')) dz += 1
+    if (keys.has('a') || keys.has('arrowleft')) dx -= 1
+    if (keys.has('d') || keys.has('arrowright')) dx += 1
+    if (stick.x || stick.y) { dx = stick.x; dz = stick.y }
+  }
   p.moving = dx !== 0 || dz !== 0
   if (!p.moving) return
   const len = Math.hypot(dx, dz), speed = 3.2 * dt * Math.min(1, len)

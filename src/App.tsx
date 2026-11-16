@@ -45,7 +45,7 @@ export function World() {
       <group scale={WORLD}>
       <Exterior showPot={!inside || outro} fadeIn={outro} />
       {inside && <Interior cutaway={mode === 'dollhouse' || outro} pov={mode === 'pov'} />}
-      {inside && mode !== 'pov' && mode !== 'vlog' && <Reveal id="barista" at={[0.4, 0, 2.4]}><Barista /></Reveal>}
+      {inside && mode !== 'pov' && mode !== 'vlog' && mode !== 'walk' && <Reveal id="barista" at={[0.4, 0, 2.4]}><Barista /></Reveal>}
       {inside && <Customers />}
       {kozie && <Kozie />}
       </group>
@@ -81,7 +81,7 @@ export default function App() {
 
   return (
     <>
-      <Canvas onCreated={(s) => { (window as any).__r3f = s }} flat shadows={quality.high} dpr={quality.high ? 1 : 0.75} camera={{ fov: 45, position: [15, 9, 25] }} gl={{ antialias: true, powerPreference: 'high-performance' }}>
+      <Canvas frameloop={SNAP ? 'always' : 'demand'} onCreated={(s) => { (window as any).__r3f = s; if (!SNAP) { const cap = quality.high ? 40 : 30; setInterval(() => s.invalidate(), 1000 / cap) } }} flat shadows={quality.high} dpr={quality.high ? 1 : 0.75} camera={{ fov: 45, position: [15, 9, 25] }} gl={{ antialias: quality.high, powerPreference: 'high-performance' }}>
         <color attach="background" args={['#dfccf6']} />
         <World />
       </Canvas>
@@ -93,6 +93,7 @@ export default function App() {
       {playing && <CakeHud />}
       {SNAP && <Credits />}
       {playing && (TOUCH ? <Joystick /> : <LookHint mode={mode} />)}
+      {playing && mode === 'walk' && <div className="crosshair" />}
       {!SNAP && <Menu screen={screen} setScreen={setScreen} />}
       <div className="fps">{shownFps} fps</div>
     </>
