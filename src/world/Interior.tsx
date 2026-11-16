@@ -9,6 +9,7 @@ import { Bar } from './Bar'
 import { CakeBench } from './Cake'
 import { Swing, Slide } from './Swing'
 import { useGame } from '../systems/store'
+import { Model } from './Models'
 import { ArchWindow, Chalkboard, Clock, PendantLamp, Plant, RoundTable, Rug, Shelf, Stool, StringLights } from './Props'
 import { BACK_DZ, COUNTER, FRIDGE_DX, FRIDGE_DZ, H, KITCHEN_DX, KITCHEN_DZ, PLUS_SPOTS, ROOM, TABLES, WALL_H } from './layout'
 
@@ -110,17 +111,10 @@ function Treats({ w, y }: { w: number; y: number }) {
           </group>
         ) : i % 3 === 1 ? (
           // cupcake
-          <group key={i} position={[x, y, 0]}>
-            <mesh position={[0, -0.03, 0]} material={mat(C.cream)}><cylinderGeometry args={[0.09, 0.07, 0.1, 12]} /></mesh>
-            <mesh position={[0, 0.05, 0]} material={mat(c)}><sphereGeometry args={[0.1, 12, 8]} /></mesh>
-            <mesh position={[0, 0.15, 0]} material={mat('#e0405e')}><sphereGeometry args={[0.03, 8, 6]} /></mesh>
-          </group>
+          <group key={i} position={[x, y - 0.08, 0]}><Model name="croissant" scale={1.4} rot={[0, 0.4, 0]} /></group>
         ) : (
           // cake slice
-          <group key={i} position={[x, y - 0.02, 0]}>
-            <RBox size={[0.22, 0.14, 0.16]} color={c} r={0.03} shadow={false} />
-            <RBox size={[0.22, 0.04, 0.16]} pos={[0, 0.08, 0]} color={C.cream} r={0.02} shadow={false} />
-          </group>
+          <group key={i} position={[x, y - 0.09, 0]}><Model name={i % 2 ? 'carrot_cake' : 'strawberry_chocolate_cake'} scale={1.1} /></group>
         )
       })}
     </group>

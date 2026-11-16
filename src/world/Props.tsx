@@ -1,3 +1,4 @@
+import { Model } from './Models'
 import { C } from '../data/palette'
 import { glow, mat, glass } from './mats'
 import { Puck, RBox } from './Soft'
@@ -5,18 +6,7 @@ import { Puck, RBox } from './Soft'
 type V3 = [number, number, number]
 
 export function Plant({ pos, s = 1, pot = C.purple }: { pos: V3; s?: number; pot?: string }) {
-  const leaves: V3[] = [[0, 0.75, 0], [0.22, 0.62, 0.1], [-0.2, 0.65, -0.08], [0.05, 0.6, 0.24], [-0.08, 0.95, 0.05]]
-  return (
-    <group position={pos} scale={s}>
-      <mesh position={[0, 0.22, 0]} material={mat(pot)} castShadow><cylinderGeometry args={[0.24, 0.18, 0.44, 20]} /></mesh>
-      <mesh position={[0, 0.45, 0]} rotation={[Math.PI / 2, 0, 0]} material={mat(pot)}><torusGeometry args={[0.24, 0.04, 8, 20]} /></mesh>
-      {leaves.map((p, i) => (
-        <mesh key={i} position={p} scale={[1, 1.25, 1]} material={mat(i % 2 ? C.leaf : C.leafDark)} castShadow>
-          <sphereGeometry args={[0.2, 12, 10]} />
-        </mesh>
-      ))}
-    </group>
-  )
+  return <group position={pos}><Model name="potted_plant_01" scale={s * 0.85} /></group>
 }
 
 // Vine trailing down from a shelf: a chain of little leaf blobs
@@ -33,27 +23,18 @@ export function Vine({ pos, len = 6 }: { pos: V3; len?: number }) {
 }
 
 export function PendantLamp({ pos, color = C.counter, drop = 1.1 }: { pos: V3; color?: string; drop?: number }) {
+  void color
   return (
     <group position={pos}>
-      <mesh position={[0, -drop / 2, 0]} material={mat(C.plum)}><cylinderGeometry args={[0.015, 0.015, drop, 6]} /></mesh>
-      <mesh position={[0, -drop, 0]} material={mat(color, { flat: false })} castShadow>
-        <sphereGeometry args={[0.38, 20, 10, 0, Math.PI * 2, 0, Math.PI / 2]} />
-      </mesh>
-      <mesh position={[0, -drop - 0.02, 0]} rotation={[Math.PI / 2, 0, 0]} material={mat(color)}><torusGeometry args={[0.38, 0.03, 6, 20]} /></mesh>
-      <mesh position={[0, -drop - 0.06, 0]} material={glow()}><sphereGeometry args={[0.13, 12, 8]} /></mesh>
+      <mesh position={[0, -drop / 2, 0]} material={mat(C.plum)}><cylinderGeometry args={[0.012, 0.012, drop, 6]} /></mesh>
+      <Model name="modern_ceiling_lamp_01" scale={1.3} pos={[0, -drop - 1.25, 0]} />
+      <mesh position={[0, -drop - 0.75, 0]} material={glow()}><sphereGeometry args={[0.07, 12, 8]} /></mesh>
     </group>
   )
 }
 
 export function Clock({ pos, rotY = 0, r = 0.32 }: { pos: V3; rotY?: number; r?: number }) {
-  return (
-    <group position={pos} rotation={[0, rotY, 0]}>
-      <mesh rotation={[Math.PI / 2, 0, 0]} material={mat(C.plum)}><cylinderGeometry args={[r + 0.05, r + 0.05, 0.08, 24]} /></mesh>
-      <mesh position={[0, 0, 0.045]} material={mat(C.cream)}><circleGeometry args={[r, 24]} /></mesh>
-      <mesh position={[0, r * 0.25, 0.06]} material={mat(C.plum)}><boxGeometry args={[0.03, r * 0.5, 0.01]} /></mesh>
-      <mesh position={[r * 0.2, 0, 0.06]} rotation={[0, 0, Math.PI / 2]} material={mat(C.plum)}><boxGeometry args={[0.03, r * 0.4, 0.01]} /></mesh>
-    </group>
-  )
+  return <group position={pos} rotation={[0, rotY, 0]}><Model name="wall_clock" scale={r / 0.16} /></group>
 }
 
 // Wall shelf with jars and cups
@@ -103,29 +84,17 @@ export function StringLights({ from, to, n = 14 }: { from: V3; to: V3; n?: numbe
 }
 
 export function Stool({ pos, color = C.counter }: { pos: V3; color?: string }) {
-  return (
-    <group position={pos}>
-      <Puck r={0.26} h={0.12} pos={[0, 0.62, 0]} color={color} />
-      {[0, 2.09, 4.18].map((a) => (
-        <mesh key={a} position={[Math.sin(a) * 0.15, 0.3, Math.cos(a) * 0.15]} rotation={[Math.cos(a) * 0.12, 0, -Math.sin(a) * 0.12]} material={mat(C.woodDark)} castShadow>
-          <cylinderGeometry args={[0.035, 0.03, 0.62, 8]} />
-        </mesh>
-      ))}
-    </group>
-  )
+  void color
+  return <group position={pos}><Model name="bar_chair_round_01" scale={0.95} /></group>
 }
 
 export function RoundTable({ pos, top = C.cream }: { pos: V3; top?: string }) {
+  void top
   return (
     <group position={pos}>
-      <Puck r={0.62} h={0.08} pos={[0, 0.82, 0]} color={top} />
-      <mesh position={[0, 0.42, 0]} material={mat(C.plum)}><cylinderGeometry args={[0.06, 0.08, 0.8, 10]} /></mesh>
-      <mesh position={[0, 0.04, 0]} material={mat(C.plum)}><cylinderGeometry args={[0.32, 0.36, 0.08, 18]} /></mesh>
-      {/* little cup + cake on top */}
-      <mesh position={[0.18, 0.93, 0.05]} material={mat(C.white)}><cylinderGeometry args={[0.08, 0.06, 0.12, 12]} /></mesh>
-      <mesh position={[-0.15, 0.92, -0.1]} material={mat(C.counter)}><cylinderGeometry args={[0.12, 0.12, 0.1, 14]} /></mesh>
-      <mesh position={[-0.15, 0.99, -0.1]} material={mat(C.cream)}><cylinderGeometry args={[0.12, 0.12, 0.03, 14]} /></mesh>
-      <mesh position={[-0.15, 1.04, -0.1]} material={mat('#e0405e')}><sphereGeometry args={[0.035, 8, 6]} /></mesh>
+      <Model name="coffee_table_round_01" scale={[0.95, 1.7, 0.95]} />
+      <Model name="tea_set_01" pos={[0.2, 0.84, 0.05]} scale={0.9} rot={[0, 0.6, 0]} />
+      <Model name="strawberry_chocolate_cake" pos={[-0.18, 0.84, -0.12]} scale={0.9} />
     </group>
   )
 }
