@@ -68,3 +68,6 @@ export const useShop = create<Shop>((set, get) => ({
     if (s.pours.length && now() - s.pours[0].t0 > 3) set({ pours: s.pours.filter((p) => now() - p.t0 < 3) })
   },
 }))
+
+// handle for headless tests / reels
+if (typeof window !== 'undefined') (window as unknown as { __shop: typeof useShop }).__shop = useShop

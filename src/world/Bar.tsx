@@ -8,6 +8,7 @@ import { mat, glass } from './mats'
 import { Html } from '@react-three/drei'
 import { useGame } from '../systems/store'
 import { Grab, DropTarget } from '../systems/drag'
+import { liquidMat, surfaceTex, Surface, Stream, WhipSpiral, useCupGeometry, ceramic } from './Liquid'
 
 // The playable bar. Coordinates are the counter's local space (the Counter group in Interior).
 // Every station is clickable: R3F casts a ray from the mouse into the scene (raycasting) and
@@ -68,14 +69,16 @@ function Layer({ h, y, color, r = 0.19 }: { h: number; y: number; color: string;
     m.scale.y = cur.current.h; m.position.y = cur.current.y + cur.current.h / 2
     m.visible = cur.current.h > 0.002
   })
-  return <mesh ref={ref} material={mat(color)}><cylinderGeometry args={[r, r * 0.9, 1, 20]} /></mesh>
+  const m = useMemo(() => liquidMat(color), [color])
+  return <mesh ref={ref} material={m}><cylinderGeometry args={[r, r * 0.9, 1, 32]} /></mesh>
 }
 
 // the machine's left group head, in counter space (the cup slides under it for every shot)
 const UNDER_MACHINE: [number, number, number] = [-1.92, CUP_AT[1], COUNTER.z - 0.6]
 
 function Cup() {
-  const cup = useShop((s) => s.cup), d = useShop((s) => s.drink)
+  const cup = useShop((s) => s.cup), d = useShop((s) => s.drink), pours = useShop((s) => s.pours)
+  const cupGeo = useCupGeometry()
   const ref = useRef<THREE.Group>(null)
   useFrame(() => {
     const g = ref.current; if (!g) return
@@ -95,15 +98,20 @@ function Cup() {
   if (d.milk === 'micro') layers.push({ h: 0.07, color: '#b88a5e' }, { h: 0.025, color: milkC })
   let y = 0.03
   const placed = layers.map((l) => { const o = { ...l, y }; y += l.h; return o })
+  // what the top of the drink looks like: crema on espresso, foam on milk, a latte-art heart on micro-foam
+  const tex = d.milk === 'micro' ? surfaceTex('art', milkC) : d.milk === 'foamy' ? surfaceTex('foam', '#fffaf2') : d.milk === 'steamed' ? surfaceTex('foam', milkC)
+    : d.shots ? surfaceTex('crema', d.water ? '#7a4a2c' : '#9a5f33') : surfaceTex('plain', layers.length ? layers[layers.length - 1].color : '#000')
+  const lastT = pours.length ? pours[pours.length - 1].t0 + GO : 0
   return (
     <group ref={ref} position={CUP_AT}>
       <group scale={CUP_SCALE}>
         {/* ceramic cup: open cylinder + base + handle */}
-        <mesh material={mat(C.white, { rough: 0.3 })} castShadow><cylinderGeometry args={[0.23, 0.19, 0.3, 24, 1, true]} /></mesh>
-        <mesh position={[0, -0.14, 0]} material={mat(C.cream)}><cylinderGeometry args={[0.19, 0.19, 0.03, 24]} /></mesh>
-        <mesh position={[0.26, 0.04, 0]} rotation={[0, 0, Math.PI / 2]} material={mat(C.cream)}><torusGeometry args={[0.08, 0.025, 8, 14]} /></mesh>
-        <group position={[0, -0.14, 0]}>
+        {/* glazed ceramic mug: lathe-turned body with a rolled rim, plus a handle */}
+        <mesh geometry={cupGeo} material={ceramic} castShadow />
+        <mesh position={[0.25, 0.03, 0]} rotation={[0, 0, 0]} material={ceramic}><torusGeometry args={[0.075, 0.022, 12, 24, Math.PI * 1.25]} /></mesh>
+        <group position={[0, -0.12, 0]}>
           {placed.map((l, i) => <Layer key={i} h={l.h} y={l.y} color={l.color} r={0.2} />)}
+          {placed.length > 0 && <Surface r={0.205} y={y + 0.001} tex={tex} last={lastT} />}
           <ToppingFx y={y} />
         </group>
         <PourFx />
@@ -122,21 +130,9 @@ function ToppingFx({ y }: { y: number }) {
   return <group position={[0, y + 0.005, 0]}>{dots.map(([x, z], i) => <mesh key={i} position={[x, 0, z]} material={mat(cols[i % cols.length])}><sphereGeometry args={[0.018, 6, 4]} /></mesh>)}</group>
 }
 
+// whipped cream: a real piped spiral that winds up into a peak while the can sprays
 function Whip({ y }: { y: number }) {
-  const ref = useRef<THREE.Group>(null)
-  useFrame(() => {
-    const g = ref.current; if (!g) return
-    const p = active('whip'); const t = p ? nowS() - p.t0 - GO : 99
-    const k = clamp01(t / ACT.whip), e = 1 - Math.pow(1 - k, 3)
-    g.scale.set(0.4 + 0.6 * e, Math.max(0.001, e), 0.4 + 0.6 * e); g.rotation.y = e * 2.5 // swirls up as it's sprayed
-  })
-  return (
-    <group ref={ref} position={[0, y + 0.02, 0]}>
-      <mesh material={mat(C.white)}><sphereGeometry args={[0.15, 14, 10]} /></mesh>
-      <mesh position={[0, 0.07, 0]} rotation={[Math.PI / 2, 0, 0]} material={mat(C.white)}><torusGeometry args={[0.1, 0.045, 8, 16]} /></mesh>
-      <mesh position={[0, 0.13, 0]} material={mat(C.white)}><coneGeometry args={[0.09, 0.16, 12]} /></mesh>
-    </group>
-  )
+  return <WhipSpiral y={y} progress={() => { const p = active('whip'); const t = p ? nowS() - p.t0 - GO : 99; return clamp01(t / ACT.whip) }} />
 }
 
 // pour streams + falling sprinkles, driven by time since the pour started (no React re-render per frame)
@@ -173,8 +169,13 @@ function OnePour({ p }: { p: Pour }) {
   const w = p.kind === 'shot' ? 0.022 : p.kind === 'choc' ? 0.03 : 0.045
   return (
     <group>
-      <mesh ref={stream} material={mat(p.color, { opacity: p.kind === 'water' ? 0.6 : 1, rough: 0.2 })}><cylinderGeometry args={[w, w * 0.8, 1, 10]} /></mesh>
-      <mesh ref={twin} visible={false} material={mat(p.color, { rough: 0.2 })}><cylinderGeometry args={[w, w * 0.8, 1, 10]} /></mesh>
+      {/* timing meshes (invisible) drive the real wobbling streams below */}
+      <mesh ref={stream} visible={false}><boxGeometry args={[0.001, 0.001, 0.001]} /></mesh>
+      <mesh ref={twin} visible={false}><boxGeometry args={[0.001, 0.001, 0.001]} /></mesh>
+      {p.kind !== 'sprinkle' && p.kind !== 'whip' && <>
+        <Stream color={p.color} w={w} top={p.kind === 'shot' ? 0.62 : 1.0} bottom={0.02} x={p.kind === 'shot' ? -0.04 : p.kind === 'choc' ? 0 : 0.04} on={() => (stream.current?.visible ? stream.current.scale.z : 0)} />
+        {p.kind === 'shot' && <Stream color={p.color} w={w} top={0.62} bottom={0.02} x={0.04} seed={1.3} on={() => (stream.current?.visible ? stream.current.scale.z : 0)} />}
+      </>}
       <group ref={bits}>{seeds.map((_, i) => <mesh key={i} material={mat(p.color === '#ff7fb6' ? [C.counter, C.mint, C.butter, C.lilac][i % 4] : p.color)} visible={false}><sphereGeometry args={[0.02, 5, 4]} /></mesh>)}</group>
     </group>
   )
