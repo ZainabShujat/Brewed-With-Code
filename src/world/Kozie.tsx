@@ -3,6 +3,7 @@ import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js'
 import { makeMascot3D, type Mascot } from './kozie/notey3d.js'
+import { RBox } from './Soft'
 import { useGame } from '../systems/store'
 import { anim, frozen } from '../systems/anim'
 
@@ -88,16 +89,27 @@ export function Kozie() {
 function VillainChair() {
   const g = useRef<THREE.Group>(null)
   useFrame(() => { const v = anim.villain; if (!g.current) return; g.current.visible = v.chair; g.current.position.copy(v.chairPos); g.current.rotation.y = v.chairSpin; g.current.scale.setScalar(1.5) }) // a proper throne: Kozie fits in it
-  const red = <meshStandardMaterial color="#7a0f22" roughness={0.55} />, gold = <meshStandardMaterial color="#c9a24a" metalness={0.8} roughness={0.3} />
+  const red = <meshStandardMaterial color="#8a1228" roughness={0.6} />, dark = <meshStandardMaterial color="#5c0b1a" roughness={0.7} />, gold = <meshStandardMaterial color="#d4a94a" metalness={0.8} roughness={0.3} />
   return (
     <group ref={g} visible={false}>
-      <mesh position={[0, 0.55, 0]}>{<boxGeometry args={[1.5, 0.35, 1.2]} />}{red}</mesh>
-      <mesh position={[0, 1.55, -0.55]}><boxGeometry args={[1.5, 2.1, 0.3]} />{red}</mesh>
-      {[-1, 1].map((k) => <mesh key={k} position={[k * 0.82, 1.0, -0.15]}><boxGeometry args={[0.2, 0.8, 1.1]} />{red}</mesh>)}
-      {[-1, 1].map((k) => <mesh key={k} position={[k * 0.9, 2.45, -0.5]} rotation={[0, 0, k * -0.5]}><boxGeometry args={[0.5, 0.7, 0.32]} />{red}</mesh>)}
-      <mesh position={[0, 2.68, -0.55]}><sphereGeometry args={[0.12, 12, 8]} />{gold}</mesh>
-      <mesh position={[0, 0.2, 0]}><cylinderGeometry args={[0.08, 0.08, 0.4, 10]} />{gold}</mesh>
-      <mesh position={[0, 0.02, 0]}><cylinderGeometry args={[0.6, 0.6, 0.04, 20]} />{gold}</mesh>
+      {/* swivel base: gold post on five little feet */}
+      <mesh position={[0, 0.3, 0]}><cylinderGeometry args={[0.07, 0.09, 0.45, 12]} />{gold}</mesh>
+      {[0, 1, 2, 3, 4].map((i) => { const a = (i / 5) * Math.PI * 2; return <group key={i} rotation={[0, a, 0]}><mesh position={[0.3, 0.06, 0]} rotation={[0, 0, 0.12]}><boxGeometry args={[0.6, 0.06, 0.09]} />{gold}</mesh><mesh position={[0.58, 0.05, 0]}><sphereGeometry args={[0.07, 10, 8]} />{dark}</mesh></group> })}
+      {/* puffy rounded seat cushion */}
+      <RBox size={[1.3, 0.34, 1.1]} pos={[0, 0.66, 0.05]} r={0.15} color="#8a1228" />
+      {/* tall tufted backrest, slightly reclined, with gold buttons in a diamond grid */}
+      <group position={[0, 1.6, -0.48]} rotation={[-0.12, 0, 0]}>
+        <RBox size={[1.35, 1.9, 0.32]} r={0.16} color="#8a1228" />
+        {[-0.4, 0, 0.4].flatMap((x) => [-0.5, 0, 0.5].map((y) => <mesh key={`${x},${y}`} position={[x + (y === 0 ? 0.2 : 0) - (y === 0 && x === 0.4 ? 0.8 : 0), y, 0.17]}><sphereGeometry args={[0.035, 8, 6]} />{gold}</mesh>))}
+        {/* wing ears at the top */}
+        {[-1, 1].map((k) => <mesh key={k} position={[k * 0.72, 0.62, 0.12]} rotation={[0, k * -0.5, 0]}><boxGeometry args={[0.22, 0.75, 0.42]} />{red}</mesh>)}
+        <mesh position={[0, 1.05, 0]}><sphereGeometry args={[0.1, 12, 8]} />{gold}</mesh>
+      </group>
+      {/* rolled armrests */}
+      {[-1, 1].map((k) => <group key={k} position={[k * 0.72, 0.98, 0.0]}>
+        <mesh rotation={[Math.PI / 2, 0, 0]}><capsuleGeometry args={[0.13, 0.85, 6, 14]} />{red}</mesh>
+        <mesh position={[0, -0.2, 0]}><boxGeometry args={[0.2, 0.38, 0.9]} />{dark}</mesh>
+      </group>)}
     </group>
   )
 }
