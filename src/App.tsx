@@ -13,6 +13,7 @@ import { Customers, cafe as cafeLine } from './world/Customers'
 import { ShopHud } from './ui/ShopHud'
 import { CakeHud } from './ui/CakeHud'
 import { Joystick } from './ui/Joystick'
+import { Credits } from './ui/Credits'
 import { TOUCH } from './systems/CameraRig'
 import { LookHint } from './ui/LookHint'
 import { useCake } from './systems/cake'
@@ -93,6 +94,7 @@ export default function App() {
       </div>
       {mode !== 'cake' && <ShopHud />}
       <CakeHud />
+      <Credits />
       {TOUCH ? <Joystick /> : <LookHint mode={mode} />}
       <div className="fps">{shownFps} fps</div>
     </>
