@@ -125,7 +125,7 @@ function Embedded() {
         // BUILDS #011 villain bits
         villain: (on: boolean) => { anim.villain.on = on; anim.villain.fall = 0 },
         villainFall: (to: number, dur = 0.6) => tween(() => anim.villain.fall, (v) => (anim.villain.fall = v), to, dur),
-        chair: (on: boolean, x = 0, z = 0) => { anim.villain.chair = on; anim.villain.chairPos.set(x, 0, z) },
+        chair: (on: boolean, x = 0, z = 0, spin?: number) => { anim.villain.chair = on; anim.villain.chairPos.set(x, 0, z); if (spin !== undefined) anim.villain.chairSpin = spin }, // spin set directly (tweens don't run before play)
         chairSpin: (to: number, dur = 0.8) => tween(() => anim.villain.chairSpin, (v) => (anim.villain.chairSpin = v), to, dur),
         off: () => { anim.cam.active = false; anim.kozie.free = false },
       },
