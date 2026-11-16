@@ -237,7 +237,11 @@ export function Bar() {
       {/* steel pitcher: steam the milk */}
       <Grab id="milk" tip={`pitcher (${style}): click to change, drag onto the cup`} pos={[1.95, TOP + 0.12, BZ]} size={[0.26, 0.3, 0.26]} onClick={() => s().cycleMilkStyle()} drops={{ cup: () => s().milk(s().milkStyle) }}>
         <Flyer kind="milk" home={[1.95, TOP + 0.12, BZ]} act="tilt" side={0.16} above={0.36}>
-          <Model name="sf:pitcher" fit={0.24} pos={[0, -0.12, 0]} />
+          {/* steel milk pitcher (the downloaded one turned out to be a flat cut-out): bell body, spout, handle */}
+          <mesh material={mat(C.steel, { rough: 0.25 })}><cylinderGeometry args={[0.075, 0.095, 0.22, 24, 1, true]} /></mesh>
+          <mesh position={[0, -0.11, 0]} material={mat(C.steel)}><cylinderGeometry args={[0.095, 0.095, 0.01, 24]} /></mesh>
+          <mesh position={[0.1, 0.02, 0]} rotation={[0, 0, Math.PI / 2]} material={mat(C.steel)}><torusGeometry args={[0.05, 0.012, 6, 12, Math.PI]} /></mesh>
+          <mesh position={[-0.085, 0.1, 0]} rotation={[0, 0, 0.6]} material={mat(C.steel)}><coneGeometry args={[0.025, 0.06, 8]} /></mesh>
         </Flyer>
       </Grab>
       {/* toppings (back row) */}
