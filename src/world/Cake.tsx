@@ -8,6 +8,7 @@ import { RBox } from './Soft'
 import { Shelf } from './Props'
 import { tileTex } from './textures'
 import { Grab, DropTarget } from '../systems/drag'
+import { CakeMachine } from './CakeMachine'
 import { glass } from './mats'
 
 // The cake bench lives in the kitchen (back-left corner). Everything on the turntable is drawn
@@ -238,7 +239,7 @@ function BakeryCorner() {
         {[-0.4, -0.25, 0.25, 0.4].map((kx) => <mesh key={kx} position={[kx, 0.36, 0.04]} rotation={[Math.PI / 2, 0, 0]} material={mat(C.plum)}><cylinderGeometry args={[0.03, 0.03, 0.03, 14]} /></mesh>)}
       </group>
       {/* stand mixer (dusty-rose enamel, steel bowl) */}
-      <group position={[-5.1, top + 0.03, z - 0.15]}>
+      <group position={[-3.75, top + 0.03, z - 0.15]}>
         <RBox size={[0.42, 0.08, 0.6]} pos={[0, 0.04, 0]} color={C.counter} r={0.04} />
         <RBox size={[0.18, 0.55, 0.18]} pos={[0, 0.34, -0.2]} color={C.counter} r={0.07} />
         <mesh position={[0, 0.66, -0.02]} rotation={[Math.PI / 2, 0, 0]} material={mat(C.counter, { rough: 0.3 })}><capsuleGeometry args={[0.13, 0.36, 6, 16]} /></mesh>
@@ -246,7 +247,7 @@ function BakeryCorner() {
         <mesh position={[0, 0.42, 0.1]} material={mat(C.steel)}><cylinderGeometry args={[0.012, 0.012, 0.24, 8]} /></mesh>
       </group>
       {/* flour + sugar canisters */}
-      {[[-8.35, 'flour'], [-7.95, 'sugar']].map(([x], i) => (
+      {[[-10.15, 'flour'], [-9.85, 'sugar']].map(([x], i) => (
         <group key={String(x)} position={[x as number, top + 0.17, z - 0.32]}>
           <mesh material={mat(C.cream)} castShadow><cylinderGeometry args={[0.13, 0.13, 0.3 - i * 0.06, 24]} /></mesh>
           <mesh position={[0, 0.16 - i * 0.03, 0]} material={mat(C.woodDark)}><cylinderGeometry args={[0.135, 0.135, 0.03, 24]} /></mesh>
@@ -365,15 +366,8 @@ export function CakeBench() {
   return (
     <group>
       <BakeryCorner />
-      <CakeIngredients />
-      <group position={CAKE_AT}>
-        {/* turntable: steel pedestal + white plate, spins slowly */}
-        <mesh position={[0, 0.98, 0]} material={mat(C.steel)}><cylinderGeometry args={[0.12, 0.2, 0.06, 20]} /></mesh>
-        <group ref={spin} position={[0, TOP, 0]}>
-          <mesh material={mat(C.white, { rough: 0.25 })} receiveShadow><cylinderGeometry args={[0.72, 0.72, 0.03, 48]} /></mesh>
-          <group position={[0, 0.015, 0]}><TheCake /></group>
-        </group>
-      </group>
+      {/* the cake machine: the cake rides a conveyor to each dispenser */}
+      <CakeMachine><group ref={spin}><TheCake /></group></CakeMachine>
     </group>
   )
 }

@@ -13,7 +13,7 @@ const SHOTS: Record<Exclude<CamMode, 'walk' | 'vlog'>, { pos: THREE.Vector3; loo
   // outro: pull back from the dollhouse to the full exterior while the pot walls fade in
   outro: { pos: new THREE.Vector3(42, 24.5, 69), look: new THREE.Vector3(0, 9.4, 5.8) },
   // the cake bench in the kitchen: close, slightly above, like leaning over the turntable
-  cake: { pos: new THREE.Vector3(-7.0, 3.7, -4.3), look: new THREE.Vector3(-7.0, 1.25, -9.2) }, // stepped back: the whole bakery corner, calm and roomy // the bakery corner: cake, backsplash, shelf
+  cake: { pos: new THREE.Vector3(-6.95, 3.6, -3.4), look: new THREE.Vector3(-6.95, 1.95, -9.1) }, // the whole cake machine: canopy, dispensers, belt // stepped back: the whole bakery corner, calm and roomy // the bakery corner: cake, backsplash, shelf
   dollhouse: { pos: new THREE.Vector3(17.5, 19, 23.5), look: new THREE.Vector3(-0.3, 0.2, -0.6) },
   pov: { pos: new THREE.Vector3(0.1, 3.9, -14.3), look: new THREE.Vector3(0.1, 0.95, -6.7) } // looking down at the workspace: every tool readable,
 }

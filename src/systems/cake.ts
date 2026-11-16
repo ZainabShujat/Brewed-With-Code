@@ -49,6 +49,10 @@ type CakeState = {
   coins: number
   last: { pct: number; misses: string[]; coins: number; t: number } | null
   spin: boolean
+  orderUntil: number   // the order screen shows the cake until this time (ms), then you work from memory
+  peeks: number
+  peek: () => void
+  showFor: () => void
   addLayer: (s: Sponge) => void
   addFilling: (f: Filling) => void
   frost: (f: Exclude<Frosting, 'none'>) => void
@@ -60,7 +64,9 @@ type CakeState = {
 }
 
 export const useCake = create<CakeState>((set, get) => ({
-  cake: { ...EMPTY }, order: randomCakeOrder(), t: {}, coins: 0, last: null, spin: true,
+  cake: { ...EMPTY }, order: randomCakeOrder(), t: {}, coins: 0, last: null, spin: true, orderUntil: 0, peeks: 0,
+  showFor: () => set({ orderUntil: performance.now() + 8000 }),
+  peek: () => set((s) => ({ orderUntil: performance.now() + 2500, peeks: s.peeks + 1 })),
   // a sponge can only go on bare cake or on a filling (fillings sit *between* layers)
   addLayer: (s) => { const c = get().cake; if (c.frosting !== 'none' || c.layers.length >= 4 || c.layers.length > c.fillings.length) return
     set({ cake: { ...c, layers: [...c.layers, s] }, t: { ...get().t, [`L${c.layers.length}`]: now() } }) },
@@ -73,8 +79,9 @@ export const useCake = create<CakeState>((set, get) => ({
   topWith: (tp) => { const c = get().cake; if (c.frosting === 'none' || c.top !== 'none') return
     set({ cake: { ...c, top: tp }, t: { ...get().t, top: now() } }) },
   box: () => { const s = get(); if (!s.cake.layers.length) return
-    const r = scoreCake(s.cake, s.order.want), coins = Math.round(12 * r.pct / 100) + (r.pct === 100 ? 4 : 0)
-    set({ coins: s.coins + coins, last: { ...r, coins, t: now() }, cake: { ...EMPTY }, t: {}, order: randomCakeOrder() }) },
+    const r0 = scoreCake(s.cake, s.order.want), r = { ...r0, pct: Math.max(0, r0.pct - s.peeks * 5) } // each peek at the order costs a little
+    const coins = Math.round(12 * r.pct / 100) + (r.pct === 100 ? 4 : 0)
+    set({ coins: s.coins + coins, last: { ...r, coins, t: now() }, cake: { ...EMPTY }, t: {}, order: randomCakeOrder(), orderUntil: performance.now() + 8000, peeks: 0 }) },
   reset: () => set({ cake: { ...EMPTY }, t: {} }),
-  newOrder: () => set({ order: randomCakeOrder() }),
+  newOrder: () => set({ order: randomCakeOrder(), orderUntil: performance.now() + 8000, peeks: 0 }),
 }))

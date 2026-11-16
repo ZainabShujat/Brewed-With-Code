@@ -248,7 +248,7 @@ function Decor({ hideBack }: { hideBack: boolean }) {
       <PendantLamp pos={[0.4, WALL_H + 0.1, -6.2]} color={C.purple} drop={0.9} />
       <PendantLamp pos={[2.4, WALL_H + 0.1, -6.2]} color={C.counter} drop={0.9} />
       {/* one lamp per table */}
-      {TABLES.map(([x, z], i) => <PendantLamp key={x} pos={[x, WALL_H + 0.1, z]} color={i % 2 ? C.counter : C.lilac} drop={0.8} />)}
+      {TABLES.map(([x, z], i) => <PendantLamp key={`${x},${z}`} pos={[x, WALL_H + 0.1, z]} color={i % 2 ? C.counter : C.lilac} drop={0.8} />)}
       <Plant pos={[-9.2, 0, -3.8]} s={1.3} />
       <Plant pos={[-9.2, 0, 9.2]} s={1.1} pot={C.counter} />
       <Plant pos={[9.2, 0, -4.2]} s={1.2} pot={C.lilac} />
@@ -287,7 +287,7 @@ export function Interior({ cutaway, pov }: { cutaway: boolean; pov: boolean }) {
       <Reveal id="decor"><Decor hideBack={pov} /></Reveal>
       <CakeBench />
       {TABLES.map(([x, z], i) => (
-        <Reveal key={x} id="tables" at={[x, 0, z]}>
+        <Reveal key={`${x},${z}`} id="tables" at={[x, 0, z]}>
           {/* FURN: tables + stools sized for ~2 m characters (table ~1.05 m, seat ~0.8 m) */}
           <group position={[x, 0, z]} scale={FURN}>
             <RoundTable pos={[0, 0, 0]} top={i ? C.cream : C.counterTop} />

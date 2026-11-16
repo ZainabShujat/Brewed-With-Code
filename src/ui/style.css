@@ -149,3 +149,11 @@ html, body { overscroll-behavior: none; }
 .hotspot { border: 0; border-radius: 14px; padding: 7px 12px; font: 800 13px 'Trebuchet MS', sans-serif; background: #fff6ee; color: #5e2a75; box-shadow: 0 4px 0 #c4528a, 0 6px 16px rgba(0,0,0,.25); cursor: pointer; white-space: nowrap; animation: hsbob 2.4s ease-in-out infinite; }
 .hotspot:hover { background: #ff7fb6; color: #fff; }
 @keyframes hsbob { 50% { transform: translateY(-4px); } }
+.screen3d { width: 260px; height: 230px; background: #fff1f8; border-radius: 18px; display: flex; align-items: center; justify-content: center; box-shadow: inset 0 0 0 6px #f4b6c8; }
+.screen-q { font: 900 120px 'Trebuchet MS', sans-serif; color: #c4528a; }
+.beltnav { position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%); display: flex; align-items: center; gap: 12px; background: rgba(42,24,48,.82); padding: 10px 14px; border-radius: 22px; z-index: 8; }
+.navbtn { border: 0; width: 64px; height: 64px; border-radius: 50%; font: 900 26px 'Trebuchet MS', sans-serif; background: #ffcf5c; color: #3a2230; box-shadow: 0 5px 0 #b8892a; cursor: pointer; }
+.navbtn:active { transform: translateY(3px); box-shadow: 0 2px 0 #b8892a; }
+.navstop { min-width: 210px; text-align: center; color: #fff6ee; font: 900 18px 'Trebuchet MS', sans-serif; display: flex; flex-direction: column; }
+.navstop small { font-size: 11px; font-weight: 700; opacity: .7; }
+.headtag { background: rgba(42,24,48,.75); color: #fff6ee; border-radius: 8px; padding: 2px 8px; font: 800 11px 'Trebuchet MS', sans-serif; white-space: nowrap; }
