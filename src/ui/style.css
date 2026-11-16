@@ -157,3 +157,29 @@ html, body { overscroll-behavior: none; }
 .navstop { min-width: 210px; text-align: center; color: #fff6ee; font: 900 18px 'Trebuchet MS', sans-serif; display: flex; flex-direction: column; }
 .navstop small { font-size: 11px; font-weight: 700; opacity: .7; }
 .headtag { background: rgba(42,24,48,.75); color: #fff6ee; border-radius: 8px; padding: 2px 8px; font: 800 11px 'Trebuchet MS', sans-serif; white-space: nowrap; }
+
+/* ── phones: coffee flow, cake machine, menus ─────────────── */
+@media (max-width: 700px) {
+  .ticket { width: auto; left: 8px; right: 8px; top: 52px; transform: none; padding: 8px 10px; }
+  .tk-steps { font-size: 10px; }
+  .brew { bottom: 8px; padding: 10px; gap: 8px; }
+  .brew-title { font-size: 13px; }
+  .brew-hold { width: 76px; height: 76px; font-size: 15px; }
+  .brew-go { padding: 12px 20px; font-size: 16px; }
+  .chip { padding: 8px 10px; font-size: 13px; }
+  .brewpop { font-size: 38px; }
+  .beltnav { bottom: 8px; gap: 8px; padding: 8px 10px; }
+  .navbtn { width: 54px; height: 54px; font-size: 22px; }
+  .navstop { min-width: 0; font-size: 15px; }
+  .cake-card { top: 52px; bottom: auto; left: 8px; right: 8px; max-width: none; }
+  .cc-pic svg { max-height: 90px; }
+  .gmenu .panel { margin: 0 16px; width: calc(100vw - 32px); }
+  .gmenu button.big b { font-size: 17px; }
+  .logo { font-size: 52px; }
+  .menubtn { top: 8px; left: 8px; padding: 6px 10px; font-size: 13px; }
+  .menubtn span { display: none; }
+  .hotspot { font-size: 11px; padding: 5px 9px; }
+  .coins { top: auto; bottom: 120px; right: 8px; font-size: 13px; }
+  .stick { bottom: 120px; }
+  .credits-card { font-size: 12px; }
+}

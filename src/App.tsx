@@ -103,7 +103,7 @@ export default function App() {
       {playing && mode !== 'cake' && mode !== 'pov' && <ShopHud />}
       {playing && <CakeHud />}
       {SNAP && <Credits />}
-      {playing && (TOUCH ? <Joystick /> : mode !== 'pov' && <LookHint mode={mode} />)}
+      {playing && (TOUCH ? mode !== 'cake' && mode !== 'pov' && <Joystick /> : mode !== 'pov' && <LookHint mode={mode} />)}
       {playing && mode === 'walk' && <div className="crosshair" />}
       {!SNAP && <Menu screen={screen} setScreen={setScreen} />}
       <div className="fps">{shownFps} fps</div>

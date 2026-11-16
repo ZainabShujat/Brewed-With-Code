@@ -175,6 +175,8 @@ export function CameraRig() {
       // lean in a little: each station fills the screen instead of the whole bar at once
       wantPos.set(povX, 2.0, -9.4); wantLook.set(povX, 0.95, -6.9)
     }
+    // portrait phone: step back from the stations so the whole machine / bar fits the narrow screen
+    if ((camera as THREE.PerspectiveCamera).aspect < 1 && mode === 'cake') wantPos.sub(wantLook).multiplyScalar(1.45).add(wantLook)
     wantPos.multiplyScalar(WORLD); wantLook.multiplyScalar(WORLD)
     applyLook(mode, dt)
     // ?snap = jump straight to the shot (used for footage capture and tests)
