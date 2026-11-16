@@ -183,3 +183,6 @@ html, body { overscroll-behavior: none; }
   .stick { bottom: 120px; }
   .credits-card { font-size: 12px; }
 }
+
+.tinbadge { display: inline-block; margin-top: 4px; padding: 3px 10px; border-radius: 10px; background: #f3e8f8; font: 800 13px 'Trebuchet MS', sans-serif; color: #6e3f78; }
+.screen-tin { text-align: center; font: 900 30px 'Trebuchet MS', sans-serif; color: #6e3f78; margin-top: -6px; }

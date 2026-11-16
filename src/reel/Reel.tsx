@@ -90,6 +90,7 @@ function Embedded() {
       kozieHidden: (on: boolean) => { anim.kozie.hidden = on },
       // cake bench (flushSync: commit right away so the frame-stepped render never lags the state)
       cake: {
+        tin: (x: any) => flushSync(() => useCake.getState().setTin(x)),
         layer: (x: any) => flushSync(() => useCake.getState().addLayer(x)),
         fill: (x: any) => flushSync(() => useCake.getState().addFilling(x)),
         frost: (x: any) => flushSync(() => useCake.getState().frost(x)),
@@ -101,7 +102,7 @@ function Embedded() {
         picture: (cake: any, w = 260) => cakeSvg(cake, w),
         setOrder: (cake: any, label: string) => flushSync(() => useCake.setState({ order: { want: cake, label } })),
         // the cake machine (BUILDS #008): roll to a station, dip a dispenser, show/hide the order screen
-        go: (station: string) => { const i = ['start', 'layer', 'frost', 'pipe', 'top', 'star'].indexOf(station); machine.idx = i; machine.target = (ST as any)[station] },
+        go: (station: string) => { const i = ['start', 'tin', 'layer', 'fill', 'frost', 'pipe', 'top', 'star'].indexOf(station); machine.idx = i; machine.target = (ST as any)[station] },
         dropAt: (station: string, fn: () => void) => machine.run(station as any, () => flushSync(fn)),
         showOrder: (ms: number) => flushSync(() => useCake.setState({ orderUntil: performance.now() + ms })),
         resetMachine: () => { machine.queue.length = 0; machine.dipT = -1; machine.active = ''; machine.idx = 0; machine.target = machine.x = ST.start },

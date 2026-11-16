@@ -9,6 +9,7 @@ import { Shelf } from './Props'
 import { tileTex } from './textures'
 import { Grab, DropTarget } from '../systems/drag'
 import { CakeMachine } from './CakeMachine'
+import { bodyGeo, edge } from './cakeShape'
 import { glass } from './mats'
 
 // The cake bench lives in the kitchen (back-left corner). Everything on the turntable is drawn
@@ -25,6 +26,7 @@ const bounce = (x: number) => { x = clamp01(x); return 1 - Math.pow(1 - x, 3) * 
 const FALL = 0.42
 function Sponge({ y, h, r, color, t0 }: { y: number; h: number; r: number; color: string; t0: number }) {
   const ref = useRef<THREE.Mesh>(null), puff = useRef<THREE.Group>(null)
+  const tin = useCake((st) => st.cake.tin)
   useFrame(() => {
     const m = ref.current; if (!m) return
     const t = now() - t0
@@ -44,7 +46,7 @@ function Sponge({ y, h, r, color, t0 }: { y: number; h: number; r: number; color
   const puffMat = useMemo(() => new THREE.MeshStandardMaterial({ color: '#fff8ee', transparent: true, opacity: 0.5, depthWrite: false }), [])
   return (
     <group>
-      <mesh ref={ref} material={mat(color, { rough: 0.85 })} castShadow><cylinderGeometry args={[r, r, h, 40]} /></mesh>
+      <mesh ref={ref} geometry={bodyGeo(tin, r, h)} material={mat(color, { rough: 0.85 })} castShadow />
       <group ref={puff}>{Array.from({ length: 8 }, (_, i) => <mesh key={i} material={puffMat} visible={false}><sphereGeometry args={[0.05, 8, 6]} /></mesh>)}</group>
     </group>
   )
@@ -64,6 +66,7 @@ function Bag({ bagRef, color }: { bagRef: React.RefObject<THREE.Group>; color: s
 // cream/jam filling is piped in a spiral from the centre out, spreading as the bag moves
 function Filling({ y, h, r, color, t0 }: { y: number; h: number; r: number; color: string; t0: number }) {
   const disc = useRef<THREE.Mesh>(null), bag = useRef<THREE.Group>(null)
+  const tin = useCake((st) => st.cake.tin)
   const D = 0.75
   useFrame(() => {
     const t = now() - t0, k = clamp01(t / D)
@@ -73,7 +76,7 @@ function Filling({ y, h, r, color, t0 }: { y: number; h: number; r: number; colo
   })
   return (
     <group>
-      <mesh ref={disc} position={[0, y + h / 2, 0]} material={mat(color, { rough: 0.45 })}><cylinderGeometry args={[r, r, h, 40]} /></mesh>
+      <mesh ref={disc} position={[0, y + h / 2, 0]} geometry={bodyGeo(tin, r, h)} material={mat(color, { rough: 0.45 })} />
       <Bag bagRef={bag} color={color} />
     </group>
   )
@@ -86,6 +89,7 @@ function Frosting({ height, color, t0: tPour }: { height: number; color: string;
   const t0 = tPour + POUR
   const collar = useRef<THREE.Mesh>(null), cap = useRef<THREE.Mesh>(null), drips = useRef<THREE.Group>(null)
   const bowl = useRef<THREE.Group>(null), stream = useRef<THREE.Mesh>(null)
+  const tin = useCake((st) => st.cake.tin)
   const hash = (n: number) => { const v = Math.sin(n * 91.345) * 47453.21; return v - Math.floor(v) }
   const D = useMemo(() => Array.from({ length: 22 }, (_, i) => ({
     a: (i / 22) * Math.PI * 2 + (hash(i) - 0.5) * 0.18,
@@ -114,12 +118,12 @@ function Frosting({ height, color, t0: tPour }: { height: number; color: string;
         <mesh position={[0, 0.04, 0]} material={m}><cylinderGeometry args={[0.2, 0.2, 0.04, 24]} /></mesh>
       </group>
       <mesh ref={stream} visible={false} material={m}><cylinderGeometry args={[0.05, 0.04, 1, 12]} /></mesh>
-      <mesh ref={cap} position={[0, height + 0.02, 0]} material={m}><cylinderGeometry args={[R + 0.03, R + 0.03, 0.045, 48]} /></mesh>
-      <mesh ref={collar} position={[0, height - COLLAR / 2 + 0.01, 0]} material={m}><cylinderGeometry args={[R + 0.018, R + 0.018, COLLAR, 48, 1, true]} /></mesh>
+      <mesh ref={cap} position={[0, height + 0.02, 0]} geometry={bodyGeo(tin, R + 0.03, 0.045)} material={m} />
+      <mesh ref={collar} position={[0, height - COLLAR / 2 + 0.01, 0]} geometry={bodyGeo(tin, R + 0.018, COLLAR)} material={m} />
       <group ref={drips} position={[0, height - COLLAR + 0.02, 0]}>
         {D.map((d, i) => (
           // rotate each drip so its flat side lies against the cake
-          <group key={i} position={[Math.cos(d.a) * (R + 0.012), 0, Math.sin(d.a) * (R + 0.012)]} rotation={[0, Math.PI / 2 - d.a, 0]}>
+          <group key={i} position={[Math.cos(d.a) * edge(tin, d.a, R + 0.012), 0, Math.sin(d.a) * edge(tin, d.a, R + 0.012)]} rotation={[0, Math.PI / 2 - d.a, 0]}>
             <mesh position={[0, -d.len / 2, 0]} scale={[1, 1, 0.6]} material={m}><capsuleGeometry args={[d.w, d.len, 4, 10]} /></mesh>
             <mesh position={[0, -d.len - d.w * 0.4, 0]} scale={[1, 1, 0.65]} material={m}><sphereGeometry args={[d.w * 1.25, 12, 8]} /></mesh>
           </group>
@@ -132,6 +136,7 @@ function Frosting({ height, color, t0: tPour }: { height: number; color: string;
 // piped rosettes: the piping bag travels round the rim; each rosette squeezes up and twists into shape
 function Rosettes({ y, color, t0 }: { y: number; color: string; t0: number }) {
   const g = useRef<THREE.Group>(null), bag = useRef<THREE.Group>(null)
+  const tin = useCake((st) => st.cake.tin)
   const N = 14, STEP = 0.13, SQ = 0.22
   useFrame(() => {
     const t = now() - t0
@@ -144,7 +149,7 @@ function Rosettes({ y, color, t0 }: { y: number; color: string; t0: number }) {
     if (bg) {
       const i = Math.min(N - 1, Math.max(0, Math.floor(t / STEP))), into = clamp01((t - i * STEP) / STEP)
       bg.visible = t >= 0 && t < N * STEP + 0.2
-      const a = ((i + into * 0.5) / N) * Math.PI * 2, rr = R - 0.07
+      const a = ((i + into * 0.5) / N) * Math.PI * 2, rr = edge(tin, a, R) - 0.07
       bg.position.set(Math.cos(a) * rr, y + 0.12 + Math.abs(Math.sin(into * Math.PI)) * 0.06, Math.sin(a) * rr) // a little lift between rosettes
     }
   })
@@ -153,7 +158,7 @@ function Rosettes({ y, color, t0 }: { y: number; color: string; t0: number }) {
     <group>
       <group ref={g} position={[0, y, 0]}>
         {Array.from({ length: N }, (_, i) => { const a = (i / N) * Math.PI * 2; return (
-          <group key={i} position={[Math.cos(a) * (R - 0.07), 0, Math.sin(a) * (R - 0.07)]}>
+          <group key={i} position={[Math.cos(a) * (edge(tin, a, R) - 0.07), 0, Math.sin(a) * (edge(tin, a, R) - 0.07)]}>
             <mesh position={[0, 0.02, 0]} rotation={[Math.PI / 2, 0, 0]} material={m}><torusGeometry args={[0.055, 0.026, 8, 16]} /></mesh>
             <mesh position={[0, 0.055, 0]} rotation={[Math.PI / 2, 0, 0]} material={m}><torusGeometry args={[0.035, 0.022, 8, 14]} /></mesh>
             <mesh position={[0, 0.095, 0]} material={m}><coneGeometry args={[0.03, 0.06, 10]} /></mesh>

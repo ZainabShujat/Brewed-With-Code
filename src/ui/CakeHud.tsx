@@ -6,7 +6,8 @@ import { machine } from '../world/CakeMachine'
 
 // The cake machine needs almost no UI: the order card (from memory), and ◀ ▶ to roll the cake
 // along the belt. Everything else is clicking the coloured bulbs on the dispensers themselves.
-const STOPS = ['start', 'sponge + filling', 'frosting', 'rosettes', 'toppings', 'serve ⭐']
+export const TIN_ICON: Record<string, string> = { round: '⚪', square: '⬜', heart: '🤍', none: '' }
+const STOPS = ['start', 'tin', 'sponge', 'filling', 'frosting', 'rosettes', 'toppings', 'serve ⭐']
 
 export function CakeHud() {
   const mode = useGame((s) => s.mode)
@@ -27,6 +28,7 @@ export function CakeHud() {
         <div className="tk-h">cake order</div>
         {performance.now() < k.orderUntil ? <>
           <div className="cc-pic" dangerouslySetInnerHTML={{ __html: cakeSvg(k.order.want, 180) }} />
+          <div className="tinbadge">{TIN_ICON[k.order.want.tin]} {k.order.want.tin} tin</div>
           <div className="cc-name">{k.order.label}</div>
           <div className="tk-note">remember it, it'll hide in a moment!</div>
         </> : <>

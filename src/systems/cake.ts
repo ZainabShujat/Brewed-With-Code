@@ -8,7 +8,8 @@ export type Frosting = 'none' | 'pink' | 'white' | 'chocolate' | 'lavender'
 export type Pipe = 'none' | 'white' | 'pink' | 'chocolate'
 export type CakeTop = 'none' | 'sprinkles' | 'cherries' | 'strawberries' | 'candles'
 
-export type Cake = { layers: Sponge[]; fillings: Filling[]; frosting: Frosting; piping: Pipe; top: CakeTop }
+export type Tin = 'none' | 'round' | 'square' | 'heart'
+export type Cake = { tin: Tin; layers: Sponge[]; fillings: Filling[]; frosting: Frosting; piping: Pipe; top: CakeTop }
 export type CakeOrder = { want: Cake; label: string }
 
 export const SPONGE_COL: Record<Sponge, string> = { vanilla: '#f1d6a2', chocolate: '#6b3f2a', strawberry: '#f2a7b4' }
@@ -20,26 +21,29 @@ const pick = <T,>(a: readonly T[]) => a[Math.floor(Math.random() * a.length)]
 export function randomCakeOrder(): CakeOrder {
   const n = pick([2, 3, 3])
   const sponge = pick(['vanilla', 'chocolate', 'strawberry'] as const)
+  const tin = pick(['round', 'square', 'heart'] as const)
   const want: Cake = {
+    tin,
     layers: Array(n).fill(sponge), fillings: Array(n - 1).fill(pick(['cream', 'jam'] as const)),
     frosting: pick(['pink', 'white', 'chocolate', 'lavender'] as const), piping: pick(['white', 'pink', 'chocolate'] as const),
     top: pick(['sprinkles', 'cherries', 'strawberries', 'candles'] as const),
   }
-  return { want, label: `${n}-layer ${sponge} · ${want.fillings[0]} · ${want.frosting} frosting · ${want.piping} rosettes · ${want.top}` }
+  return { want, label: `${tin} tin · ${n}-layer ${sponge} · ${want.fillings[0]} · ${want.frosting} frosting · ${want.piping} rosettes · ${want.top}` }
 }
 
 export function scoreCake(made: Cake, want: Cake) {
   const misses: string[] = []
+  if (made.tin !== want.tin) misses.push(`${want.tin} tin`)
   if (made.layers.length !== want.layers.length) misses.push(`${want.layers.length} layers`)
   else if (made.layers.some((l, i) => l !== want.layers[i])) misses.push(`${want.layers[0]} sponge`)
   if (made.fillings.join() !== want.fillings.join()) misses.push(`${want.fillings[0]} filling`)
   if (made.frosting !== want.frosting) misses.push(`${want.frosting} frosting`)
   if (made.piping !== want.piping) misses.push(`${want.piping} rosettes`)
   if (made.top !== want.top) misses.push(want.top)
-  return { pct: Math.max(0, 100 - misses.length * 20), misses }
+  return { pct: Math.max(0, 100 - misses.length * 17), misses }
 }
 
-const EMPTY: Cake = { layers: [], fillings: [], frosting: 'none', piping: 'none', top: 'none' }
+const EMPTY: Cake = { tin: 'none', layers: [], fillings: [], frosting: 'none', piping: 'none', top: 'none' }
 const now = () => performance.now() / 1000
 
 type CakeState = {
@@ -53,6 +57,7 @@ type CakeState = {
   peeks: number
   peek: () => void
   showFor: () => void
+  setTin: (t: Exclude<Tin, 'none'>) => void
   addLayer: (s: Sponge) => void
   addFilling: (f: Filling) => void
   frost: (f: Exclude<Frosting, 'none'>) => void
@@ -67,8 +72,10 @@ export const useCake = create<CakeState>((set, get) => ({
   cake: { ...EMPTY }, order: randomCakeOrder(), t: {}, coins: 0, last: null, spin: true, orderUntil: 0, peeks: 0,
   showFor: () => set({ orderUntil: performance.now() + 8000 }),
   peek: () => set((s) => ({ orderUntil: performance.now() + 2500, peeks: s.peeks + 1 })),
+  // the tin comes first: it decides the cake's shape
+  setTin: (tin) => { const c = get().cake; if (c.layers.length) return; set({ cake: { ...c, tin }, t: { ...get().t, tin: now() } }) },
   // a sponge can only go on bare cake or on a filling (fillings sit *between* layers)
-  addLayer: (s) => { const c = get().cake; if (c.frosting !== 'none' || c.layers.length >= 4 || c.layers.length > c.fillings.length) return
+  addLayer: (s) => { const c = get().cake; if (c.tin === 'none' || c.frosting !== 'none' || c.layers.length >= 4 || c.layers.length > c.fillings.length) return
     set({ cake: { ...c, layers: [...c.layers, s] }, t: { ...get().t, [`L${c.layers.length}`]: now() } }) },
   addFilling: (f) => { const c = get().cake; if (c.frosting !== 'none' || !c.layers.length || c.fillings.length >= c.layers.length) return
     set({ cake: { ...c, fillings: [...c.fillings, f] }, t: { ...get().t, [`F${c.fillings.length}`]: now() } }) },

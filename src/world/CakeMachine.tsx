@@ -8,6 +8,7 @@ import { RBox } from './Soft'
 import { useCake, SPONGE_COL, FILL_COL, FROST_COL, PIPE_COL } from '../systems/cake'
 import { cakeSvg } from '../ui/cakeSvg'
 import { sfx } from '../systems/sound'
+import { bodyGeo } from './cakeShape'
 
 // ── The cake machine: a little conveyor under a striped canopy ───────────────────────────────
 // The cake rides the belt to each dispenser; the dispenser dips, does its thing, rises; the cake
@@ -15,7 +16,7 @@ import { sfx } from '../systems/sound'
 
 export const BELT_Y = 1.02, BELT_Z = -9.05
 // stations along the belt (x)
-export const ST = { start: -9.3, layer: -8.45, frost: -7.45, pipe: -6.45, top: -5.45, star: -4.55 } as const
+export const ST = { start: -9.45, tin: -8.85, layer: -8.15, fill: -7.45, frost: -6.75, pipe: -6.05, top: -5.35, star: -4.55 } as const
 type Station = keyof typeof ST
 
 // the machine's little brain: a queue of "go to station, dip, do it" jobs
@@ -38,7 +39,7 @@ export const machine = {
   },
   nudge: '' as string, nudgeT: 0,
 }
-const ORDER: Station[] = ['start', 'layer', 'frost', 'pipe', 'top', 'star']
+const ORDER: Station[] = ['start', 'tin', 'layer', 'fill', 'frost', 'pipe', 'top', 'star']
 
 const DIP = 0.9 // seconds: down, act, up
 
@@ -100,16 +101,26 @@ export function CakeMachine({ children }: { children: React.ReactNode }) {
       <mesh position={[(ST.start + ST.star) / 2, H - 0.25, 0]} rotation={[0, 0, Math.PI / 2]} material={mat(C.steel)}><cylinderGeometry args={[0.03, 0.03, 5.4, 10]} /></mesh>
 
       {/* ── four dispensers (each its own look) ── */}
-      <Head id="layer" name="sponge + filling" x={ST.layer} top={H - 0.25} heads={heads} opts={[
-        { label: "vanilla", color: SPONGE_COL.vanilla, fn: () => useCake.getState().addLayer("vanilla") },
-        { label: "chocolate", color: SPONGE_COL.chocolate, fn: () => useCake.getState().addLayer("chocolate") },
-        { label: "strawberry", color: SPONGE_COL.strawberry, fn: () => useCake.getState().addLayer("strawberry") },
-        { label: "cream", color: FILL_COL.cream, fn: () => useCake.getState().addFilling("cream"), icon: "〰" },
-        { label: "jam", color: FILL_COL.jam, fn: () => useCake.getState().addFilling("jam"), icon: "〰" }]}>
-        {/* layer press: a lilac barrel with mint bands and two nozzles (sponge + filling) */}
+      <Head id="tin" name="tin" x={ST.tin} top={H - 0.25} heads={heads} opts={[
+        { label: "round", color: "#cfd3dc", icon: "⚪", fn: () => useCake.getState().setTin("round") },
+        { label: "square", color: "#cfd3dc", icon: "⬜", fn: () => useCake.getState().setTin("square") },
+        { label: "heart", color: "#cfd3dc", icon: "🤍", fn: () => useCake.getState().setTin("heart") }]}>
+        {/* tin press: a steel block that stamps the tin onto the plate */}
+        <RBox size={[0.36, 0.3, 0.3]} pos={[0, 0.25, 0]} color={C.steel} r={0.05} />
+        <RBox size={[0.42, 0.05, 0.36]} pos={[0, 0.06, 0]} color={C.plum} r={0.02} />
+        {[-0.12, 0.12].map((x) => <mesh key={x} position={[x, 0.42, 0]} material={mat(C.mint)}><cylinderGeometry args={[0.03, 0.03, 0.1, 10]} /></mesh>)}
+      </Head>
+      <Head id="layer" name="sponge" x={ST.layer} top={H - 0.25} heads={heads} opts={(["vanilla", "chocolate", "strawberry"] as const).map((f) => ({ label: f, color: SPONGE_COL[f], fn: () => useCake.getState().addLayer(f) }))}>
+        {/* sponge press: a lilac barrel with mint bands */}
         <mesh position={[0, 0.25, 0]} material={mat(C.lilac, { rough: 0.35 })}><cylinderGeometry args={[0.2, 0.2, 0.42, 24]} /></mesh>
         {[0.1, 0.4].map((y) => <mesh key={y} position={[0, y, 0]} rotation={[Math.PI / 2, 0, 0]} material={mat(C.mint)}><torusGeometry args={[0.205, 0.03, 8, 24]} /></mesh>)}
-        {[-0.08, 0.08].map((x) => <mesh key={x} position={[x, -0.02, 0]} rotation={[Math.PI, 0, 0]} material={mat(C.steel)}><coneGeometry args={[0.06, 0.14, 12]} /></mesh>)}
+        <mesh position={[0, -0.02, 0]} rotation={[Math.PI, 0, 0]} material={mat(C.steel)}><coneGeometry args={[0.09, 0.14, 16]} /></mesh>
+      </Head>
+      <Head id="fill" name="filling" x={ST.fill} top={H - 0.25} heads={heads} opts={(["cream", "jam"] as const).map((f) => ({ label: f, color: FILL_COL[f], fn: () => useCake.getState().addFilling(f) }))}>
+        {/* filling pump: a mint squeeze bottle with a butter cap */}
+        <mesh position={[0, 0.26, 0]} material={mat(C.mint, { rough: 0.35 })}><capsuleGeometry args={[0.13, 0.22, 6, 18]} /></mesh>
+        <mesh position={[0, 0.48, 0]} material={mat(C.butter)}><cylinderGeometry args={[0.08, 0.1, 0.06, 16]} /></mesh>
+        <mesh position={[0, 0.02, 0]} rotation={[Math.PI, 0, 0]} material={mat(C.plum)}><coneGeometry args={[0.05, 0.16, 12]} /></mesh>
       </Head>
       <Head id="frost" name="frosting" x={ST.frost} top={H - 0.25} heads={heads} opts={(["pink", "white", "chocolate", "lavender"] as const).map((f) => ({ label: f, color: FROST_COL[f], fn: () => useCake.getState().frost(f) }))}>
         {/* frosting fountain: a pink dome bowl that tips a nozzle */}
@@ -141,6 +152,7 @@ export function CakeMachine({ children }: { children: React.ReactNode }) {
       {/* ── the cake carrier riding the belt ── */}
       <group ref={carrier} position={[ST.start, BELT_Y, 0]}>
         <mesh material={mat(C.white, { rough: 0.25 })} receiveShadow><cylinderGeometry args={[0.42, 0.42, 0.03, 40]} /></mesh>
+        <TinRim />
         <group position={[0, 0.015, 0]} scale={0.6}>{children}</group>
       </group>
     </group>
@@ -154,12 +166,12 @@ function Head({ id, x, top, heads, children, opts, name }: { id: Station; x: num
       {/* the colour bulbs: click one to drop it onto the cake below */}
       <group position={[0, 0.5, 0.3]}>
         {opts.map((o, i) => {
-          const bx = (i - (opts.length - 1) / 2) * 0.17
+          const bx = (i - (opts.length - 1) / 2) * 0.135
           return (
             <group key={o.label} position={[bx, 0, 0]}>
               <mesh onClick={(e) => { e.stopPropagation(); machine.drop(id, o.fn) }}
                 onPointerOver={(e) => { e.stopPropagation(); document.body.style.cursor = 'pointer' }} onPointerOut={() => { document.body.style.cursor = '' }}
-                material={mat(o.color, { rough: 0.3 })}><sphereGeometry args={[0.07, 16, 12]} /></mesh>
+                material={mat(o.color, { rough: 0.3 })}><sphereGeometry args={[0.058, 16, 12]} /></mesh>
               <mesh position={[0, 0, -0.05]} rotation={[Math.PI / 2, 0, 0]} material={mat(C.steel)}><cylinderGeometry args={[0.03, 0.03, 0.08, 8]} /></mesh>
               {o.icon && <Html position={[0, 0, 0.08]} center zIndexRange={[4, 0]} style={{ pointerEvents: 'none', fontSize: 13 }}>{o.icon}</Html>}
             </group>
@@ -181,10 +193,17 @@ function OrderScreen({ x, y }: { x: number; y: number }) {
     <group position={[x, y, 0.42]} rotation={[-0.15, 0.25, 0]}>
       <RBox size={[0.8, 0.72, 0.07]} color={C.plum} r={0.06} />
       <Html transform position={[0, 0, 0.045]} scale={0.15} zIndexRange={[5, 0]}>
-        <div className="screen3d">{performance.now() < until ? <div dangerouslySetInnerHTML={{ __html: cakeSvg(order.want, 220) }} /> : <div className="screen-q">?</div>}</div>
+        <div className="screen3d">{performance.now() < until ? <div><div dangerouslySetInnerHTML={{ __html: cakeSvg(order.want, 220) }} /><div className="screen-tin">{order.want.tin} tin</div></div> : <div className="screen-q">?</div>}</div>
       </Html>
     </group>
   )
+}
+
+function TinRim() {
+  const tin = useCake((s) => s.cake.tin)
+  if (tin === 'none') return null
+  // a thin steel tin under the cake, its shape showing round the base
+  return <mesh position={[0, 0.03, 0]} geometry={bodyGeo(tin, 0.37, 0.05)} material={mat(C.steel, { rough: 0.3 })} />
 }
 
 function starShape(r: number) {
