@@ -12,6 +12,9 @@ import { Kozie } from './world/Kozie'
 import { Customers, cafe as cafeLine } from './world/Customers'
 import { ShopHud } from './ui/ShopHud'
 import { CakeHud } from './ui/CakeHud'
+import { Joystick } from './ui/Joystick'
+import { TOUCH } from './systems/CameraRig'
+import { LookHint } from './ui/LookHint'
 import { useCake } from './systems/cake'
 import { useShop } from './systems/shop'
 ;(window as any).game = { shop: useShop, line: cafeLine } // handy for testing in the console
@@ -38,7 +41,7 @@ export function World() {
       <Lighting />
       <group scale={WORLD}>
       <Exterior showPot={!inside || outro} fadeIn={outro} />
-      {inside && <Interior cutaway={mode === 'dollhouse' || mode === 'pov' || outro} pov={mode === 'pov'} />}
+      {inside && <Interior cutaway={mode === 'dollhouse' || outro} pov={mode === 'pov'} />}
       {inside && mode !== 'pov' && mode !== 'vlog' && <Reveal id="barista" at={[0.4, 0, 2.4]}><Barista /></Reveal>}
       {inside && <Customers />}
       {kozie && <Kozie />}
@@ -90,6 +93,7 @@ export default function App() {
       </div>
       {mode !== 'cake' && <ShopHud />}
       <CakeHud />
+      {TOUCH ? <Joystick /> : <LookHint mode={mode} />}
       <div className="fps">{shownFps} fps</div>
     </>
   )
