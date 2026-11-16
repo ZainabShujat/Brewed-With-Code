@@ -87,7 +87,7 @@ export function Kozie() {
 // a huge wingback villain chair that can spin (and fling whoever's in it)
 function VillainChair() {
   const g = useRef<THREE.Group>(null)
-  useFrame(() => { const v = anim.villain; if (!g.current) return; g.current.visible = v.chair; g.current.position.copy(v.chairPos); g.current.rotation.y = v.chairSpin })
+  useFrame(() => { const v = anim.villain; if (!g.current) return; g.current.visible = v.chair; g.current.position.copy(v.chairPos); g.current.rotation.y = v.chairSpin; g.current.scale.setScalar(1.5) }) // a proper throne: Kozie fits in it
   const red = <meshStandardMaterial color="#7a0f22" roughness={0.55} />, gold = <meshStandardMaterial color="#c9a24a" metalness={0.8} roughness={0.3} />
   return (
     <group ref={g} visible={false}>
