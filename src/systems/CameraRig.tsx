@@ -27,7 +27,7 @@ const wantLook = new THREE.Vector3()
 // Mouse look: dollhouse = orbit all the way round (drag) + zoom (wheel).
 // Walk / barista / cakes = turn your head (right-drag, or drag on empty space), wheel leans in/out.
 const loadSens = () => { try { return Number(localStorage.getItem('sens')) || 1 } catch { return 1 } }
-export const view = { yaw: 0, pitch: 0, zoom: 1, mode: '' as string, sens: loadSens(), looking: false }
+export const view = { yaw: 0, pitch: 0, zoom: 1, mode: '' as string, sens: loadSens(), looking: false, panX: 0, panZ: 0, spin: 0 }
 export const setSens = (v: number) => { view.sens = v; try { localStorage.setItem('sens', String(v)) } catch { /* private mode */ } }
 const _off = new THREE.Vector3(), _sph = new THREE.Spherical()
 export function useMouseLook() {
@@ -64,6 +64,13 @@ export function useMouseLook() {
       if (down === 0 && grabbed) return                   // dragging an item, not the view
       if (!orbit) return                                  // only the dollhouse is dragged round; elsewhere you turn your head with Q / E
       const dx = e.clientX - lx, dy = e.clientY - ly; lx = e.clientX; ly = e.clientY
+      if (down === 0) {
+        // pan across the miniature, like sliding a diorama on a table
+        const a = view.yaw + view.spin, k = 0.03 * view.zoom
+        view.panX = Math.max(-11, Math.min(11, view.panX - (Math.cos(a) * dx + Math.sin(a) * dy) * k))
+        view.panZ = Math.max(-11, Math.min(11, view.panZ - (-Math.sin(a) * dx + Math.cos(a) * dy) * k))
+        return
+      }
       view.yaw -= dx * (orbit ? 0.006 : 0.003); view.pitch += dy * (orbit ? 0.004 : 0.003)
       view.pitch = orbit ? Math.max(-0.6, Math.min(0.5, view.pitch)) : Math.max(-0.7, Math.min(0.7, view.pitch))
       if (!orbit) view.yaw = Math.max(-1.4, Math.min(1.4, view.yaw))
@@ -73,7 +80,7 @@ export function useMouseLook() {
       if (document.pointerLockElement !== el) view.looking = false
       pts.delete(e.pointerId); if (pts.size < 2) pinch = 0; down = -1 }
     window.addEventListener('pointercancel', pu)
-    const zoomBy = (f: number) => { view.zoom = Math.max(view.mode === 'dollhouse' ? 0.3 : 0.6, Math.min(view.mode === 'dollhouse' ? 1.8 : 1.3, view.zoom * f)) }
+    const zoomBy = (f: number) => { view.zoom = Math.max(view.mode === 'dollhouse' ? 0.35 : 0.6, Math.min(view.mode === 'dollhouse' ? 1.8 : 1.3, view.zoom * f)) }
     const wh = (e: WheelEvent) => { e.preventDefault(); zoomBy(e.deltaY > 0 ? 1.1 : 0.9) }
     const cm = (e: Event) => e.preventDefault()
     el.addEventListener('pointerdown', pd); window.addEventListener('pointermove', pm); window.addEventListener('pointerup', pu)
@@ -81,7 +88,7 @@ export function useMouseLook() {
     return () => { el.removeEventListener('pointerdown', pd); window.removeEventListener('pointermove', pm); window.removeEventListener('pointerup', pu); el.removeEventListener('wheel', wh); el.removeEventListener('contextmenu', cm) }
   }, [gl])
 }
-let povX = 0.1
+let povX = 0.1, spinTo = 0, qe = false
 export const brewCam = { x: null as number | null } // set by the coffee flow: which station to stand at
 function applyLook(mode: string, dt: number) {
   // Q / E (or ← → in barista view) turn your head like a person would; it eases back when you let go
@@ -95,11 +102,18 @@ function applyLook(mode: string, dt: number) {
     view.pitch = orbit ? Math.max(-0.6, Math.min(0.5, view.pitch)) : Math.max(-0.7, Math.min(0.7, view.pitch))
     if (!orbit) view.yaw = Math.max(-1.4, Math.min(1.4, view.yaw))
   }
-  if (view.mode !== mode) { view.mode = mode; view.yaw = 0; view.pitch = 0; view.zoom = 1 } // each view starts fresh
+  if (view.mode !== mode) { view.mode = mode; view.yaw = 0; view.pitch = 0; view.zoom = 1; view.panX = 0; view.panZ = 0; view.spin = 0 } // each view starts fresh
+  if (mode === 'dollhouse') {
+    if (keys.has('q') && !qe) { qe = true; spinTo += Math.PI / 2 } else if (keys.has('e') && !qe) { qe = true; spinTo -= Math.PI / 2 } else if (!keys.has('q') && !keys.has('e')) qe = false
+    view.spin += (spinTo - view.spin) * Math.min(1, dt * 5)
+  } else { spinTo = 0; view.spin = 0 }
   if (mode === 'dollhouse' || mode === 'exterior') {
     _off.copy(wantPos).sub(wantLook); _sph.setFromVector3(_off)
-    _sph.theta += view.yaw; _sph.phi = Math.max(0.15, Math.min(1.45, _sph.phi + view.pitch)); _sph.radius *= view.zoom
+    _sph.theta += view.yaw + view.spin; _sph.phi = Math.max(0.15, Math.min(1.45, _sph.phi + view.pitch)); _sph.radius *= view.zoom
+    // dollhouse = a long, narrow lens from far away: almost orthographic, like an isometric diorama
+    if (mode === 'dollhouse') _sph.radius *= 2.4
     wantPos.copy(wantLook).add(_off.setFromSpherical(_sph))
+    if (mode === 'dollhouse') { wantLook.x += view.panX; wantLook.z += view.panZ; wantPos.x += view.panX; wantPos.z += view.panZ }
   } else {
     // turn the head: swing the look point round the eye; the wheel leans closer / back
     _off.copy(wantLook).sub(wantPos); _sph.setFromVector3(_off)
@@ -137,7 +151,7 @@ export function CameraRig() {
       return
     }
     const asp = (camera as THREE.PerspectiveCamera).aspect
-    setFov(camera as THREE.PerspectiveCamera, (mode === 'pov' ? 55 : 45) * (asp < 1 ? Math.min(1.7, 1 / asp * 0.95) : 1)) // portrait phone = wider lens // barista view: a slightly wider, human field of view
+    setFov(camera as THREE.PerspectiveCamera, (mode === 'pov' ? 55 : mode === 'dollhouse' ? 19 : 45) * (asp < 1 ? Math.min(1.7, 1 / asp * 0.95) : 1)) // portrait phone = wider lens // barista view: a slightly wider, human field of view
     if (mode === 'walk') {
       // first person at eye height (~1.65 m): the mouse turns you, W walks where you look
       step(player, dt, view.mode === 'walk' ? view.yaw : 0)

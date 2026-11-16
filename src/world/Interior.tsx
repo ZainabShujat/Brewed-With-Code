@@ -11,6 +11,7 @@ import { CakeBench } from './Cake'
 import { Swing, Slide } from './Swing'
 import { useGame } from '../systems/store'
 import { Model } from './Models'
+import { Steam } from './Props'
 import { ArchWindow, Chalkboard, Clock, PendantLamp, Plant, RoundTable, Rug, Shelf, Stool, StringLights } from './Props'
 import { BACK_DZ, COUNTER, FRIDGE_DX, FRIDGE_DZ, H, KITCHEN_DX, KITCHEN_DZ, PLUS_SPOTS, ROOM, TABLES, WALL_H } from './layout'
 
@@ -171,6 +172,7 @@ function CounterTop() {
       {/* the real espresso machine (Sketchfab, CC BY: KWojcik), with a grinder beside it */}
       <Model name="sf:espresso" fit={0.85} pos={[-1.6, y, z - 0.05]} rot={[0, Math.PI, 0]} />
       <Model name="sf:grinder" fit={0.5} pos={[-2.5, y, z + 0.1]} />
+      <Steam pos={[-1.6, y + 0.9, z - 0.05]} />
       <group position={[-1.6, y, z - 0.05]} visible={false}>
         {/* brushed-steel body with a pastel enamel side panel, sitting on short feet */}
         <RBox size={[1.34, 0.95, 0.8]} pos={[0, 0.62, 0]} color={C.steel} r={0.07} />
@@ -251,8 +253,22 @@ function Decor({ hideBack }: { hideBack: boolean }) {
       <Plant pos={[-9.2, 0, 9.2]} s={1.1} pot={C.counter} />
       <Plant pos={[9.2, 0, -4.2]} s={1.2} pot={C.lilac} />
       <Plant pos={[9.2, 0, 9.2]} s={0.9} pot={C.mint} />
-      <Rug pos={[-0.8, 0.1, -1.2]} r={2.4} />
-      <Rug pos={[0.4, 0.1, 4.8]} r={2.8} color={C.counter} />
+      <Rug pos={[-1.7, 0.1, 0.0]} r={2.3} />
+      <Rug pos={[-1.7, 0.1, 5.0]} r={2.3} color={C.counter} />
+      <Rug pos={[6.6, 0.1, 0.3]} r={2.9} color={C.mint} />
+      {/* window bench: a long cushioned seat under the arched windows, with cushions and a plant at each end */}
+      <group position={[-9.3, 0, 1.8]}>
+        <RBox size={[0.8, 0.5, 9.4]} pos={[0, 0.25, 0]} color={C.mint} r={0.08} />
+        <RBox size={[0.84, 0.14, 9.4]} pos={[0, 0.57, 0]} color={C.lilac} r={0.07} />
+        {[-3.8, -1.9, 0, 1.9, 3.8].map((z, i) => <RBox key={z} size={[0.18, 0.5, 0.6]} pos={[-0.25, 0.85, z]} color={i % 2 ? C.counter : C.butter} r={0.12} />)}
+      </group>
+      {/* hanging plants at different heights between the windows */}
+      {[[-8.9, 3.0, -4.0], [-8.9, 2.6, -0.1], [-8.9, 3.1, 3.7], [8.9, 2.8, 1.0]].map(([x, y, z], i) => (
+        <group key={i} position={[x, y, z]}>
+          <mesh position={[0, (WALL_H - y) / 2, 0]} material={mat(C.plum)}><cylinderGeometry args={[0.01, 0.01, WALL_H - y, 4]} /></mesh>
+          <Plant pos={[0, -0.45, 0]} s={0.5} pot={i % 2 ? C.lilac : C.counter} />
+        </group>
+      ))}
       {/* bar stools along the side of the counter */}
       <group position={[4.2, 0, -7.6]} scale={FURN}><Stool pos={[0, 0, 0]} /></group>
       <group position={[4.2, 0, -6.2]} scale={FURN}><Stool pos={[0, 0, 0]} color={C.purple} /></group>

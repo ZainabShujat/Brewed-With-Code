@@ -1,3 +1,6 @@
+import { useRef } from 'react'
+import { useFrame } from '@react-three/fiber'
+import type * as THREE from 'three'
 import { Model } from './Models'
 import { C } from '../data/palette'
 import { glow, mat, glass } from './mats'
@@ -6,7 +9,10 @@ import { Puck, RBox } from './Soft'
 type V3 = [number, number, number]
 
 export function Plant({ pos, s = 1, pot = C.purple }: { pos: V3; s?: number; pot?: string }) {
-  return <group position={pos}><Model name="potted_plant_01" scale={s * 0.85} /></group>
+  // leaves sway gently, each plant on its own rhythm
+  const ref = useRef<THREE.Group>(null), ph = pos[0] * 1.7 + pos[2]
+  useFrame(({ clock }) => { if (ref.current) { const t = clock.elapsedTime; ref.current.rotation.z = Math.sin(t * 0.9 + ph) * 0.025; ref.current.rotation.x = Math.sin(t * 0.7 + ph * 2) * 0.02 } })
+  return <group position={pos}><group ref={ref}><Model name="potted_plant_01" scale={s * 0.85} /></group></group>
 }
 
 // Vine trailing down from a shelf: a chain of little leaf blobs
@@ -24,8 +30,11 @@ export function Vine({ pos, len = 6 }: { pos: V3; len?: number }) {
 
 export function PendantLamp({ pos, color = C.counter, drop = 1.1 }: { pos: V3; color?: string; drop?: number }) {
   void color
+  // a very slight swing, as if someone brushed past
+  const ref = useRef<THREE.Group>(null), ph = pos[0] + pos[2] * 0.7
+  useFrame(({ clock }) => { if (ref.current) { const t = clock.elapsedTime; ref.current.rotation.z = Math.sin(t * 0.8 + ph) * 0.012; ref.current.rotation.x = Math.cos(t * 0.6 + ph) * 0.01 } })
   return (
-    <group position={pos}>
+    <group position={pos} ref={ref}>
       <mesh position={[0, -drop / 2, 0]} material={mat(C.plum)}><cylinderGeometry args={[0.012, 0.012, drop, 6]} /></mesh>
       <Model name="modern_ceiling_lamp_01" scale={1.0} pos={[0, -drop - 0.5, 0]} />
       <mesh position={[0, -drop - 0.15, 0]} material={glow()}><sphereGeometry args={[0.07, 12, 8]} /></mesh>
@@ -134,6 +143,25 @@ export function ArchWindow({ pos, rotY = 0, w = 1.1, h = 1.5 }: { pos: V3; rotY?
       <mesh position={[0, h / 2, 0.02]} material={mat(C.plum)}><torusGeometry args={[w / 2, 0.05, 8, 20, Math.PI]} /></mesh>
       <RBox size={[0.05, h + w / 2, 0.06]} pos={[0, w / 4, 0.03]} color={C.plum} r={0.02} />
       <Plant pos={[0.25, -h / 2 + 0.06, 0.12]} s={0.5} pot={C.counter} />
+    </group>
+  )
+}
+
+// soft wisps of steam rising and fading (espresso machine, cups)
+const STEAM_N = 7
+export function Steam({ pos, scale = 1 }: { pos: V3; scale?: number }) {
+  const ref = useRef<THREE.Group>(null)
+  useFrame(({ clock }) => {
+    ref.current?.children.forEach((c, i) => {
+      const k = (clock.elapsedTime * 0.35 + i / STEAM_N) % 1
+      c.position.set(Math.sin(k * 6 + i) * 0.06, k * 0.9, Math.cos(k * 5 + i) * 0.05)
+      c.scale.setScalar(0.4 + k * 1.3)
+      const m = (c as THREE.Mesh).material as THREE.MeshStandardMaterial; m.opacity = Math.sin(k * Math.PI) * 0.35
+    })
+  })
+  return (
+    <group ref={ref} position={pos} scale={scale}>
+      {Array.from({ length: STEAM_N }, (_, i) => <mesh key={i}><sphereGeometry args={[0.08, 8, 6]} /><meshStandardMaterial color="#ffffff" transparent depthWrite={false} opacity={0.2} /></mesh>)}
     </group>
   )
 }

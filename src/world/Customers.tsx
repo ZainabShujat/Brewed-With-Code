@@ -76,7 +76,8 @@ function Body({ c }: { c: Cust }) {
   const ref = useRef<THREE.Group>(null)
   const tag = useRef<HTMLDivElement>(null)
   const bubble = useRef<HTMLDivElement>(null)
-  const hips = useRef<THREE.Group>(null)
+  const hips = useRef<THREE.Group>(null), head = useRef<THREE.Group>(null), prop = useRef<THREE.Group>(null)
+  const act = c.id % 3 // what they do once seated: 0 reads a book, 1 scrolls their phone, 2 sips and chats
   const look = LOOKS[c.look]
   useFrame(({ clock }, dtRaw) => {
     const g = ref.current; if (!g) return
@@ -113,11 +114,21 @@ function Body({ c }: { c: Cust }) {
       // seated: hips on the chair seat, thighs forward; a slight lean in towards the table
       g.position.set(st.x, 0.1, st.z); g.rotation.set(0.08 + Math.sin(t * 0.8 + c.id) * 0.02, st.face, 0)
       hips.current?.children.forEach((l) => { l.rotation.x = -Math.PI / 2 })
+      // little lives: reading (head down, page turns), phone (head down, thumb taps), chatting (looking around, sipping)
+      if (prop.current) { prop.current.visible = true; prop.current.children.forEach((p, i) => { p.visible = i === act }) }
+      if (head.current) {
+        if (act === 2) { head.current.rotation.set(Math.sin(t * 0.5 + c.id) * 0.08, Math.sin(t * 0.35 + c.id) * 0.6, 0) }
+        else head.current.rotation.set(0.35 + Math.sin(t * 0.3 + c.id) * 0.04, Math.sin(t * 0.17 + c.id) * 0.12, 0)
+      }
+      const cup = prop.current?.children[2]; if (cup) cup.position.y = 1.0 + Math.max(0, Math.sin(t * 0.6 + c.id) - 0.85) * 3.2 // a sip now and then
       if (c.sitT > 22 + (c.id % 4) * 3) { taken.delete(c.seat); c.seat = -1; c.phase = 'out'; c.path = [V(st.x, away(st, 0.9)), V(OUT_LANE, away(st, 0.9)), V(OUT_LANE, 7.6), V(...DOOR)] }
       if (tag.current) tag.current.style.opacity = '0'
       if (bubble.current && bubble.current.textContent) bubble.current.textContent = ''
       return
     }
+    if (prop.current) prop.current.visible = false
+    // standing in line: glance around now and then
+    if (head.current) head.current.rotation.set(0, moving ? 0 : Math.sin(t * 0.4 + c.id * 2) * 0.45 * Math.max(0, Math.sin(t * 0.13 + c.id)), 0)
     // walking: legs swing from the hips in opposite phase, a gentle bob, no cartoon hop
     g.position.set(c.pos.x, moving ? Math.abs(Math.sin(t * 7 + c.id)) * 0.025 : 0, c.pos.z)
     g.rotation.x = 0; g.rotation.z = moving ? Math.sin(t * 7 + c.id) * 0.02 : 0
@@ -133,10 +144,18 @@ function Body({ c }: { c: Cust }) {
       </group>
       <mesh position={[0, 0.95, 0]} material={mat(look.shirt)} castShadow><capsuleGeometry args={[0.24, 0.42, 4, 10]} /></mesh>
       {/* human proportions: a head about 1/7 of the height, on a neck */}
+      <group ref={head} position={[0, 1.42, 0]}><group position={[0, -1.42, 0]}>
       <mesh position={[0, 1.42, 0]} material={mat(look.skin)}><cylinderGeometry args={[0.07, 0.08, 0.14, 10]} /></mesh>
       <mesh position={[0, 1.62, 0]} scale={[1, 1.12, 1]} material={mat(look.skin)} castShadow><sphereGeometry args={[0.2, 16, 12]} /></mesh>
       <mesh position={[0, 1.7, -0.03]} scale={[1.06, 0.85, 1.08]} material={mat(look.hair)}><sphereGeometry args={[0.2, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2]} /></mesh>
       {[-0.07, 0.07].map((x) => <mesh key={x} position={[x, 1.64, 0.185]} material={mat('#2b2024')}><sphereGeometry args={[0.022, 6, 4]} /></mesh>)}
+      </group></group>
+      {/* things in their hands when seated */}
+      <group ref={prop} visible={false}>
+        <group position={[0, 1.0, 0.34]} rotation={[-0.7, 0, 0]}><mesh position={[-0.07, 0, 0]} rotation={[0, 0.25, 0]} material={mat(look.shirt === '#ffcf5c' ? '#6e3f78' : '#c4528a')}><boxGeometry args={[0.15, 0.2, 0.02]} /></mesh><mesh position={[0.07, 0, 0]} rotation={[0, -0.25, 0]} material={mat('#fff6ee')}><boxGeometry args={[0.15, 0.2, 0.02]} /></mesh></group>
+        <mesh position={[0.05, 1.08, 0.3]} rotation={[-0.9, 0, 0]} material={mat('#2b2024')}><boxGeometry args={[0.08, 0.15, 0.012]} /></mesh>
+        <mesh position={[0.2, 1.0, 0.3]} material={mat('#fff6ee')}><cylinderGeometry args={[0.045, 0.035, 0.09, 12]} /></mesh>
+      </group>
       {EMBED && <Html position={[0, 2.35, 0]} center><div ref={tag} className="qtag" /></Html>}
       <Html position={[0, 3.0, 0]} center><div ref={bubble} className="obubble" /></Html>
     </group>

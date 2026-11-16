@@ -24,7 +24,7 @@ export const BLOCKERS: Box[] = [
   [-2.7 + KITCHEN_DX, -2.5 + KITCHEN_DZ, -2.6 + KITCHEN_DX, -2.3 + KITCHEN_DZ], // partition stub
 ]
 // Tables (x, z); each gets two stools. ~5 m apart so you can walk between them.
-export const TABLES: [number, number][] = [[-7, -1.2], [-0.8, -0.8], [5.4, -1.3], [-6, 5.4], [0.4, 6.0], [6.8, 5.2]]
+export const TABLES: [number, number][] = [[-7.0, -2.0], [-7.0, 1.8], [-7.0, 5.6], [-1.7, 0.0], [-1.7, 5.0], [6.6, -2.4], [6.6, 3.0]]
 for (const [x, z] of TABLES) BLOCKERS.push([x - 1.4, z - 1.0, x + 1.4, z + 1.0]) // 1.3x furniture + stools
 export const PLUS_SPOTS: [number, number][] = [[8, 8], [-8, 8.2], [0.4, 8.6], [8.6, 0.8]]
 export const COUNTER = { x0: -2.6, x1: 3.0, z: -3.2, depth: 1.2, top: 1.05 } // in back-zone local space

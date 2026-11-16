@@ -5,6 +5,7 @@ import { useGame, type CamMode } from './systems/store'
 import { CameraRig } from './systems/CameraRig'
 import { Exterior } from './world/Exterior'
 import { Interior } from './world/Interior'
+import { Hotspots } from './world/Hotspots'
 import { Barista } from './world/Barista'
 import { Reveal } from './world/Reveal'
 import { Lighting } from './world/Lighting'
@@ -48,6 +49,7 @@ export function World() {
       {inside && <Interior cutaway={mode === 'dollhouse' || outro} pov={mode === 'pov'} />}
       {inside && mode !== 'pov' && mode !== 'vlog' && mode !== 'walk' && <Reveal id="barista" at={[0.4, 0, 2.4]}><Barista /></Reveal>}
       {inside && <Customers />}
+      {inside && <Hotspots />}
       {kozie && <Kozie />}
       </group>
       <CameraRig />
