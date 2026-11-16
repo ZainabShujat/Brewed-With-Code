@@ -6,6 +6,13 @@ import { PriorityQueue } from '../systems/queue'
 import { anim } from '../systems/anim'
 import { mat } from './mats'
 import { useShop } from '../systems/shop'
+import { TABLES } from './layout'
+
+// reels (embed) keep the old queue look: numbers over heads, everyone leaves after being served
+const EMBED = typeof location !== 'undefined' && location.search.includes('embed')
+// two stools per table (FURN 1.3 scale): where a seated customer's body goes, and which way they face
+const SEATS = TABLES.flatMap(([x, z]) => [{ x: x - 1.235, z: z + 0.26, face: Math.PI / 2 }, { x: x + 1.235, z: z - 0.26, face: -Math.PI / 2 }])
+const taken = new Set<number>()
 
 // Customers walk in the front door, join the line at the counter (a FIFO queue), get served
 // at the front, then walk out. Fixed pool of bodies so nothing re-renders mid-reel (frame-exact).
@@ -15,8 +22,8 @@ const IN_LANE = 2.6, OUT_LANE = 3.1
 // line slots, front (at the counter) first, stretching back toward the door
 export const SLOTS: [number, number][] = Array.from({ length: 6 }, (_, i) => [1.8, -5.3 + i * 1.15])
 
-type Phase = 'off' | 'in' | 'line' | 'out'
-export type Cust = { id: number; phase: Phase; pos: THREE.Vector3; path: THREE.Vector3[]; look: number; served: number; hurry: boolean }
+type Phase = 'off' | 'in' | 'line' | 'out' | 'seat' | 'sit'
+export type Cust = { id: number; phase: Phase; pos: THREE.Vector3; path: THREE.Vector3[]; look: number; served: number; hurry: boolean; seat: number; sitT: number }
 
 export const LOOKS = [
   { shirt: '#6fe0c4', hair: '#3b2a22', skin: '#f6cdb4' }, { shirt: '#ffcf5c', hair: '#1d1838', skin: '#c98a62' },
@@ -29,7 +36,7 @@ const V = (x: number, z: number) => new THREE.Vector3(x, 0, z)
 
 // shared state: the pool, the queue, and controls (used by the game loop and by reel pages)
 export const cafe = {
-  pool: Array.from({ length: POOL }, (_, id): Cust => ({ id, phase: 'off', pos: V(...DOOR), path: [], look: id % LOOKS.length, served: 0, hurry: false })),
+  pool: Array.from({ length: POOL }, (_, id): Cust => ({ id, phase: 'off', pos: V(...DOOR), path: [], look: id % LOOKS.length, served: 0, hurry: false, seat: -1, sitT: 0 })),
   line: new PriorityQueue<Cust>(),   // in-a-hurry customers (priority 1) go ahead of normal ones (0)
   hurryChance: 0.2,
   auto: false,            // normal game: customers keep arriving and getting served on their own
@@ -45,7 +52,13 @@ export const cafe = {
   },
   serve() {
     const c = this.line.dequeue(); if (!c) return false  // ← the front of the line leaves first
-    c.phase = 'out'; c.path = [V(OUT_LANE, c.pos.z), V(OUT_LANE, 7.6), V(...DOOR)]
+    // most customers take their drink to a free table and sit a while; in-a-hurry ones take it to go
+    const free = SEATS.map((_, i) => i).filter((i) => !taken.has(i))
+    if (!EMBED && !c.hurry && free.length && Math.random() < 0.75) {
+      const i = free[Math.floor(Math.random() * free.length)], st = SEATS[i]; taken.add(i)
+      c.phase = 'seat'; c.seat = i
+      c.path = [V(OUT_LANE, c.pos.z), V(OUT_LANE, st.z + (st.z > 0 ? -1.4 : 1.4)), V(st.x + (st.face > 0 ? -0.6 : 0.6), st.z), V(st.x, st.z)]
+    } else { c.phase = 'out'; c.path = [V(OUT_LANE, c.pos.z), V(OUT_LANE, 7.6), V(...DOOR)] }
     return true
   },
   // reel helper: n customers already standing in line (teleported to their slots, no walk-in)
@@ -54,7 +67,7 @@ export const cafe = {
   },
   // who is in line, front first, with their shirt colour (for the queue strip in reels)
   order() { const out: { id: number; color: string; hurry: boolean }[] = []; for (let i = 0; i < this.line.size; i++) { const c = this.line.at(i)!; out.push({ id: c.id, color: LOOKS[c.look].shirt, hurry: c.hurry }) } return out },
-  reset() { this.pool.forEach((p) => { p.phase = 'off'; p.path = [] }); while (this.line.dequeue()); },
+  reset() { taken.clear(); this.pool.forEach((p) => { p.phase = 'off'; p.path = []; p.seat = -1 }); while (this.line.dequeue()); },
 }
 
 function Body({ c }: { c: Cust }) {
@@ -83,16 +96,27 @@ function Body({ c }: { c: Cust }) {
       } else if (c.path.length) {
         c.path.shift()
         if (!c.path.length && c.phase === 'out') { c.phase = 'off'; g.visible = false; return }
-      } else {
+        if (!c.path.length && c.phase === 'seat') { c.phase = 'sit'; c.sitT = 0 }
+      } else if (idx >= 0) {
         c.phase = 'line'
         g.rotation.y += (Math.PI - g.rotation.y) * 0.1 // face the counter
       }
     }
     const t = clock.elapsedTime
+    if (c.phase === 'sit') {
+      // sitting: on the stool, facing the table, sipping now and then; leaves after ~25 s
+      c.sitT += dt
+      const st = SEATS[c.seat]
+      g.position.set(st.x, 0.42, st.z); g.rotation.set(Math.sin(t * 0.8 + c.id) * 0.03, st.face, 0)
+      if (c.sitT > 22 + (c.id % 4) * 3) { taken.delete(c.seat); c.seat = -1; c.phase = 'out'; c.path = [V(st.x + (st.face > 0 ? -0.7 : 0.7), st.z), V(OUT_LANE, st.z + (st.z > 0 ? 1.4 : 1.4)), V(OUT_LANE, 7.6), V(...DOOR)] }
+      if (tag.current) tag.current.style.opacity = '0'
+      if (bubble.current && bubble.current.textContent) bubble.current.textContent = ''
+      return
+    }
     g.position.set(c.pos.x, moving ? Math.abs(Math.sin(t * 10 + c.id)) * 0.08 : 0, c.pos.z)
     g.rotation.z = moving ? Math.sin(t * 10 + c.id) * 0.06 : 0
     if (bubble.current) { const o = useShop.getState().orders[c.id]; const txt = o && idx === 0 ? o.label : ''; if (bubble.current.textContent !== txt) bubble.current.textContent = txt }
-    if (tag.current) { tag.current.textContent = idx >= 0 ? (c.hurry ? '⚡' : '') + String(idx + 1) : ''; tag.current.style.opacity = idx >= 0 ? '1' : '0' }
+    if (tag.current) { tag.current.textContent = idx >= 0 ? (c.hurry ? '⚡' : '') + String(idx + 1) : ''; tag.current.style.opacity = EMBED && idx >= 0 ? '1' : '0' }
   })
   return (
     <group ref={ref} visible={false}>

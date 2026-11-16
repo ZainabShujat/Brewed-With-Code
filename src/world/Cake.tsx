@@ -259,17 +259,61 @@ function BakeryCorner() {
   )
 }
 
+// ── sponges are BAKED, not dragged: pick a batter tap, it fills the pan, the pan goes into
+// the oven below, and the baked sponge lands on the turntable. One pan at a time.
+const TAPS: ['vanilla' | 'chocolate' | 'strawberry', number][] = [['vanilla', -9.55], ['chocolate', -9.2], ['strawberry', -8.85]]
+const BATTER_COL = { vanilla: '#f6dfa4', chocolate: '#6b3a22', strawberry: '#f4a3b6' }
+function BatterStation() {
+  const job = useRef<{ f: 'vanilla' | 'chocolate' | 'strawberry'; x: number; t0: number } | null>(null)
+  const pan = useRef<THREE.Group>(null), batter = useRef<THREE.Mesh>(null), stream = useRef<THREE.Mesh>(null), glowR = useRef<THREE.Mesh>(null)
+  const bm = useMemo(() => new THREE.MeshStandardMaterial({ color: BATTER_COL.vanilla, roughness: 0.3 }), [])
+  const PX = -9.2, PY = BENCH + 0.05, PZ = FRONT + 0.05
+  useFrame(() => {
+    const j = job.current, g = pan.current; if (!g) return
+    const t = j ? now() - j.t0 : 99
+    const slide = clamp01(t / 0.35), fill = clamp01((t - 0.35) / 0.9), drop = clamp01((t - 1.35) / 0.45), bake = clamp01((t - 1.8) / 1.2)
+    const x = j ? PX + (j.x - PX) * slide * (1 - drop) : PX
+    g.position.set(x, PY - drop * 0.45, PZ + drop * 0.25); g.visible = !j || drop < 0.6
+    if (batter.current) { batter.current.visible = !!j && fill > 0; batter.current.scale.set(1, Math.max(0.001, fill), 1); batter.current.position.y = 0.01 + fill * 0.025 }
+    if (stream.current) { const on = !!j && t > 0.35 && t < 1.25; stream.current.visible = on; if (j) stream.current.position.set(j.x, PY + 0.3, PZ) }
+    if (glowR.current) (glowR.current.material as THREE.MeshStandardMaterial).emissiveIntensity = j && bake > 0 && bake < 1 ? 0.6 + Math.sin(t * 10) * 0.25 : 0
+    if (j && t > 3.0) { job.current = null; useCake.getState().addLayer(j.f) }
+  })
+  const start = (f: 'vanilla' | 'chocolate' | 'strawberry', x: number) => {
+    const c = useCake.getState().cake
+    if (job.current || c.frosting !== 'none' || c.layers.length >= 4 || c.layers.length > c.fillings.length) return
+    bm.color.set(BATTER_COL[f]); job.current = { f, x, t0: now() }
+  }
+  return (
+    <group>
+      {TAPS.map(([f, x]) => (
+        <Grab key={f} id={`batter-${f}`} tip={`${f} batter: click to pour and bake`} pos={[x, BENCH + 0.55, FRONT + 0.05]} size={[0.26, 0.5, 0.26]} onClick={() => start(f, x)}>
+          <mesh material={glass()}><cylinderGeometry args={[0.1, 0.1, 0.32, 18]} /></mesh>
+          <mesh position={[0, -0.03, 0]} material={mat(BATTER_COL[f], { rough: 0.3 })}><cylinderGeometry args={[0.092, 0.092, 0.22, 18]} /></mesh>
+          <mesh position={[0, -0.2, 0]} material={mat(C.steel)}><coneGeometry args={[0.1, 0.1, 18]} /></mesh>
+          <mesh position={[0, 0.18, 0]} material={mat(C.woodDark)}><cylinderGeometry args={[0.105, 0.105, 0.04, 18]} /></mesh>
+        </Grab>
+      ))}
+      {/* the rail the taps hang from */}
+      <mesh position={[-9.2, BENCH + 0.55 + 0.32, FRONT + 0.05]} rotation={[0, 0, Math.PI / 2]} material={mat(C.steel)}><cylinderGeometry args={[0.02, 0.02, 1.05, 10]} /></mesh>
+      <group ref={pan}>
+        <mesh material={mat(C.steel, { rough: 0.35 })} castShadow><cylinderGeometry args={[0.15, 0.14, 0.07, 28, 1, true]} /></mesh>
+        <mesh position={[0, -0.03, 0]} material={mat(C.steel)}><cylinderGeometry args={[0.14, 0.14, 0.01, 28]} /></mesh>
+        <mesh ref={batter} material={bm} visible={false}><cylinderGeometry args={[0.14, 0.14, 0.05, 28]} /></mesh>
+      </group>
+      <mesh ref={stream} material={bm} visible={false}><cylinderGeometry args={[0.02, 0.016, 0.5, 10]} /></mesh>
+      {/* oven glow while it bakes */}
+      <mesh ref={glowR} position={[-9.05, 0.41, FRONT + 0.3]} material={new THREE.MeshStandardMaterial({ color: '#2a120a', emissive: '#ff9a3c', emissiveIntensity: 0 })}><planeGeometry args={[0.88, 0.44]} /></mesh>
+    </group>
+  )
+}
+
 // ── the ingredients, laid out on the bakery counter: drag each onto the turntable ──
 const BENCH = 0.97 // counter-top height
 const FRONT = -8.72, BACK = -9.45
 function CakeIngredients() {
   const k = useCake.getState
   const T = { turntable: () => {} }
-  const sponge = (x: number, f: 'vanilla' | 'chocolate' | 'strawberry') => (
-    <Grab key={f} id={`sponge-${f}`} tip={`${f} sponge: drag onto the turntable`} pos={[x, BENCH + 0.08, FRONT]} size={[0.3, 0.2, 0.3]} drops={{ turntable: () => k().addLayer(f) }}>
-      {[0, 1].map((i) => <mesh key={i} position={[0, -0.04 + i * 0.075, 0]} material={mat(SPONGE_COL[f], { rough: 0.85 })} castShadow><cylinderGeometry args={[0.13, 0.13, 0.07, 28]} /></mesh>)}
-    </Grab>
-  )
   const bowl = (id: string, x: number, z: number, color: string, tip: string, act: () => void, big = false) => (
     <Grab key={id} id={id} tip={tip} pos={[x, BENCH + 0.07, z]} size={[big ? 0.36 : 0.28, 0.2, big ? 0.36 : 0.28]} drops={{ turntable: act }}>
       <mesh material={mat(C.cream, { rough: 0.3 })} castShadow><cylinderGeometry args={[big ? 0.15 : 0.12, big ? 0.1 : 0.08, 0.12, 24, 1, true]} /></mesh>
@@ -297,7 +341,7 @@ function CakeIngredients() {
     <group>
       <DropTarget id="turntable" pos={[CAKE_AT[0], TOP + 0.02, CAKE_AT[2]]} r={0.7} />
       {/* left: sponges, fillings, piping bags */}
-      {sponge(-9.55, 'vanilla')}{sponge(-9.2, 'chocolate')}{sponge(-8.85, 'strawberry')}
+      <BatterStation />
       {bowl('fill-cream', -8.45, FRONT, FILL_COL.cream, 'cream filling: drag onto the cake', () => k().addFilling('cream'))}
       {bowl('fill-jam', -8.12, FRONT, FILL_COL.jam, 'jam filling: drag onto the cake', () => k().addFilling('jam'))}
       {bag(-9.55, 'white')}{bag(-9.25, 'pink')}{bag(-8.95, 'chocolate')}
