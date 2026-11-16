@@ -367,7 +367,8 @@ function CakeIngredients() {
 
 export function CakeBench() {
   const spin = useRef<THREE.Group>(null)
-  useFrame((_, dt) => { if (spin.current && useCake.getState().spin) spin.current.rotation.y += dt * 0.35 })
+  // no spinning on the conveyor: the cake has to stay lined up with its tin (a heart pan and a heart cake point the same way)
+  useFrame(() => { if (spin.current) spin.current.rotation.y = 0 })
   return (
     <group>
       <BakeryCorner />
