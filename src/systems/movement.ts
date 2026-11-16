@@ -1,4 +1,4 @@
-import { BLOCKERS, H } from '../world/layout'
+import { BLOCKERS, H, RR } from '../world/layout'
 
 // Keyboard state for walk mode (WASD / arrows).
 export const keys = new Set<string>()
@@ -13,7 +13,7 @@ export const stick = { x: 0, y: 0 }
 
 const R = 0.35 // barista radius
 function blocked(x: number, z: number) {
-  if (Math.abs(x) > H - 0.3 - R || Math.abs(z) > H - 0.3 - R) return true
+  if (Math.hypot(x, z) > RR - 0.5 - R || z < -H + 0.3 + R) return true // round room, flat back wall
   return BLOCKERS.some(([x0, z0, x1, z1]) => x > x0 - R && x < x1 + R && z > z0 - R && z < z1 + R)
 }
 

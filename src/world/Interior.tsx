@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import { HQ } from './Lighting'
 import * as THREE from 'three'
 import { Html } from '@react-three/drei'
@@ -13,7 +14,7 @@ import { useGame } from '../systems/store'
 import { Model } from './Models'
 import { Steam } from './Props'
 import { ArchWindow, Chalkboard, Clock, PendantLamp, Plant, RoundTable, Rug, Shelf, Stool, StringLights } from './Props'
-import { BACK_DZ, COUNTER, FRIDGE_DX, FRIDGE_DZ, H, KITCHEN_DX, KITCHEN_DZ, PLUS_SPOTS, ROOM, TABLES, WALL_H } from './layout'
+import { BACK_DZ, COUNTER, FRIDGE_DX, FRIDGE_DZ, H, KITCHEN_DX, KITCHEN_DZ, PLUS_SPOTS, ROOM, RR, TABLES, WALL_H } from './layout'
 
 const T = 0.3 // wall thickness
 
@@ -22,17 +23,19 @@ const T = 0.3 // wall thickness
 // furniture scale: matches the ~2 m customers/barista and the 1.7 m Kozie
 const FURN = 1.6
 
+// The café is the inside of the coffee pot: a round room (radius RR) with one flat wall at the back
+// for the kitchen and bakery (a chord of the circle at z = -H). The door is at the front, like outside.
 const PLANKS = (() => {
   const out: { x: number; z: number; len: number; c: string }[] = []
   const cols = [C.plank1, C.plank2, C.plank3, C.plank4]
-  const rows = ROOM, w = ROOM / rows
-  for (let i = 0; i < rows; i++) {
-    let z = -H, k = 0
-    const first = 1 + ((i * 7) % 5) * 0.6            // stagger the first board in each row
-    while (z < H - 0.01) {
+  for (let i = 0; i < RR * 2; i++) {
+    const x = -RR + i + 0.5, half = Math.sqrt(Math.max(0, RR * RR - x * x))
+    let z = Math.max(-H, -half), k = 0
+    const end = half, first = 1 + ((i * 7) % 5) * 0.6
+    while (z < end - 0.05) {
       const want = k === 0 ? first : 2.5 + ((i * 13 + k * 5) % 5) * 0.5
-      const len = Math.min(want, H - z)
-      out.push({ x: -H + (i + 0.5) * w, z: z + len / 2, len, c: cols[(i * 3 + k) % 4] })
+      const len = Math.min(want, end - z)
+      out.push({ x, z: z + len / 2, len, c: cols[(i * 3 + k) % 4] })
       z += len; k++
     }
   }
@@ -45,54 +48,62 @@ const BRASS = new THREE.MeshStandardMaterial({ color: '#c9a24a', metalness: 0.9,
 function Floor() {
   return (
     <group>
-      <RBox size={[ROOM + 0.5, 0.5, ROOM + 0.5]} pos={[0, -0.22, 0]} color={C.plum} r={0.15} />
+      {/* the pot's base: a round slab, flattened at the back */}
+      <mesh position={[0, -0.22, 0]} material={mat(C.plum)} receiveShadow><cylinderGeometry args={[RR + 0.35, RR + 0.35, 0.5, 72]} /></mesh>
       {PLANKS.map((p, i) => (
-        <RBox key={i} size={[ROOM / ROOM - 0.05, 0.08, p.len - 0.05]} pos={[p.x, 0.05, p.z]} color={p.c} r={0.025} shadow={false} />
+        <RBox key={i} size={[0.95, 0.08, p.len - 0.05]} pos={[p.x, 0.05, p.z]} color={p.c} r={0.025} shadow={false} />
       ))}
     </group>
   )
 }
 
+// angle round the pot (0 = front door, +x side positive): the back chord meets the circle at ±TH
+const TH = Math.acos(-H / RR)
+const onRing = (th: number, r = RR) => [Math.sin(th) * r, Math.cos(th) * r] as const
+const facing = (th: number) => Math.atan2(-Math.sin(th), -Math.cos(th)) // rotation that faces the centre
+
+// a curved wall section from angle a to b (thin open cylinder, both faces drawn)
+function Arc({ a, b, y = WALL_H / 2, h = WALL_H, r = RR, color = C.wall }: { a: number; b: number; y?: number; h?: number; r?: number; color?: string }) {
+  const m = useMemo(() => { const x = mat(color).clone(); x.side = THREE.DoubleSide; return x }, [color])
+  return <mesh position={[0, y, 0]} material={m} receiveShadow><cylinderGeometry args={[r, r, h, 64, 1, true, a, b - a]} /></mesh>
+}
+
 function Walls({ cutaway, hideBack }: { cutaway: boolean; hideBack: boolean }) {
+  const DOOR = 0.13 // half-angle of the door opening
   return (
     <group>
       {!hideBack && (
         <group>
-          <RBox size={[ROOM + T, WALL_H, T]} pos={[0, WALL_H / 2, -H]} color={C.wall} r={0.1} />
-          <RBox size={[ROOM + T, 1.1, 0.08]} pos={[0, 0.6, -H + T / 2]} color={C.wallTrim} r={0.03} />
-          <RBox size={[ROOM + T + 0.1, 0.18, T + 0.12]} pos={[0, WALL_H, -H]} color={C.wood} r={0.07} />
+          <RBox size={[2 * Math.sqrt(RR * RR - H * H) + T, WALL_H, T]} pos={[0, WALL_H / 2, -H]} color={C.wall} r={0.1} />
+          <RBox size={[2 * Math.sqrt(RR * RR - H * H), 1.1, 0.08]} pos={[0, 0.6, -H + T / 2]} color={C.wallTrim} r={0.03} />
+          <RBox size={[2 * Math.sqrt(RR * RR - H * H) + T + 0.1, 0.18, T + 0.12]} pos={[0, WALL_H, -H]} color={C.wood} r={0.07} />
         </group>
       )}
-      <RBox size={[T, WALL_H, ROOM + T]} pos={[-H, WALL_H / 2, 0]} color={C.wall} r={0.1} />
-      <RBox size={[0.08, 1.1, ROOM]} pos={[-H + T / 2, 0.6, 0]} color={C.wallTrim} r={0.03} />
-      <RBox size={[T + 0.12, 0.18, ROOM + T + 0.1]} pos={[-H, WALL_H, 0]} color={C.wood} r={0.07} />
-      {/* corner post */}
-      <RBox size={[0.42, WALL_H + 0.2, 0.42]} pos={[-H, WALL_H / 2, -H]} color={C.wood} r={0.1} />
+      {/* the curved pot wall: in the dollhouse only the back half shows, like a cut-open pot */}
+      {cutaway ? <>
+        <Arc a={Math.PI / 2 - 0.25} b={TH} /><Arc a={-TH} b={-Math.PI / 2 + 0.25} />
+        <Arc a={Math.PI / 2 - 0.25} b={TH} y={0.6} h={1.1} r={RR - 0.05} color={C.wallTrim} /><Arc a={-TH} b={-Math.PI / 2 + 0.25} y={0.6} h={1.1} r={RR - 0.05} color={C.wallTrim} />
+      </> : <>
+        <Arc a={DOOR} b={TH} /><Arc a={-TH} b={-DOOR} />
+        <Arc a={DOOR} b={TH} y={0.6} h={1.1} r={RR - 0.05} color={C.wallTrim} /><Arc a={-TH} b={-DOOR} y={0.6} h={1.1} r={RR - 0.05} color={C.wallTrim} />
+        <Arc a={-DOOR} b={DOOR} y={WALL_H - 0.5} h={1.0} />
+        {/* front doors swing inward (anim.doorIn) */}
+        <Swing pos={[-1.04, 0, RR - 0.15]} dir={1} src="doorIn"><RBox size={[1.0, 3.0, 0.1]} pos={[0.52, 1.5, 0]} color={C.purple} r={0.05} /></Swing>
+        <Swing pos={[1.04, 0, RR - 0.15]} dir={-1} src="doorIn"><RBox size={[1.0, 3.0, 0.1]} pos={[-0.52, 1.5, 0]} color={C.purple} r={0.05} /></Swing>
+        {/* round plaster ceiling with wooden beams */}
+        <mesh position={[0, WALL_H + 0.12, 0]} material={mat(C.wall)}><cylinderGeometry args={[RR, RR, 0.16, 64]} /></mesh>
+        {[-8, -4, 0, 4, 8].map((z) => { const w = 2 * Math.sqrt(Math.max(0, RR * RR - z * z)); return <RBox key={z} size={[w, 0.28, 0.32]} pos={[0, WALL_H - 0.08, z]} color={C.wood} r={0.08} shadow={false} /> })}
+      </>}
+      {/* wooden rim along the top of the curved wall */}
+      {!cutaway && <mesh position={[0, WALL_H, 0]} rotation={[Math.PI / 2, 0, 0]} material={mat(C.wood)}><torusGeometry args={[RR, 0.1, 8, 96, Math.PI * 2]} /></mesh>}
 
-      <ArchWindow pos={[-H + T / 2 + 0.02, 2.4, -2.0]} rotY={Math.PI / 2} />
-      <ArchWindow pos={[-H + T / 2 + 0.02, 2.4, 1.8]} rotY={Math.PI / 2} />
-      <ArchWindow pos={[-H + T / 2 + 0.02, 2.4, 5.6]} rotY={Math.PI / 2} />
-      <StringLights from={[-H + 0.25, WALL_H - 0.1, -H + 0.3]} to={[-H + 0.25, WALL_H - 0.1, H - 0.3]} n={18} />
+      {/* three arched windows along the curve on the left */}
+      {WIN.map((th) => { const [x, z] = onRing(th, RR - 0.12); return <ArchWindow key={th} pos={[x, 2.4, z]} rotY={facing(th)} /> })}
       {!hideBack && <StringLights from={[-H + 0.3, WALL_H - 0.1, -H + 0.25]} to={[H - 0.3, WALL_H - 0.1, -H + 0.25]} n={18} />}
-
-      {!cutaway && (
-        <group>
-          <RBox size={[ROOM / 2 - 1.2, WALL_H, T]} pos={[-(ROOM / 4 + 0.6), WALL_H / 2, H]} color={C.wall} r={0.1} />
-          <RBox size={[ROOM / 2 - 1.2, WALL_H, T]} pos={[ROOM / 4 + 0.6, WALL_H / 2, H]} color={C.wall} r={0.1} />
-          <RBox size={[2.4, 1.0, T]} pos={[0, WALL_H - 0.5, H]} color={C.wall} r={0.1} />
-          {/* front doors swing inward (anim.doorIn) */}
-          <Swing pos={[-1.04, 0, H]} dir={1} src="doorIn"><RBox size={[1.0, 3.0, 0.1]} pos={[0.52, 1.5, 0]} color={C.purple} r={0.05} /></Swing>
-          <Swing pos={[1.04, 0, H]} dir={-1} src="doorIn"><RBox size={[1.0, 3.0, 0.1]} pos={[-0.52, 1.5, 0]} color={C.purple} r={0.05} /></Swing>
-          {/* the café ceiling: soft plaster with mauve wood beams */}
-          <RBox size={[ROOM + T, 0.16, ROOM + T]} pos={[0, WALL_H + 0.12, 0]} color={C.wall} r={0.05} shadow={false} />
-          {[-8, -4, 0, 4, 8].map((z) => <RBox key={z} size={[ROOM, 0.28, 0.32]} pos={[0, WALL_H - 0.08, z]} color={C.wood} r={0.08} shadow={false} />)}
-          <StringLights from={[H - 0.25, WALL_H - 0.1, -H + 0.3]} to={[H - 0.25, WALL_H - 0.1, H - 0.3]} n={18} />
-          <RBox size={[T, WALL_H, ROOM + T]} pos={[H, WALL_H / 2, 0]} color={C.wall} r={0.1} />
-        </group>
-      )}
     </group>
   )
 }
+export const WIN = [-1.72, -1.42, -1.12]
 
 // The old boxed-in kitchen corner was replaced by the open bakery corner (world/Cake.tsx: BakeryCorner)
 function Kitchen() {
@@ -253,17 +264,18 @@ function Decor({ hideBack }: { hideBack: boolean }) {
       <Plant pos={[-9.2, 0, 9.2]} s={1.1} pot={C.counter} />
       <Plant pos={[9.2, 0, -4.2]} s={1.2} pot={C.lilac} />
       <Plant pos={[9.2, 0, 9.2]} s={0.9} pot={C.mint} />
-      <Rug pos={[-1.7, 0.1, 0.0]} r={2.3} />
-      <Rug pos={[-1.7, 0.1, 5.0]} r={2.3} color={C.counter} />
-      <Rug pos={[6.6, 0.1, 0.3]} r={2.9} color={C.mint} />
+      <Rug pos={[-4.2, 0.1, 0.6]} r={2.3} />
+      <Rug pos={[-3.4, 0.1, 6.4]} r={2.3} color={C.counter} />
+      <Rug pos={[8.4, 0.1, 0.6]} r={3.0} color={C.mint} />
       {/* window bench: a long cushioned seat under the arched windows, with cushions and a plant at each end */}
-      <group position={[-9.3, 0, 1.8]}>
-        <RBox size={[0.8, 0.5, 9.4]} pos={[0, 0.25, 0]} color={C.mint} r={0.08} />
-        <RBox size={[0.84, 0.14, 9.4]} pos={[0, 0.57, 0]} color={C.lilac} r={0.07} />
-        {[-3.8, -1.9, 0, 1.9, 3.8].map((z, i) => <RBox key={z} size={[0.18, 0.5, 0.6]} pos={[-0.25, 0.85, z]} color={i % 2 ? C.counter : C.butter} r={0.12} />)}
-      </group>
+      {Array.from({ length: 9 }, (_, i) => { const th = -2.0 + i * 0.13, x = Math.sin(th) * (RR - 0.65), z = Math.cos(th) * (RR - 0.65); return (
+        <group key={i} position={[x, 0, z]} rotation={[0, th, 0]}>
+          <RBox size={[1.9, 0.5, 0.8]} pos={[0, 0.25, 0]} color={C.mint} r={0.08} />
+          <RBox size={[1.92, 0.14, 0.84]} pos={[0, 0.57, 0]} color={C.lilac} r={0.07} />
+          {i % 2 === 0 && <RBox size={[0.6, 0.5, 0.18]} pos={[0, 0.85, 0.25]} color={i % 4 ? C.counter : C.butter} r={0.12} />}
+        </group>) })}
       {/* hanging plants at different heights between the windows */}
-      {[[-8.9, 3.0, -4.0], [-8.9, 2.6, -0.1], [-8.9, 3.1, 3.7], [8.9, 2.8, 1.0]].map(([x, y, z], i) => (
+      {[[-1.87, 3.0], [-1.57, 2.6], [-1.27, 3.1], [-0.95, 2.8], [1.4, 2.7]].map(([th, y]) => [Math.sin(th) * (RR - 0.8), y, Math.cos(th) * (RR - 0.8)]).map(([x, y, z], i) => (
         <group key={i} position={[x, y, z]}>
           <mesh position={[0, (WALL_H - y) / 2, 0]} material={mat(C.plum)}><cylinderGeometry args={[0.01, 0.01, WALL_H - y, 4]} /></mesh>
           <Plant pos={[0, -0.45, 0]} s={0.5} pot={i % 2 ? C.lilac : C.counter} />

@@ -5,6 +5,8 @@
 export const ROOM = 20
 export const H = ROOM / 2
 export const WALL_H = 4.2
+// 16 Nov: the room is round, the inside of the coffee pot (radius RR), with a flat back wall at z = -H
+export const RR = 14
 
 // The back-zone pieces were modelled in "old room" local space; these offsets place them in the new room.
 export const BACK_DZ = -4.2          // counter: leaves a 2 m barista aisle in front of the back wall
@@ -24,7 +26,8 @@ export const BLOCKERS: Box[] = [
   [-2.7 + KITCHEN_DX, -2.5 + KITCHEN_DZ, -2.6 + KITCHEN_DX, -2.3 + KITCHEN_DZ], // partition stub
 ]
 // Tables (x, z); each gets two stools. ~5 m apart so you can walk between them.
-export const TABLES: [number, number][] = [[-7.0, -2.0], [-7.0, 1.8], [-7.0, 5.6], [-1.7, 0.0], [-1.7, 5.0], [6.6, -2.4], [6.6, 3.0]]
+// window seats follow the curve under the three windows; a centre cluster; a group corner on the right
+export const TABLES: [number, number][] = [[-10.4, -1.7], [-10.4, 1.7], [-9.3, 5.0], [-4.2, 0.6], [-3.4, 6.4], [8.4, -2.2], [8.4, 3.4]]
 for (const [x, z] of TABLES) BLOCKERS.push([x - 1.4, z - 1.0, x + 1.4, z + 1.0]) // 1.3x furniture + stools
 export const PLUS_SPOTS: [number, number][] = [[8, 8], [-8, 8.2], [0.4, 8.6], [8.6, 0.8]]
 export const COUNTER = { x0: -2.6, x1: 3.0, z: -3.2, depth: 1.2, top: 1.05 } // in back-zone local space

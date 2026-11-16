@@ -19,7 +19,7 @@ const taken = new Set<number>()
 // Customers walk in the front door, join the line at the counter (a FIFO queue), get served
 // at the front, then walk out. Fixed pool of bodies so nothing re-renders mid-reel (frame-exact).
 const POOL = 8
-const DOOR: [number, number] = [0, 9.4]
+const DOOR: [number, number] = [0, 13.3] // the pot's front door (round room, radius 14)
 const IN_LANE = 2.6, OUT_LANE = 3.1
 // line slots, front (at the counter) first, stretching back toward the door
 export const SLOTS: [number, number][] = Array.from({ length: 6 }, (_, i) => [1.8, -5.3 + i * 1.15])
@@ -48,7 +48,7 @@ export const cafe = {
     c.phase = 'in'; c.pos.copy(V(...DOOR)); c.served = 0
     c.hurry = hurry ?? Math.random() < this.hurryChance
     this.line.enqueue(c, c.hurry ? 1 : 0)               // ← joins the line by urgency (the back, unless in a hurry)
-    c.path = [V(IN_LANE, 7.6), V(IN_LANE, 1.2)]
+    c.path = [V(IN_LANE, 11.4), V(IN_LANE, 1.2)]
     anim.doorIn = 1
     return true
   },
@@ -60,7 +60,7 @@ export const cafe = {
       const i = free[Math.floor(Math.random() * free.length)], st = SEATS[i]; taken.add(i)
       c.phase = 'seat'; c.seat = i
       c.path = [V(OUT_LANE, c.pos.z), V(OUT_LANE, away(st, 0.9)), V(st.x, away(st, 0.9)), V(st.x, st.z)]
-    } else { c.phase = 'out'; c.path = [V(OUT_LANE, c.pos.z), V(OUT_LANE, 7.6), V(...DOOR)] }
+    } else { c.phase = 'out'; c.path = [V(OUT_LANE, c.pos.z), V(OUT_LANE, 11.4), V(...DOOR)] }
     return true
   },
   // reel helper: n customers already standing in line (teleported to their slots, no walk-in)
@@ -121,7 +121,7 @@ function Body({ c }: { c: Cust }) {
         else head.current.rotation.set(0.35 + Math.sin(t * 0.3 + c.id) * 0.04, Math.sin(t * 0.17 + c.id) * 0.12, 0)
       }
       const cup = prop.current?.children[2]; if (cup) cup.position.y = 1.0 + Math.max(0, Math.sin(t * 0.6 + c.id) - 0.85) * 3.2 // a sip now and then
-      if (c.sitT > 22 + (c.id % 4) * 3) { taken.delete(c.seat); c.seat = -1; c.phase = 'out'; c.path = [V(st.x, away(st, 0.9)), V(OUT_LANE, away(st, 0.9)), V(OUT_LANE, 7.6), V(...DOOR)] }
+      if (c.sitT > 22 + (c.id % 4) * 3) { taken.delete(c.seat); c.seat = -1; c.phase = 'out'; c.path = [V(st.x, away(st, 0.9)), V(OUT_LANE, away(st, 0.9)), V(OUT_LANE, 11.4), V(...DOOR)] }
       if (tag.current) tag.current.style.opacity = '0'
       if (bubble.current && bubble.current.textContent) bubble.current.textContent = ''
       return
