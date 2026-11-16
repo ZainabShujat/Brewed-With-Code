@@ -11,7 +11,9 @@ import { TABLES } from './layout'
 // reels (embed) keep the old queue look: numbers over heads, everyone leaves after being served
 const EMBED = typeof location !== 'undefined' && location.search.includes('embed')
 // two stools per table (FURN 1.3 scale): where a seated customer's body goes, and which way they face
-const SEATS = TABLES.flatMap(([x, z]) => [{ x: x - 1.235, z: z + 0.26, face: Math.PI / 2 }, { x: x + 1.235, z: z - 0.26, face: -Math.PI / 2 }])
+// the café table set has four chairs, two on each long side, facing the table (FURN 1.6 scale)
+const SEATS = TABLES.flatMap(([x, z]) => [-0.56, 0.56].flatMap((dx) => [{ x: x + dx, z: z - 0.68, face: 0 }, { x: x + dx, z: z + 0.68, face: Math.PI }]))
+const away = (st: { z: number; face: number }, d: number) => st.z + (st.face === 0 ? -d : d) // a step back from the chair
 const taken = new Set<number>()
 
 // Customers walk in the front door, join the line at the counter (a FIFO queue), get served
@@ -57,7 +59,7 @@ export const cafe = {
     if (!EMBED && !c.hurry && free.length && Math.random() < 0.75) {
       const i = free[Math.floor(Math.random() * free.length)], st = SEATS[i]; taken.add(i)
       c.phase = 'seat'; c.seat = i
-      c.path = [V(OUT_LANE, c.pos.z), V(OUT_LANE, st.z + (st.z > 0 ? -1.4 : 1.4)), V(st.x + (st.face > 0 ? -0.6 : 0.6), st.z), V(st.x, st.z)]
+      c.path = [V(OUT_LANE, c.pos.z), V(OUT_LANE, away(st, 0.9)), V(st.x, away(st, 0.9)), V(st.x, st.z)]
     } else { c.phase = 'out'; c.path = [V(OUT_LANE, c.pos.z), V(OUT_LANE, 7.6), V(...DOOR)] }
     return true
   },
@@ -74,6 +76,7 @@ function Body({ c }: { c: Cust }) {
   const ref = useRef<THREE.Group>(null)
   const tag = useRef<HTMLDivElement>(null)
   const bubble = useRef<HTMLDivElement>(null)
+  const hips = useRef<THREE.Group>(null)
   const look = LOOKS[c.look]
   useFrame(({ clock }, dtRaw) => {
     const g = ref.current; if (!g) return
@@ -107,24 +110,33 @@ function Body({ c }: { c: Cust }) {
       // sitting: on the stool, facing the table, sipping now and then; leaves after ~25 s
       c.sitT += dt
       const st = SEATS[c.seat]
-      g.position.set(st.x, 0.42, st.z); g.rotation.set(Math.sin(t * 0.8 + c.id) * 0.03, st.face, 0)
-      if (c.sitT > 22 + (c.id % 4) * 3) { taken.delete(c.seat); c.seat = -1; c.phase = 'out'; c.path = [V(st.x + (st.face > 0 ? -0.7 : 0.7), st.z), V(OUT_LANE, st.z + (st.z > 0 ? 1.4 : 1.4)), V(OUT_LANE, 7.6), V(...DOOR)] }
+      // seated: hips on the chair seat, thighs forward; a slight lean in towards the table
+      g.position.set(st.x, 0.1, st.z); g.rotation.set(0.08 + Math.sin(t * 0.8 + c.id) * 0.02, st.face, 0)
+      hips.current?.children.forEach((l) => { l.rotation.x = -Math.PI / 2 })
+      if (c.sitT > 22 + (c.id % 4) * 3) { taken.delete(c.seat); c.seat = -1; c.phase = 'out'; c.path = [V(st.x, away(st, 0.9)), V(OUT_LANE, away(st, 0.9)), V(OUT_LANE, 7.6), V(...DOOR)] }
       if (tag.current) tag.current.style.opacity = '0'
       if (bubble.current && bubble.current.textContent) bubble.current.textContent = ''
       return
     }
-    g.position.set(c.pos.x, moving ? Math.abs(Math.sin(t * 10 + c.id)) * 0.08 : 0, c.pos.z)
-    g.rotation.z = moving ? Math.sin(t * 10 + c.id) * 0.06 : 0
+    // walking: legs swing from the hips in opposite phase, a gentle bob, no cartoon hop
+    g.position.set(c.pos.x, moving ? Math.abs(Math.sin(t * 7 + c.id)) * 0.025 : 0, c.pos.z)
+    g.rotation.x = 0; g.rotation.z = moving ? Math.sin(t * 7 + c.id) * 0.02 : 0
+    hips.current?.children.forEach((l, i) => { l.rotation.x = moving ? Math.sin(t * 7 + c.id + i * Math.PI) * 0.45 : l.rotation.x * 0.8 })
     if (bubble.current) { const o = useShop.getState().orders[c.id]; const txt = o && idx === 0 ? o.label : ''; if (bubble.current.textContent !== txt) bubble.current.textContent = txt }
     if (tag.current) { tag.current.textContent = idx >= 0 ? (c.hurry ? '⚡' : '') + String(idx + 1) : ''; tag.current.style.opacity = EMBED && idx >= 0 ? '1' : '0' }
   })
   return (
     <group ref={ref} visible={false}>
-      {[-0.13, 0.13].map((x) => <mesh key={x} position={[x, 0.3, 0]} material={mat('#4a4a5a')} castShadow><capsuleGeometry args={[0.09, 0.35, 3, 6]} /></mesh>)}
-      <mesh position={[0, 0.95, 0]} material={mat(look.shirt)} castShadow><capsuleGeometry args={[0.3, 0.45, 4, 8]} /></mesh>
-      <mesh position={[0, 1.65, 0]} material={mat(look.skin)} castShadow><sphereGeometry args={[0.36, 12, 10]} /></mesh>
-      <mesh position={[0, 1.75, -0.05]} scale={[1.04, 0.8, 1.04]} material={mat(look.hair)}><sphereGeometry args={[0.36, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2]} /></mesh>
-      {[-0.12, 0.12].map((x) => <mesh key={x} position={[x, 1.65, 0.33]} material={mat('#2b2024')}><sphereGeometry args={[0.04, 6, 4]} /></mesh>)}
+      {/* legs hinge at the hips: they swing when walking and fold forward when sitting */}
+      <group ref={hips} position={[0, 0.58, 0]}>
+        {[-0.13, 0.13].map((x) => <group key={x} position={[x, 0, 0]}><mesh position={[0, -0.28, 0]} material={mat('#4a4a5a')} castShadow><capsuleGeometry args={[0.09, 0.35, 3, 6]} /></mesh></group>)}
+      </group>
+      <mesh position={[0, 0.95, 0]} material={mat(look.shirt)} castShadow><capsuleGeometry args={[0.24, 0.42, 4, 10]} /></mesh>
+      {/* human proportions: a head about 1/7 of the height, on a neck */}
+      <mesh position={[0, 1.42, 0]} material={mat(look.skin)}><cylinderGeometry args={[0.07, 0.08, 0.14, 10]} /></mesh>
+      <mesh position={[0, 1.62, 0]} scale={[1, 1.12, 1]} material={mat(look.skin)} castShadow><sphereGeometry args={[0.2, 16, 12]} /></mesh>
+      <mesh position={[0, 1.7, -0.03]} scale={[1.06, 0.85, 1.08]} material={mat(look.hair)}><sphereGeometry args={[0.2, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2]} /></mesh>
+      {[-0.07, 0.07].map((x) => <mesh key={x} position={[x, 1.64, 0.185]} material={mat('#2b2024')}><sphereGeometry args={[0.022, 6, 4]} /></mesh>)}
       <Html position={[0, 2.35, 0]} center><div ref={tag} className="qtag" /></Html>
       <Html position={[0, 3.0, 0]} center><div ref={bubble} className="obubble" /></Html>
     </group>

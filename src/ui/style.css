@@ -97,3 +97,26 @@ html, body { overscroll-behavior: none; }
 .credits-card { background: #fff6ee; color: #5e2a75; border-radius: 18px; padding: 18px 22px; max-width: min(560px, 92vw); max-height: 80vh; overflow: auto; font: 600 13px 'Trebuchet MS', sans-serif; }
 .credits-card h2 { margin: 0 0 8px; } .credits-card a { color: #c4528a; }
 .credits-card button { margin-top: 10px; border: 0; border-radius: 10px; padding: 6px 14px; background: #ff7fb6; color: #fff; font-weight: 800; cursor: pointer; }
+
+/* ── title screen, main menu, pause ─────────────────────── */
+.gmenu { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; z-index: 30; background: linear-gradient(90deg, rgba(42,24,48,.72), rgba(42,24,48,.25) 60%, rgba(42,24,48,0)); font-family: 'Trebuchet MS', sans-serif; }
+.gmenu.title-screen { background: radial-gradient(ellipse at center, rgba(42,24,48,0) 30%, rgba(42,24,48,.55)); cursor: pointer; }
+.title-wrap { text-align: center; color: #fff6ee; text-shadow: 0 4px 0 #6e3f78, 0 10px 30px rgba(0,0,0,.35); }
+.logo { font: 900 clamp(48px, 9vw, 110px)/0.95 'Trebuchet MS', sans-serif; letter-spacing: -1px; }
+.logo.small { font-size: 30px; color: #fff6ee; text-shadow: 0 3px 0 #6e3f78; margin-bottom: 10px; }
+.tag { margin-top: 14px; font-size: 18px; font-weight: 700; opacity: .9; }
+.press { margin-top: 40px; font-size: 16px; font-weight: 800; animation: blink 1.6s ease-in-out infinite; }
+@keyframes blink { 50% { opacity: .25; } }
+.gmenu .panel { margin-right: auto; margin-left: clamp(16px, 7vw, 120px); display: flex; flex-direction: column; gap: 10px; width: min(420px, calc(100vw - 32px)); max-height: 92vh; overflow: auto; }
+.gmenu .panel.text { color: #fff1f6; font-size: 14px; line-height: 1.5; background: rgba(42,24,48,.8); padding: 18px 20px; border-radius: 18px; width: min(560px, calc(100vw - 32px)); }
+.gmenu .panel.text a { color: #ffb3d4; }
+.gmenu button { border: 0; border-radius: 14px; padding: 10px 14px; font: 800 14px 'Trebuchet MS', sans-serif; background: #fff6ee; color: #5e2a75; cursor: pointer; box-shadow: 0 4px 0 #c4528a; transition: transform .12s; }
+.gmenu button:hover { transform: translateX(6px); }
+.gmenu button.on { background: #ff7fb6; color: #fff; }
+.gmenu button.big { display: flex; flex-direction: column; align-items: flex-start; text-align: left; padding: 14px 18px; }
+.gmenu button.big b { font-size: 20px; } .gmenu button.big span { font-weight: 600; font-size: 12px; opacity: .75; margin-top: 2px; }
+.gmenu .row { display: flex; gap: 8px; flex-wrap: wrap; }
+.gmenu label { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 6px 0; font-weight: 700; }
+.gmenu input[type=range] { accent-color: #ff7fb6; width: 160px; }
+.menubtn { position: fixed; top: 12px; left: 12px; z-index: 25; border: 0; border-radius: 12px; padding: 8px 14px; font: 800 14px 'Trebuchet MS', sans-serif; background: rgba(42,24,48,.72); color: #fff6ee; cursor: pointer; }
+.menubtn span { opacity: .55; font-size: 11px; margin-left: 6px; }

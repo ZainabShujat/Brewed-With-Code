@@ -18,6 +18,8 @@ import { TOUCH } from './systems/CameraRig'
 import { LookHint } from './ui/LookHint'
 import { useCake } from './systems/cake'
 import { useShop } from './systems/shop'
+import { Menu, quality, type Screen } from './ui/Menu'
+const SNAP = location.search.includes('snap')
 ;(window as any).game = { shop: useShop, line: cafeLine } // handy for testing in the console
 ;(window as any).__cake = useCake
 
@@ -68,34 +70,30 @@ export default function App() {
   const mode = useGame((s) => s.mode)
   const setMode = useGame((s) => s.setMode)
   const [shownFps, setShownFps] = useState(0)
+  const [screen, setScreen] = useState<Screen>(SNAP ? 'playing' : 'title')
+  const playing = SNAP || screen === 'playing'
   useEffect(() => {
     const id = setInterval(() => setShownFps(fps), 500)
-    const onKey = (e: KeyboardEvent) => { const m = MODES.find((m) => m.key === e.key); if (m) setMode(m.id) }
+    const onKey = (e: KeyboardEvent) => { if (!SNAP) return; const m = MODES.find((m) => m.key === e.key); if (m) setMode(m.id) }
     window.addEventListener('keydown', onKey)
     return () => { clearInterval(id); window.removeEventListener('keydown', onKey) }
   }, [setMode])
 
   return (
     <>
-      <Canvas onCreated={(s) => { (window as any).__r3f = s }} flat shadows dpr={1} camera={{ fov: 45, position: [15, 9, 25] }} gl={{ antialias: true, powerPreference: 'high-performance' }}>
+      <Canvas onCreated={(s) => { (window as any).__r3f = s }} flat shadows={quality.high} dpr={quality.high ? 1 : 0.75} camera={{ fov: 45, position: [15, 9, 25] }} gl={{ antialias: true, powerPreference: 'high-performance' }}>
         <color attach="background" args={['#dfccf6']} />
         <World />
       </Canvas>
-      <div className="hud">
-        <div className="title">Brewed With Code</div>
-        <div className="modes">
-          {MODES.map((m) => (
-            <button key={m.id} className={m.id === mode ? 'on' : ''} onClick={() => setMode(m.id)}>
-              <span>{m.key}</span>{m.label}
-            </button>
-          ))}
-        </div>
-        {mode === 'walk' && <div className="hint">WASD / arrows to walk</div>}
-      </div>
-      {mode !== 'cake' && <ShopHud />}
-      <CakeHud />
-      <Credits />
-      {TOUCH ? <Joystick /> : <LookHint mode={mode} />}
+      {/* tests (?snap) skip the menus and keep the old mode bar */}
+      {SNAP && <div className="hud"><div className="modes">
+        {MODES.map((m) => <button key={m.id} className={m.id === mode ? 'on' : ''} onClick={() => setMode(m.id)}><span>{m.key}</span>{m.label}</button>)}
+      </div></div>}
+      {playing && mode !== 'cake' && <ShopHud />}
+      {playing && <CakeHud />}
+      {SNAP && <Credits />}
+      {playing && (TOUCH ? <Joystick /> : <LookHint mode={mode} />)}
+      {!SNAP && <Menu screen={screen} setScreen={setScreen} />}
       <div className="fps">{shownFps} fps</div>
     </>
   )

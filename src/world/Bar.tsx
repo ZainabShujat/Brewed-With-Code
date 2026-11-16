@@ -8,6 +8,7 @@ import { mat, glass } from './mats'
 import { Html } from '@react-three/drei'
 import { useGame } from '../systems/store'
 import { Grab, DropTarget } from '../systems/drag'
+import { Model } from './Models'
 import { liquidMat, surfaceTex, Surface, Stream, WhipSpiral, useCupGeometry, ceramic } from './Liquid'
 
 // The playable bar. Coordinates are the counter's local space (the Counter group in Interior).
@@ -226,8 +227,8 @@ export function Bar() {
       {/* ── left → right as the barista sees it ── */}
       {/* cup stack */}
       <Grab id="cups" tip="drag a cup onto the saucer" pos={[2.7, TOP + 0.12, BZ]} size={[0.3, 0.32, 0.3]} onClick={() => s().takeCup()} drops={{ cup: () => s().takeCup() }}>
-        {[0, 1, 2].map((i) => <group key={i} position={[0, -0.08 + i * 0.07, 0]}><mesh material={mat(C.cream)}><cylinderGeometry args={[0.11, 0.09, 0.1, 20, 1, true]} /></mesh></group>)}
-        <mesh position={[0, -0.13, 0]} material={mat(C.cream)}><cylinderGeometry args={[0.16, 0.16, 0.015, 24]} /></mesh>
+        <Model name="sf:cup" fit={0.14} pos={[0, -0.13, 0]} />
+        <Model name="sf:cup" fit={0.14} pos={[0, 0.0, 0]} rot={[0, 1.2, 0]} />
       </Grab>
       {/* milk bottles: pick a milk */}
       <MilkBottle x={2.75} milk="whole" color="#fbf8f2" cap="#4a90c2" />
@@ -236,10 +237,7 @@ export function Bar() {
       {/* steel pitcher: steam the milk */}
       <Grab id="milk" tip={`pitcher (${style}): click to change, drag onto the cup`} pos={[1.95, TOP + 0.12, BZ]} size={[0.26, 0.3, 0.26]} onClick={() => s().cycleMilkStyle()} drops={{ cup: () => s().milk(s().milkStyle) }}>
         <Flyer kind="milk" home={[1.95, TOP + 0.12, BZ]} act="tilt" side={0.16} above={0.36}>
-          <mesh material={mat(C.steel)}><cylinderGeometry args={[0.075, 0.095, 0.22, 20, 1, true]} /></mesh>
-          <mesh position={[0, -0.11, 0]} material={mat(C.steel)}><cylinderGeometry args={[0.095, 0.095, 0.01, 20]} /></mesh>
-          <mesh position={[0.1, 0.02, 0]} rotation={[0, 0, Math.PI / 2]} material={mat(C.steel)}><torusGeometry args={[0.05, 0.012, 6, 12, Math.PI]} /></mesh>
-          <mesh position={[-0.085, 0.1, 0]} rotation={[0, 0, 0.6]} material={mat(C.steel)}><coneGeometry args={[0.025, 0.06, 8]} /></mesh>
+          <Model name="sf:pitcher" fit={0.24} pos={[0, -0.12, 0]} />
         </Flyer>
       </Grab>
       {/* toppings (back row) */}
@@ -269,6 +267,8 @@ export function Bar() {
       {/* espresso machine (pull a shot) */}
       <Grab id="machine" tip="espresso: 1 shot per click" pos={[-1.6, TOP + 0.6, Z - 0.05]} size={[1.4, 1.3, 1.0]} onClick={() => s().shot()}>
       </Grab>
+      {/* flavour syrups on the back row (Sketchfab, CC BY: oparaskos) */}
+      {[-0.95, -0.78].map((x, i) => <Model key={x} name="sf:syrup" fit={0.36} pos={[x, TOP - 0.06, RZ + 0.05]} rot={[0, i * 0.8, 0]} />)}
       {/* service bell */}
       <Grab id="bell" tip="serve 🔔" pos={[1.15, TOP + 0.06, BZ]} size={[0.3, 0.2, 0.3]} onClick={() => s().serve()}>
         <mesh position={[0, -0.03, 0]} material={mat(C.plum)}><cylinderGeometry args={[0.1, 0.11, 0.03, 16]} /></mesh>

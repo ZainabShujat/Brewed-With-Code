@@ -18,7 +18,7 @@ const T = 0.3 // wall thickness
 // Diorama base + mauve plank floor (like a little dollhouse slab)
 // staggered planks: every 1 m row is cut into boards of 2.5 to 4.5 m, offset row to row (deterministic, no Math.random)
 // furniture scale: matches the ~2 m customers/barista and the 1.7 m Kozie
-const FURN = 1.3
+const FURN = 1.6
 
 const PLANKS = (() => {
   const out: { x: number; z: number; len: number; c: string }[] = []
@@ -167,7 +167,10 @@ function CounterTop() {
   return (
     <group>
       {/* espresso machine: a real two-group machine, facing the barista (-z) */}
-      <group position={[-1.6, y, z - 0.05]}>
+      {/* the real espresso machine (Sketchfab, CC BY: KWojcik), with a grinder beside it */}
+      <Model name="sf:espresso" fit={0.85} pos={[-1.6, y, z - 0.05]} rot={[0, Math.PI, 0]} />
+      <Model name="sf:grinder" fit={0.5} pos={[-2.5, y, z + 0.1]} />
+      <group position={[-1.6, y, z - 0.05]} visible={false}>
         {/* brushed-steel body with a pastel enamel side panel, sitting on short feet */}
         <RBox size={[1.34, 0.95, 0.8]} pos={[0, 0.62, 0]} color={C.steel} r={0.07} />
         <RBox size={[1.36, 0.6, 0.6]} pos={[0, 0.66, 0.03]} color={C.counter} r={0.05} />
@@ -271,8 +274,6 @@ export function Interior({ cutaway, pov }: { cutaway: boolean; pov: boolean }) {
           {/* FURN: tables + stools sized for ~2 m characters (table ~1.05 m, seat ~0.8 m) */}
           <group position={[x, 0, z]} scale={FURN}>
             <RoundTable pos={[0, 0, 0]} top={i ? C.cream : C.counterTop} />
-            <Stool pos={[-0.95, 0, 0.2]} color={C.purple} />
-            <Stool pos={[0.95, 0, -0.2]} color={C.counter} />
           </group>
         </Reveal>
       ))}

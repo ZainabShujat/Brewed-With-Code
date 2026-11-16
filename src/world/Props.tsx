@@ -27,8 +27,8 @@ export function PendantLamp({ pos, color = C.counter, drop = 1.1 }: { pos: V3; c
   return (
     <group position={pos}>
       <mesh position={[0, -drop / 2, 0]} material={mat(C.plum)}><cylinderGeometry args={[0.012, 0.012, drop, 6]} /></mesh>
-      <Model name="modern_ceiling_lamp_01" scale={1.3} pos={[0, -drop - 1.25, 0]} />
-      <mesh position={[0, -drop - 0.75, 0]} material={glow()}><sphereGeometry args={[0.07, 12, 8]} /></mesh>
+      <Model name="modern_ceiling_lamp_01" scale={1.0} pos={[0, -drop - 0.5, 0]} />
+      <mesh position={[0, -drop - 0.15, 0]} material={glow()}><sphereGeometry args={[0.07, 12, 8]} /></mesh>
     </group>
   )
 }
@@ -92,9 +92,10 @@ export function RoundTable({ pos, top = C.cream }: { pos: V3; top?: string }) {
   void top
   return (
     <group position={pos}>
-      <Model name="coffee_table_round_01" scale={[0.95, 1.7, 0.95]} />
-      <Model name="tea_set_01" pos={[0.2, 0.84, 0.05]} scale={0.9} rot={[0, 0.6, 0]} />
-      <Model name="strawberry_chocolate_cake" pos={[-0.18, 0.84, -0.12]} scale={0.9} />
+      <Model name="sf:table" fit={0.84} />
+      {/* the table set comes with its own four chairs; on top: a cup and a slice of cake */}
+      <Model name="sf:cup" fit={0.1} pos={[0.12, 0.84, 0.02]} rot={[0, 0.6, 0]} />
+      <Model name="strawberry_chocolate_cake" pos={[-0.12, 0.84, -0.02]} scale={0.8} />
     </group>
   )
 }
