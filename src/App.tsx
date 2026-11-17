@@ -14,6 +14,7 @@ import { Customers, cafe as cafeLine } from './world/Customers'
 import { ShopHud } from './ui/ShopHud'
 import { BrewHud } from './ui/BrewHud'
 import { DayHud } from './ui/DayHud'
+import { MusicButton } from './ui/MusicButton'
 import { CakeHud } from './ui/CakeHud'
 import { Joystick } from './ui/Joystick'
 import { Credits } from './ui/Credits'
@@ -107,6 +108,7 @@ export default function App() {
       {SNAP && <Credits />}
       {playing && (TOUCH ? mode !== 'cake' && mode !== 'pov' && <Joystick /> : mode !== 'pov' && <LookHint mode={mode} />)}
       {playing && mode === 'walk' && <div className="crosshair" />}
+      {!SNAP && <MusicButton />}
       {!SNAP && <Menu screen={screen} setScreen={setScreen} />}
       <div className="fps">{shownFps} fps</div>
     </>

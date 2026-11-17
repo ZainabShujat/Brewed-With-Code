@@ -204,3 +204,13 @@ html, body { overscroll-behavior: none; }
 .dayresults .bank { margin: 12px 0; font-weight: 700; opacity: .8; }
 
 .sizetag { background: rgba(42,24,48,.8); color: #fff6ee; border-radius: 8px; padding: 1px 7px; font: 900 12px 'Trebuchet MS', sans-serif; }
+
+/* ── café radio ───────────────────────────────────────────── */
+.musicbtn { position: fixed; left: 132px; top: 10px; z-index: 26; width: 44px; height: 44px; border: 0; border-radius: 50%; background: rgba(42,24,48,.72); font-size: 20px; cursor: pointer; }
+.musicpanel { position: fixed; left: 14px; top: 62px; z-index: 26; width: 260px; background: #fff6ee; border-radius: 18px; padding: 12px; box-shadow: 0 8px 0 #c4528a, 0 20px 40px rgba(0,0,0,.3); font-family: 'Trebuchet MS', sans-serif; color: #5e2a75; display: flex; flex-direction: column; gap: 4px; }
+.mp-h { font-weight: 900; font-size: 15px; margin-bottom: 4px; } .mp-h span { font-weight: 600; font-size: 11px; opacity: .7; }
+.mp-row { border: 0; text-align: left; background: transparent; padding: 6px 10px; border-radius: 10px; font: 700 13px 'Trebuchet MS', sans-serif; color: #5e2a75; cursor: pointer; }
+.mp-row:hover { background: #f3e2ee; } .mp-row.on { background: #ffcf5c; } .mp-row.off { color: #c4528a; }
+.mp-vol { display: flex; gap: 8px; align-items: center; padding: 6px 10px; } .mp-vol input { flex: 1; accent-color: #ff7fb6; }
+.mp-cr { font-size: 10px; opacity: .6; padding: 2px 10px; }
+@media (max-width: 700px) { .musicbtn { top: 6px; left: 104px; width: 38px; height: 38px; } .musicpanel { top: 52px; left: 8px; } }
