@@ -117,7 +117,7 @@ export function WhipSpiral({ y, progress }: { y: number; progress: () => number 
     geo.setDrawRange(0, Math.floor((total * k) / 6) * 6)
     if (ref.current) ref.current.visible = k > 0.01
   })
-  return <mesh ref={ref} geometry={geo} material={mat} position={[0, y + 0.02, 0]} castShadow />
+  return <mesh ref={ref} geometry={geo} material={mat} position={[0, y + 0.01, 0]} scale={[0.72, 0.6, 0.72]} castShadow /> // a neat swirl sized to the glass
 }
 
 // a real cup shape: lathe-turned profile with wall thickness, a rolled rim and a foot

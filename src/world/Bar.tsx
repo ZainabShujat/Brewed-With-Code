@@ -102,8 +102,11 @@ function Cup() {
   if (d.milk === 'steamed') layers.push({ h: 0.17, color: '#d8b48c' }, { h: 0.04, color: milkC })
   if (d.milk === 'foamy') layers.push({ h: 0.09, color: '#d8b48c' }, { h: 0.13, color: '#fffaf2' })
   if (d.milk === 'micro') layers.push({ h: 0.1, color: '#c89c70' }, { h: 0.04, color: milkC })
+  // a long drink fills the glass (layers keep their proportions); a plain espresso stays a short shot
+  const total = layers.reduce((a, l) => a + l.h, 0)
+  const K = d.milk !== 'none' || d.water ? 0.72 / Math.max(0.01, total) : 1.55
   let y = 0.03
-  const placed = layers.map((l) => { const o = { ...l, y }; y += l.h; return o })
+  const placed = layers.map((l) => { const o = { ...l, h: l.h * K, y }; y += l.h * K; return o })
   // what the top of the drink looks like: crema on espresso, foam on milk, a latte-art heart on micro-foam
   const tex = d.milk === 'micro' ? surfaceTex('art', milkC) : d.milk === 'foamy' ? surfaceTex('foam', '#fffaf2') : d.milk === 'steamed' ? surfaceTex('foam', milkC)
     : d.shots ? surfaceTex('crema', d.water ? '#7a4a2c' : '#9a5f33') : surfaceTex('plain', layers.length ? layers[layers.length - 1].color : '#000')
@@ -115,9 +118,9 @@ function Cup() {
         <mesh geometry={GLASS_GEO} material={GLASS_MAT} renderOrder={2} scale={[0.78, 1.45, 0.78]} position={[0, 0.12, 0]} />
         <mesh position={[0, -0.27, 0]} material={GLASS_BASE}><cylinderGeometry args={[0.158, 0.166, 0.05, 40]} /></mesh>
         <group position={[0, -0.23, 0]}>
-          {placed.map((l, i) => <Layer key={i} h={l.h * 1.55} y={l.y * 1.55} color={l.color} r={0.162} />)}
-          {placed.length > 0 && <Surface r={0.166} y={y * 1.55 + 0.001} tex={tex} last={lastT} />}
-          <ToppingFx y={y * 1.55} />
+          {placed.map((l, i) => <Layer key={i} h={l.h} y={l.y} color={l.color} r={0.162} />)}
+          {placed.length > 0 && <Surface r={0.166} y={y + 0.001} tex={tex} last={lastT} />}
+          <ToppingFx y={y} />
         </group>
         <PourFx />
       </group>
