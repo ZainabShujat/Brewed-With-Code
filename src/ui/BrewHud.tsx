@@ -1,9 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { useShop } from '../systems/shop'
 import { cafe } from '../world/Customers'
-import { brewCam } from '../systems/CameraRig'
 import { loop, sfx } from '../systems/sound'
-import type { Milk, MilkType, Topping, CupSize } from '../data/recipes'
+import type { Milk, MilkType } from '../data/recipes'
 import { drinkSvg } from './drinkSvg'
 
 // ── The coffee bar as a sequence of short, skill-based steps (Papa's-style stations) ─────────
@@ -14,8 +13,6 @@ import { drinkSvg } from './drinkSvg'
 type Step = 'start' | 'cup' | 'grind' | 'shot' | 'extras' | 'milk' | 'pour' | 'top' | 'serve' | 'done'
 const STEPS: Step[] = ['cup', 'grind', 'shot', 'extras', 'milk', 'pour', 'top', 'serve']
 const LABEL: Record<Step, string> = { start: '', cup: 'Cup', grind: 'Grind', shot: 'Pull shot', extras: 'Extras', milk: 'Steam milk', pour: 'Pour', top: 'Top', serve: 'Serve', done: '' }
-// where the barista steps to for each station (counter x)
-const CAM: Partial<Record<Step, number>> = { cup: 2.62, grind: -2.3, shot: -1.6, extras: -0.5, milk: 1.9, pour: 0.25, top: 1.1, serve: 0.6 }
 
 // a held meter: how fast it fills, and its green zone(s)
 type Meter = { speed: number; zones: { from: number; to: number; label?: string; value?: string }[] }
@@ -48,8 +45,9 @@ export function BrewHud() {
   const order = front ? shop.orders[front.id] : undefined
   const want = order?.want
 
-  // camera follows the station
-  useEffect(() => { brewCam.x = CAM[step] ?? null; return () => { brewCam.x = null } }, [step])
+  // the cup step finishes when you actually pick a glass off the shelf and set it on the coaster
+  const cupNow = shop.cup, size = shop.drink.size
+  useEffect(() => { if (step === 'cup' && cupNow) { setScore((o) => ({ ...o, cup: want && want.size === size ? 3 : 0 })); sfx.tap(); setTimeout(() => setStep('grind'), 350) } }, [step, cupNow, size])
 
   const flash = (s: number) => { setPop({ text: s === 3 ? 'Perfect!' : s === 2 ? 'Nice' : s === 1 ? 'Close' : 'Oops', t: performance.now() }); (s === 3 ? sfx.perfect : s >= 2 ? sfx.good : sfx.meh)() }
   const next = (from: Step) => {
@@ -94,7 +92,6 @@ export function BrewHud() {
   })
 
   const begin = () => { useShop.getState().trash(); setScore({}); setMilkType('whole'); sfx.tap(); setStep('cup') }
-  const pickCup = (sz: CupSize) => { useShop.getState().takeCup(sz); setScore((o) => ({ ...o, cup: want && want.size === sz ? 3 : 0 })); sfx.tap(); setTimeout(() => setStep('grind'), 350) }
   const skipMilk = () => { setScore((o) => ({ ...o, milk: want && want.milk !== 'none' ? 0 : 3 })); setStep('top') }
   const serve = () => {
     const st = Object.values(score); const avg = st.length ? st.reduce((a, b) => a + (b ?? 0), 0) / st.length : 0
@@ -141,17 +138,14 @@ export function BrewHud() {
 
         {step === 'cup' && (
           <>
-            <div className="brew-title">Grab a glass from the shelf</div>
-            <div className="brew-row">{(['small', 'medium', 'large'] as const).map((sz) => <button key={sz} className="chip" onClick={() => pickCup(sz)}>{sz === 'small' ? '🥃' : sz === 'medium' ? '🥛' : '🫙'} {sz}</button>)}</div>
+            <div className="brew-title">Click a {want?.size ?? ''} glass on the shelf (right), then click the coaster</div>
           </>
         )}
 
         {step === 'extras' && (
           <>
-            <div className="brew-title">Anything else in the cup?</div>
+            <div className="brew-title">Extras? Pick up the 🍫 chocolate or 💧 kettle and click your glass {d.chocolate ? '· 🍫 in' : ''}{d.water ? ' · 💧 in' : ''}</div>
             <div className="brew-row">
-              <button className={'chip' + (d.water ? ' on' : '')} onClick={() => { useShop.getState().water(); sfx.tap() }}>💧 hot water</button>
-              <button className={'chip' + (d.chocolate ? ' on' : '')} onClick={() => { useShop.getState().choc(); sfx.tap() }}>🍫 chocolate</button>
               <button className="chip go" onClick={() => { setScore((o) => ({ ...o, extras: want && d.water === want.water && d.chocolate === want.chocolate ? 3 : 0 })); next('extras') }}>next →</button>
             </div>
           </>
@@ -159,9 +153,8 @@ export function BrewHud() {
 
         {step === 'top' && (
           <>
-            <div className="brew-title">Finish it</div>
+            <div className="brew-title">Finish it: pick up a shaker or the cream can and click your glass {d.topping !== 'none' ? `· ${d.topping} ✓` : ''}</div>
             <div className="brew-row">
-              {(['cocoa', 'cinnamon', 'sprinkles', 'whipped'] as Topping[]).map((t) => <button key={t} className={'chip' + (d.topping === t ? ' on' : '')} onClick={() => { useShop.getState().top(t); sfx.tap() }}>{t}</button>)}
               <button className="chip go" onClick={() => { setScore((o) => ({ ...o, top: want && useShop.getState().drink.topping === want.topping ? 3 : 0 })); setStep('serve') }}>next →</button>
             </div>
           </>

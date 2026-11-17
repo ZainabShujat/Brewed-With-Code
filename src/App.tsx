@@ -28,7 +28,8 @@ const SNAP = location.search.includes('snap')
 ;(window as any).__cake = useCake
 
 // the playable game: customers arrive and get served on their own
-cafeLine.auto = !location.pathname.includes('reel')
+const REEL = location.pathname.includes('reel') // reels film from angles the player never sees: draw everything
+cafeLine.auto = !REEL
 
 const MODES: { id: CamMode; label: string; key: string }[] = [
   { id: 'exterior', label: 'Outside', key: '1' },
@@ -47,8 +48,10 @@ export function World() {
     <>
       <Lighting />
       <group scale={WORLD}>
-      <Exterior showPot={!inside || outro} fadeIn={outro} />
-      {inside && <Interior cutaway={mode === 'dollhouse' || outro} pov={mode === 'pov'} />}
+      {/* zone culling (like occlusion culling): rooms you can't see from this view aren't drawn at all.
+          Behind the bar or at the cake machine you face a wall, so the whole outdoors is skipped. */}
+      <group visible={REEL || (mode !== 'pov' && mode !== 'cake')}><Exterior showPot={!inside || outro} fadeIn={outro} /></group>
+      {inside && <Interior cutaway={mode === 'dollhouse' || outro} pov={mode === 'pov'} only={REEL ? '' : mode === 'pov' ? 'bar' : mode === 'cake' ? 'kitchen' : ''} />}
       {inside && mode !== 'pov' && mode !== 'vlog' && mode !== 'walk' && <Reveal id="barista" at={[0.4, 0, 2.4]}><Barista /></Reveal>}
       {inside && <Customers />}
       {inside && <Hotspots />}

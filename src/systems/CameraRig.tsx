@@ -45,7 +45,7 @@ export function useMouseLook() {
       down = e.button; lx = e.clientX; ly = e.clientY
       // MOUSE LOOK, like any first-person game: hold the RIGHT button and move the mouse to turn your head.
       // In Walk view a left click on the scene locks the mouse for full look (Esc to let go).
-      if (view.mode !== 'dollhouse' && view.mode !== 'exterior' && (e.button === 2 || (view.mode === 'walk' && e.button === 0))) {
+      if (view.mode !== 'dollhouse' && view.mode !== 'exterior' && view.mode !== 'pov' && (e.button === 2 || (view.mode === 'walk' && e.button === 0))) {
         el.requestPointerLock?.(); view.looking = true; return
       }
       grabbed = document.body.style.cursor === 'grab' || document.body.style.cursor === 'grabbing' || document.body.style.cursor === 'pointer'
@@ -89,7 +89,7 @@ export function useMouseLook() {
     return () => { el.removeEventListener('pointerdown', pd); window.removeEventListener('pointermove', pm); window.removeEventListener('pointerup', pu); el.removeEventListener('wheel', wh); el.removeEventListener('contextmenu', cm) }
   }, [gl])
 }
-let povX = 0.1, spinTo = 0, qe = false
+let spinTo = 0, qe = false
 export const brewCam = { x: null as number | null } // set by the coffee flow: which station to stand at
 function applyLook(mode: string, dt: number) {
   // Q / E (or ← → in barista view) turn your head like a person would; it eases back when you let go
@@ -152,7 +152,7 @@ export function CameraRig() {
       return
     }
     const asp = (camera as THREE.PerspectiveCamera).aspect
-    setFov(camera as THREE.PerspectiveCamera, mode === 'cake' && asp < 1 ? 58 : (mode === 'pov' ? 55 : mode === 'dollhouse' ? 19 : 45) * (asp < 1 ? Math.min(1.7, 1 / asp * 0.95) : 1)) // portrait phone = wider lens // barista view: a slightly wider, human field of view
+    setFov(camera as THREE.PerspectiveCamera, mode === 'cake' && asp < 1 ? 58 : (mode === 'pov' ? 50 : mode === 'dollhouse' ? 19 : 45) * (asp < 1 ? Math.min(1.7, 1 / asp * 0.95) : 1)) // portrait phone = wider lens // barista view: a slightly wider, human field of view
     if (mode === 'walk') {
       // first person at eye height (~1.65 m): the mouse turns you, W walks where you look
       step(player, dt, view.mode === 'walk' ? view.yaw : 0)
@@ -168,20 +168,16 @@ export function CameraRig() {
     }
     if (mode === 'pov' || mode === 'cake') wantPos.sub(wantLook).multiplyScalar(0.9).add(wantLook)
     if (mode === 'pov') {
-      // you ARE the barista: eye height ~1.7 m, standing right at the back edge of the counter;
-      // A / D (or the joystick) step left and right along the bar to reach each station
-      const side = (keys.has('d') || keys.has('arrowright') ? 1 : 0) - (keys.has('a') || keys.has('arrowleft') ? 1 : 0) + stick.x
-      povX = Math.max(-2.4, Math.min(2.4, povX + side * dt * 2.2))
-      if (brewCam.x !== null && !side) povX += (brewCam.x - povX) * Math.min(1, dt * 3) // glide to the current station
-      // lean in a little: each station fills the screen instead of the whole bar at once
-      wantPos.set(povX, 2.0, -9.4); wantLook.set(povX, 0.95, -6.9)
+      // the coffee bar is played like Papa's: ONE fixed view of the whole workspace, the camera never moves
+      wantPos.set(0.2, 3.9, -9.6); wantLook.set(0.2, 1.05, -7.45)
+      { const asp = (camera as THREE.PerspectiveCamera).aspect; setFov(camera as THREE.PerspectiveCamera, Math.min(100, 2 * Math.atan(Math.tan(25 * Math.PI / 180) * Math.max(1, 1.75 / asp)) * 180 / Math.PI)) } // narrower screens: a wider lens so the whole bar fits (the wall is right behind you)
     }
     // portrait phone: step back from the stations so the whole machine / bar fits the narrow screen
     // portrait phone at the cake machine: don't squeeze the whole machine in; follow the cake and
     // frame the dispenser it's under, gliding left/right as ◀ ▶ move it along the belt
     if ((camera as THREE.PerspectiveCamera).aspect < 1 && mode === 'cake') { const x = machine.target; wantLook.set(x, 1.85, -9.05); wantPos.set(x + 0.15, 2.75, -5.8) }
     wantPos.multiplyScalar(WORLD); wantLook.multiplyScalar(WORLD)
-    applyLook(mode, dt)
+    if (mode !== 'pov') applyLook(mode, dt); else if (view.mode !== mode) { view.mode = mode; view.yaw = 0; view.pitch = 0; view.zoom = 1 }
     // ?snap = jump straight to the shot (used for footage capture and tests)
     const k = SNAP ? 1 : 1 - Math.exp(-dt * (mode === 'outro' ? 1.4 : view.looking ? 30 : 4)) // mouse look = instant, like a game
     camera.position.lerp(wantPos, k)

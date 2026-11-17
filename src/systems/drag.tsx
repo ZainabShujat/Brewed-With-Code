@@ -20,7 +20,7 @@ export function DropTarget({ id, pos, r = 0.3, show = true }: { id: string; pos:
   const ref = useRef<THREE.Group>(null)
   useEffect(() => { if (ref.current) targets.set(id, { obj: ref.current, r }); return () => { targets.delete(id) } }, [id, r])
   const ring = useRef<THREE.Mesh>(null)
-  useFrame(({ clock }) => { if (ring.current) { const on = drag.active !== '' && show; ring.current.visible = on; ring.current.scale.setScalar(drag.over === id ? 1.15 + Math.sin(clock.elapsedTime * 8) * 0.05 : 1) } })
+  useFrame(({ clock }) => { if (ring.current) { const on = drag.active !== '' && show && !!held.drops?.[id]; ring.current.visible = on; ring.current.scale.setScalar(drag.over === id ? 1.15 + Math.sin(clock.elapsedTime * 8) * 0.05 : 1) } })
   return (
     <group ref={ref} position={pos}>
       {/* a soft glowing ring shows where you can drop while you're carrying something */}
@@ -42,62 +42,61 @@ function nearestTarget(world: THREE.Vector3, accepts: string[]) {
   return best
 }
 
-// Anything you can grab (and optionally click). `drops` maps a target id → what happens when dropped there.
+// Anything you can pick up (and optionally click). `drops` maps a target id → what happens when used there.
+// CLICK AND PICK (Papa's-style): click a tool and it sticks to your cursor, floating over the counter;
+// click the glass (or another target) to use it there. Click anywhere else, or press Esc, to put it back.
+const held = { id: '', drops: null as Record<string, () => void> | null }
+export function putBack() { held.id = ''; held.drops = null; drag.active = ''; drag.over = ''; document.body.style.cursor = '' }
+if (typeof window !== 'undefined') {
+  window.addEventListener('keydown', (e) => { if (e.key === 'Escape') putBack() })
+  // the click that USES the held tool: whatever target it's hovering over, or put it back
+  window.addEventListener('pointerdown', (e) => {
+    if (!held.id || e.button !== 0) return
+    if ((e.target as HTMLElement)?.tagName !== 'CANVAS') return
+    const t = drag.over, d = held.drops
+    putBack()
+    if (t && d?.[t]) d[t]()
+    e.stopPropagation()
+  }, true)
+}
+
 export function Grab({ id, pos, size, children, tip, onClick, drops }: {
   id: string; pos: [number, number, number]; size: [number, number, number]; children?: ReactNode; tip?: string
   onClick?: () => void; drops?: Record<string, () => void>
 }) {
   const [hover, setHover] = useState(false)
-  const [dragging, setDragging] = useState(false)
   const outer = useRef<THREE.Group>(null), inner = useRef<THREE.Group>(null)
-  const st = useRef({ moved: 0, lift: 0, home: new THREE.Vector3(), down: false })
-  useFrame(({ clock }, dt) => {
-    const g = inner.current; if (!g) return
-    if (!st.current.down) {
-      // float back home (or bob a little when hovered)
-      g.position.lerp(_w.set(0, hover ? Math.abs(Math.sin(clock.elapsedTime * 6)) * 0.04 : 0, 0), 1 - Math.exp(-dt * 12))
+  useFrame(({ clock, raycaster, pointer, camera }, dt) => {
+    const g = inner.current, o = outer.current; if (!g || !o) return
+    if (held.id === id) {
+      // follow the cursor: the pointer's ray meets a flat plane a little above the counter
+      raycaster.setFromCamera(pointer, camera)
+      o.getWorldPosition(_w); _plane.constant = -(_w.y + 0.3)
+      if (raycaster.ray.intersectPlane(_plane, _p)) {
+        drag.over = drops ? nearestTarget(_p, Object.keys(drops)) : '' // where the cursor points, not where the tool has got to
+        g.position.lerp(o.worldToLocal(_p.clone()), 1 - Math.exp(-dt * 25))
+      }
+      return
     }
+    // home (or bob a little when hovered)
+    g.position.lerp(_w.set(0, hover ? Math.abs(Math.sin(clock.elapsedTime * 6)) * 0.04 : 0, 0), 1 - Math.exp(-dt * 12))
   })
   const down = (e: ThreeEvent<PointerEvent>) => {
+    if (e.button !== 0) return
     e.stopPropagation()
-    st.current = { ...st.current, moved: 0, down: true }
-    ;(e.target as Element).setPointerCapture?.(e.pointerId)
-    if (drops) { drag.active = id; setDragging(true) }
+    if (drops) { held.id = id; held.drops = drops; drag.active = id; document.body.style.cursor = 'none'; return }
+    onClick?.()
   }
-  const move = (e: ThreeEvent<PointerEvent>) => {
-    if (!st.current.down || !drops || !outer.current || !inner.current) return
-    outer.current.getWorldPosition(_w)
-    _plane.constant = -(_w.y + 0.25)                       // carry it a little above the counter
-    if (!e.ray.intersectPlane(_plane, _p)) return
-    const local = outer.current.worldToLocal(_p.clone())
-    st.current.moved += inner.current.position.distanceTo(local)
-    inner.current.position.copy(local)
-    inner.current.getWorldPosition(_w)
-    drag.over = nearestTarget(_w, Object.keys(drops))
-    document.body.style.cursor = 'grabbing'
-  }
-  const up = (e: ThreeEvent<PointerEvent>) => {
-    if (!st.current.down) return
-    st.current.down = false
-    ;(e.target as Element).releasePointerCapture?.(e.pointerId)
-    const wasDrag = st.current.moved > 0.05
-    if (drops && wasDrag && inner.current) {
-      inner.current.getWorldPosition(_w)
-      const t = nearestTarget(_w, Object.keys(drops))
-      if (t) drops[t]()
-    } else if (onClick) onClick()                          // a plain click (no real drag) still works
-    drag.active = ''; drag.over = ''; setDragging(false)
-    document.body.style.cursor = hover ? 'grab' : ''
-  }
+  const holding = held.id === id
   return (
     <group ref={outer} position={pos}>
       <group ref={inner}>{children}</group>
-      <mesh name={`station:${id}`} visible={false} onPointerDown={down} onPointerMove={move} onPointerUp={up}
-        onPointerOver={(e) => { e.stopPropagation(); setHover(true); document.body.style.cursor = drops ? 'grab' : 'pointer' }}
-        onPointerOut={() => { setHover(false); if (!st.current.down) document.body.style.cursor = '' }}>
+      <mesh name={`station:${id}`} visible={false} onPointerDown={down}
+        onPointerOver={(e) => { e.stopPropagation(); setHover(true); if (!held.id) document.body.style.cursor = 'pointer' }}
+        onPointerOut={() => { setHover(false); if (!held.id) document.body.style.cursor = '' }}>
         <boxGeometry args={size} />
       </mesh>
-      {hover && !dragging && tip && <Html position={[0, size[1] / 2 + 0.08, 0]} center className="tag tool">{tip}</Html>}
+      {hover && !holding && !held.id && tip && <Html position={[0, size[1] / 2 + 0.08, 0]} center className="tag tool">{tip}</Html>}
     </group>
   )
 }

@@ -288,14 +288,14 @@ function Decor({ hideBack }: { hideBack: boolean }) {
   )
 }
 
-export function Interior({ cutaway, pov }: { cutaway: boolean; pov: boolean }) {
+export function Interior({ cutaway, pov, only = '' }: { cutaway: boolean; pov: boolean; only?: '' | 'bar' | 'kitchen' }) {
   return (
     <group name="interior">
       <Reveal id="floor"><Floor /></Reveal>
       <Reveal id="walls"><Walls cutaway={cutaway} hideBack={pov} /></Reveal>
-      <Reveal id="kitchen" at={[-8.5, 0, -8.5]}><group position={[KITCHEN_DX, 0, KITCHEN_DZ]}><Kitchen /></group></Reveal>
-      <Reveal id="counter" at={[0.2, 0, -7.2]}><group position={[0, 0, BACK_DZ]}><Counter showDrawerTags={pov} /><Bar /></group></Reveal>
-      <Reveal id="fridge" at={[9.5, 0, -9.4]}><group position={[FRIDGE_DX, 0, FRIDGE_DZ]}><Fridge /></group></Reveal>
+      <Reveal id="kitchen" at={[-8.5, 0, -8.5]}><group visible={only !== 'bar'} position={[KITCHEN_DX, 0, KITCHEN_DZ]}><Kitchen /></group></Reveal>
+      <Reveal id="counter" at={[0.2, 0, -7.2]}><group visible={only !== 'kitchen'} position={[0, 0, BACK_DZ]}><Counter showDrawerTags={pov} /><Bar /></group></Reveal>
+      <Reveal id="fridge" at={[9.5, 0, -9.4]}><group visible={only === ''} position={[FRIDGE_DX, 0, FRIDGE_DZ]}><Fridge /></group></Reveal>
       <Reveal id="decor"><Decor hideBack={pov} /></Reveal>
       <CakeBench />
       {TABLES.map(([x, z], i) => (
