@@ -18,6 +18,7 @@ import { MusicButton } from './ui/MusicButton'
 import { CakeHud } from './ui/CakeHud'
 import { Joystick } from './ui/Joystick'
 import { Landscape } from './ui/Landscape'
+import { ClockChip } from './ui/ClockChip'
 import { Credits } from './ui/Credits'
 import { TOUCH } from './systems/CameraRig'
 import { LookHint } from './ui/LookHint'
@@ -113,6 +114,7 @@ export default function App() {
       {playing && (TOUCH ? mode !== 'cake' && mode !== 'pov' && <Joystick /> : mode !== 'pov' && <LookHint mode={mode} />)}
       {playing && mode === 'walk' && <div className="crosshair" />}
       {!SNAP && <MusicButton />}
+      {(!SNAP || location.pathname.includes('play')) && <ClockChip />}
       {!SNAP && <Landscape />}
       {!SNAP && <Menu screen={screen} setScreen={setScreen} />}
       <div className="fps">{shownFps} fps</div>

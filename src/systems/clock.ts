@@ -16,6 +16,7 @@ export const useClock = create<Clock>((set) => ({
 }))
 
 let gameHour = load().hour
+let speed = 1 // capture/testing only: how many times faster than 1 min = 1 hour
 let last = typeof performance !== 'undefined' ? performance.now() : 0
 let saved = 0
 function save() { try { localStorage.setItem(KEY, JSON.stringify({ real: useClock.getState().real, hour: gameHour })) } catch { /* private mode */ } }
@@ -23,7 +24,7 @@ function save() { try { localStorage.setItem(KEY, JSON.stringify({ real: useCloc
 // call once per frame; returns the hour as a decimal (13.5 = 1:30 pm)
 export function tickClock(): number {
   const now = performance.now(), dt = Math.min(0.25, (now - last) / 1000); last = now
-  gameHour = (gameHour + dt / (MIN_PER_HOUR * 60)) % 24
+  gameHour = (gameHour + (dt * speed) / (MIN_PER_HOUR * 60)) % 24
   if (now - saved > 10000) { saved = now; save() }
   return hourNow()
 }
@@ -32,3 +33,10 @@ export function hourNow(): number {
   return gameHour
 }
 export const fmtHour = (h: number) => { const hh = Math.floor(h), mm = Math.floor((h - hh) * 60); const ap = hh < 12 ? 'am' : 'pm'; return `${((hh + 11) % 12) + 1}:${String(mm).padStart(2, '0')} ${ap}` }
+
+// capture/testing hook (reels drive a time-lapse with it): __clock.set(19.5), __clock.speed(240)
+if (typeof window !== 'undefined') (window as unknown as { __clock: object }).__clock = {
+  set: (h: number) => { useClock.getState().setReal(false); gameHour = ((h % 24) + 24) % 24 },
+  speed: (x: number) => { speed = x },
+  get: () => hourNow(),
+}

@@ -229,3 +229,9 @@ html, body { overscroll-behavior: none; }
 /* switching areas: a quick fade-cut instead of a slow fly-through */
 .cutfade { position: fixed; inset: 0; background: #2a1830; opacity: 0; pointer-events: none; z-index: 45; transition: opacity .28s ease; }
 .cutfade.on { opacity: 1; transition: none; }
+
+/* the café clock chip (time of day) */
+.clockchip { position: fixed; left: 184px; top: 12px; z-index: 26; height: 40px; padding: 0 14px; border: 0; border-radius: 999px; background: rgba(42,24,48,.72); color: #fbeee4; font: 700 15px/40px inherit; font-family: inherit; cursor: pointer; white-space: nowrap; }
+.clockchip i { font-style: normal; opacity: .7; font-size: 12px; }
+@media (max-width: 700px) { .clockchip { left: 148px; top: 6px; height: 36px; line-height: 36px; font-size: 13px; } }
+.clockchip.corner { top: auto; bottom: 62px; left: 14px; } /* capture/dev builds: the view tabs own the top-left */

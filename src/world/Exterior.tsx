@@ -1,3 +1,4 @@
+import { nightGlow } from './Lighting'
 import * as THREE from 'three'
 import { useMemo } from 'react'
 import { C } from '../data/palette'
@@ -55,6 +56,8 @@ function CoffeePot() {
       </Reveal>
       <Reveal id="window" at={[3.6, 4.9, 3.7]}><Porthole /></Reveal>
       <Reveal id="door" at={[0, 0, 5.9]}><ArchDoor /><Awning /></Reveal>
+      {/* at night, warm light spills out of the doorway onto the path */}
+      <mesh position={[0, 0.12, 7.6]} rotation={[-Math.PI / 2, 0, 0]} material={nightGlow}><planeGeometry args={[6.5, 5.5]} /></mesh>
     </group>
   )
 }

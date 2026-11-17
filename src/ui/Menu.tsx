@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useGame, type CamMode } from '../systems/store'
 import { useShop } from '../systems/shop'
+import { useClock } from '../systems/clock'
 import { view, setSens } from '../systems/CameraRig'
 import { CREDITS } from '../data/credits'
 
@@ -23,6 +24,7 @@ export function Menu({ screen, setScreen }: { screen: Screen; setScreen: (s: Scr
   const setMode = useGame((s) => s.setMode), mode = useGame((s) => s.mode)
   const [sens, set] = useState(view.sens)
   const [hq, setHq] = useState(quality.high)
+  const realTime = useClock((st) => st.real)
 
   // title screen: the camera slowly circles the café; any key / click continues
   useEffect(() => {
@@ -107,6 +109,10 @@ export function Menu({ screen, setScreen }: { screen: Screen; setScreen: (s: Scr
           <label>Graphics
             <button className={hq ? 'on' : ''} onClick={() => { save('quality', 'high'); setHq(true); location.reload() }}>High</button>
             <button className={!hq ? 'on' : ''} onClick={() => { save('quality', 'low'); setHq(false); location.reload() }}>Low (cooler, faster)</button>
+          </label>
+          <label>Time of day
+            <button className={!realTime ? 'on' : ''} onClick={() => useClock.getState().setReal(false)}>Game time (1 min = 1 hour)</button>
+            <button className={realTime ? 'on' : ''} onClick={() => useClock.getState().setReal(true)}>Real time (your clock)</button>
           </label>
           <button onClick={() => setScreen(mode === 'exterior' ? 'main' : 'paused')}>Back</button>
         </div>
