@@ -87,7 +87,7 @@ function Filling({ y, h, r, color, t0 }: { y: number; h: number; r: number; colo
 function Frosting({ height, color, t0: tPour }: { height: number; color: string; t0: number }) {
   const POUR = 0.45 // the bowl tips and pours first; the frosting lands and spreads after
   const t0 = tPour + POUR
-  const collar = useRef<THREE.Mesh>(null), cap = useRef<THREE.Mesh>(null), drips = useRef<THREE.Group>(null)
+  const collar = useRef<THREE.Mesh>(null), cap = useRef<THREE.Mesh>(null), frill = useRef<THREE.Mesh>(null)
   const bowl = useRef<THREE.Group>(null), stream = useRef<THREE.Mesh>(null)
   const tin = useCake((st) => st.cake.tin)
   const hash = (n: number) => { const v = Math.sin(n * 91.345) * 47453.21; return v - Math.floor(v) }
@@ -97,7 +97,21 @@ function Frosting({ height, color, t0: tPour }: { height: number; color: string;
     w: 0.03 + hash(i + 90) * 0.012,
   })), [height])
   const m = mat(color, { rough: 0.3 }) // glossy frosting
-  const RIM = useMemo(() => outline(tin, R + 0.012, D.length), [tin, D.length])
+  const frillMat = useMemo(() => { const x = m.clone(); x.side = THREE.DoubleSide; return x }, [m])
+  // the frill: a closed ribbon along the tin's outline, hem = rounded scallops (curtain-like), gently uneven
+  const FRILL = useMemo(() => {
+    const N = 220, P = outline(tin, R + 0.017, N), SC = 16, L = Math.min(height * 0.5, 0.17)
+    const pos: number[] = [], idx: number[] = []
+    for (let i = 0; i <= N; i++) {
+      const q = P[i % N], s = i / N
+      const wave = Math.pow(Math.abs(Math.sin(Math.PI * SC * s)), 0.55)          // round-bottomed scallops
+      const len = L * (0.42 + 0.58 * wave) * (0.9 + 0.1 * Math.sin(s * 23.0))     // a touch uneven, like real frosting
+      const out = 0.004 + 0.012 * wave                                             // the hem bulges out slightly
+      pos.push(q.x, 0, q.z, q.x + Math.cos(q.a) * out, -len, q.z + Math.sin(q.a) * out)
+      if (i < N) { const a = i * 2; idx.push(a, a + 1, a + 2, a + 1, a + 3, a + 2) }
+    }
+    const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setIndex(idx); g.computeVertexNormals(); return g
+  }, [tin, height])
   const COLLAR = 0.075
   useFrame(() => {
     // the bowl: glides in, tips, pours a thick ribbon onto the centre, then tilts back and leaves
@@ -107,10 +121,8 @@ function Frosting({ height, color, t0: tPour }: { height: number; color: string;
     const t = now() - t0, k = clamp01(t / 0.6)
     if (cap.current) { cap.current.visible = t >= 0; const r = 0.25 + 0.75 * (1 - Math.pow(1 - k, 2)); cap.current.scale.set(r, 1, r) }
     if (collar.current) { const kc = clamp01((t - 0.45) / 0.35); collar.current.visible = kc > 0; collar.current.scale.y = Math.max(0.001, kc) }
-    drips.current?.children.forEach((c, i) => {
-      const kk = clamp01((t - 0.75 - hash(i + 7) * 0.5) / 0.9), e = 1 - Math.pow(1 - kk, 3) // each drip runs at its own pace, easing to a stop
-      c.visible = kk > 0; c.scale.y = Math.max(0.001, e)
-    })
+    // the frill flows down the sides as the frosting settles, easing to a stop
+    if (frill.current) { const kk = clamp01((t - 0.7) / 1.0), e = 1 - Math.pow(1 - kk, 3); frill.current.visible = kk > 0; frill.current.scale.y = Math.max(0.001, e) }
   })
   return (
     <group>
@@ -121,15 +133,8 @@ function Frosting({ height, color, t0: tPour }: { height: number; color: string;
       <mesh ref={stream} visible={false} material={m}><cylinderGeometry args={[0.05, 0.04, 1, 12]} /></mesh>
       <mesh ref={cap} position={[0, height + 0.02, 0]} geometry={bodyGeo(tin, R + 0.03, 0.045)} material={m} />
       <mesh ref={collar} position={[0, height - COLLAR / 2 + 0.01, 0]} geometry={bodyGeo(tin, R + 0.018, COLLAR)} material={m} />
-      <group ref={drips} position={[0, height - COLLAR + 0.02, 0]}>
-        {D.map((d, i) => (
-          // rotate each drip so its flat side lies against the cake
-          <group key={i} position={[RIM[i].x, 0, RIM[i].z]} rotation={[0, Math.PI / 2 - RIM[i].a, 0]}>
-            <mesh position={[0, -d.len / 2, 0]} scale={[1, 1, 0.6]} material={m}><capsuleGeometry args={[d.w, d.len, 4, 10]} /></mesh>
-            <mesh position={[0, -d.len - d.w * 0.4, 0]} scale={[1, 1, 0.65]} material={m}><sphereGeometry args={[d.w * 1.25, 12, 8]} /></mesh>
-          </group>
-        ))}
-      </group>
+      {/* a scalloped frill all the way round: a glossy band with a soft, wavy, curtain-like hem */}
+      <mesh ref={frill} position={[0, height - COLLAR + 0.025, 0]} geometry={FRILL} material={frillMat} />
     </group>
   )
 }
