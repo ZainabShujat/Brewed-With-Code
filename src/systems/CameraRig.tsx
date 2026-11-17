@@ -10,7 +10,8 @@ import { machine } from '../world/CakeMachine'
 
 // Fixed shots per mode. Walk mode follows the barista instead.
 const SHOTS: Record<Exclude<CamMode, 'walk' | 'vlog'>, { pos: THREE.Vector3; look: THREE.Vector3 }> = {
-  exterior: { pos: new THREE.Vector3(42, 24.5, 69), look: new THREE.Vector3(0, 9.4, 5.8) },
+  // straight on to the front door (square, level, symmetrical); slid left so the pot sits right of the menu panel
+  exterior: { pos: new THREE.Vector3(-13, 13, 78), look: new THREE.Vector3(-13, 8.5, 0) },
   // outro: pull back from the dollhouse to the full exterior while the pot walls fade in
   outro: { pos: new THREE.Vector3(42, 24.5, 69), look: new THREE.Vector3(0, 9.4, 5.8) },
   // the cake bench in the kitchen: close, slightly above, like leaning over the turntable
