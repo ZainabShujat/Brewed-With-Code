@@ -22,7 +22,7 @@ type Shop = {
   menu: null | 'fillers' | 'sprinkles' | 'ingredients' | 'milk'
   setMenu: (m: Shop['menu']) => void
   openShop: (on: boolean) => void
-  takeCup: () => void
+  takeCup: (size?: import('../data/recipes').CupSize) => void
   shot: () => void
   water: () => void
   choc: () => void
@@ -42,7 +42,7 @@ export const useShop = create<Shop>((set, get) => ({
   coins: 0, served: 0, last: null, menu: null,
   setMenu: (menu) => set({ menu }),
   openShop: (on) => { cafe.auto = on; cafe.serveEvery = 1e9; set({ open: on }) }, // customers arrive on their own; YOU serve them
-  takeCup: () => { if (!get().cup) set({ cup: true, drink: { ...EMPTY } }) },
+  takeCup: (size = 'medium') => { if (!get().cup) set({ cup: true, drink: { ...EMPTY, size } }) },
   shot: () => { const s = get(); if (!s.cup || s.drink.shots >= 4) return; set({ drink: { ...s.drink, shots: s.drink.shots + 1 }, pours: [...s.pours, pour('shot', '#5b2e1c')] }) },
   water: () => { const s = get(); if (!s.cup || s.drink.water) return; set({ drink: { ...s.drink, water: true }, pours: [...s.pours, pour('water', '#bfe3f2')] }) },
   choc: () => { const s = get(); if (!s.cup || s.drink.chocolate) return; set({ drink: { ...s.drink, chocolate: true }, pours: [...s.pours, pour('choc', '#3b1d12')] }) },

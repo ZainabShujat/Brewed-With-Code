@@ -3,7 +3,7 @@ import { useShop } from '../systems/shop'
 import { cafe } from '../world/Customers'
 import { brewCam } from '../systems/CameraRig'
 import { loop, sfx } from '../systems/sound'
-import type { Milk, MilkType, Topping } from '../data/recipes'
+import type { Milk, MilkType, Topping, CupSize } from '../data/recipes'
 import { drinkSvg } from './drinkSvg'
 
 // ── The coffee bar as a sequence of short, skill-based steps (Papa's-style stations) ─────────
@@ -11,11 +11,11 @@ import { drinkSvg } from './drinkSvg'
 // Held steps use a meter: hold the button (or Space) and let go in the green zone.
 // The camera glides to each part of the bar; every step gets 0–3 stars; nothing is a hard fail.
 
-type Step = 'start' | 'grind' | 'shot' | 'extras' | 'milk' | 'pour' | 'top' | 'serve' | 'done'
-const STEPS: Step[] = ['grind', 'shot', 'extras', 'milk', 'pour', 'top', 'serve']
-const LABEL: Record<Step, string> = { start: '', grind: 'Grind', shot: 'Pull shot', extras: 'Extras', milk: 'Steam milk', pour: 'Pour', top: 'Top', serve: 'Serve', done: '' }
+type Step = 'start' | 'cup' | 'grind' | 'shot' | 'extras' | 'milk' | 'pour' | 'top' | 'serve' | 'done'
+const STEPS: Step[] = ['cup', 'grind', 'shot', 'extras', 'milk', 'pour', 'top', 'serve']
+const LABEL: Record<Step, string> = { start: '', cup: 'Cup', grind: 'Grind', shot: 'Pull shot', extras: 'Extras', milk: 'Steam milk', pour: 'Pour', top: 'Top', serve: 'Serve', done: '' }
 // where the barista steps to for each station (counter x)
-const CAM: Partial<Record<Step, number>> = { grind: -2.3, shot: -1.6, extras: -0.5, milk: 1.9, pour: 0.25, top: 1.1, serve: 0.6 }
+const CAM: Partial<Record<Step, number>> = { cup: 2.62, grind: -2.3, shot: -1.6, extras: -0.5, milk: 1.9, pour: 0.25, top: 1.1, serve: 0.6 }
 
 // a held meter: how fast it fills, and its green zone(s)
 type Meter = { speed: number; zones: { from: number; to: number; label?: string; value?: string }[] }
@@ -93,7 +93,8 @@ export function BrewHud() {
     return () => { window.removeEventListener('keydown', d); window.removeEventListener('keyup', u) }
   })
 
-  const begin = () => { useShop.getState().trash(); useShop.getState().takeCup(); setScore({}); setMilkType('whole'); sfx.tap(); setStep('grind') }
+  const begin = () => { useShop.getState().trash(); setScore({}); setMilkType('whole'); sfx.tap(); setStep('cup') }
+  const pickCup = (sz: CupSize) => { useShop.getState().takeCup(sz); setScore((o) => ({ ...o, cup: want && want.size === sz ? 3 : 0 })); sfx.tap(); setTimeout(() => setStep('grind'), 350) }
   const skipMilk = () => { setScore((o) => ({ ...o, milk: want && want.milk !== 'none' ? 0 : 3 })); setStep('top') }
   const serve = () => {
     const st = Object.values(score); const avg = st.length ? st.reduce((a, b) => a + (b ?? 0), 0) / st.length : 0
@@ -135,6 +136,13 @@ export function BrewHud() {
               <div className="needle" style={{ left: `${Math.min(100, val * 100)}%` }} />
             </div>
             <button className={'brew-hold' + (holding ? ' on' : '')} onPointerDown={press} onPointerUp={release} onPointerLeave={release}>{holding ? 'let go!' : 'HOLD'} <small>or Space</small></button>
+          </>
+        )}
+
+        {step === 'cup' && (
+          <>
+            <div className="brew-title">Grab a glass from the shelf</div>
+            <div className="brew-row">{(['small', 'medium', 'large'] as const).map((sz) => <button key={sz} className="chip" onClick={() => pickCup(sz)}>{sz === 'small' ? '🥃' : sz === 'medium' ? '🥛' : '🫙'} {sz}</button>)}</div>
           </>
         )}
 

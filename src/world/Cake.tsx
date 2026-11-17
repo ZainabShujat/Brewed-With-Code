@@ -9,7 +9,7 @@ import { Shelf } from './Props'
 import { tileTex } from './textures'
 import { Grab, DropTarget } from '../systems/drag'
 import { CakeMachine } from './CakeMachine'
-import { bodyGeo, edge } from './cakeShape'
+import { bodyGeo, edge, outline } from './cakeShape'
 import { glass } from './mats'
 
 // The cake bench lives in the kitchen (back-left corner). Everything on the turntable is drawn
@@ -97,6 +97,7 @@ function Frosting({ height, color, t0: tPour }: { height: number; color: string;
     w: 0.03 + hash(i + 90) * 0.012,
   })), [height])
   const m = mat(color, { rough: 0.3 }) // glossy frosting
+  const RIM = useMemo(() => outline(tin, R + 0.012, D.length), [tin, D.length])
   const COLLAR = 0.075
   useFrame(() => {
     // the bowl: glides in, tips, pours a thick ribbon onto the centre, then tilts back and leaves
@@ -123,7 +124,7 @@ function Frosting({ height, color, t0: tPour }: { height: number; color: string;
       <group ref={drips} position={[0, height - COLLAR + 0.02, 0]}>
         {D.map((d, i) => (
           // rotate each drip so its flat side lies against the cake
-          <group key={i} position={[Math.cos(d.a) * edge(tin, d.a, R + 0.012), 0, Math.sin(d.a) * edge(tin, d.a, R + 0.012)]} rotation={[0, Math.PI / 2 - d.a, 0]}>
+          <group key={i} position={[RIM[i].x, 0, RIM[i].z]} rotation={[0, Math.PI / 2 - RIM[i].a, 0]}>
             <mesh position={[0, -d.len / 2, 0]} scale={[1, 1, 0.6]} material={m}><capsuleGeometry args={[d.w, d.len, 4, 10]} /></mesh>
             <mesh position={[0, -d.len - d.w * 0.4, 0]} scale={[1, 1, 0.65]} material={m}><sphereGeometry args={[d.w * 1.25, 12, 8]} /></mesh>
           </group>
@@ -138,6 +139,7 @@ function Rosettes({ y, color, t0 }: { y: number; color: string; t0: number }) {
   const g = useRef<THREE.Group>(null), bag = useRef<THREE.Group>(null)
   const tin = useCake((st) => st.cake.tin)
   const N = 14, STEP = 0.13, SQ = 0.22
+  const RO = useMemo(() => outline(tin, R - 0.075, N), [tin])
   useFrame(() => {
     const t = now() - t0
     g.current?.children.forEach((c, i) => {
@@ -149,16 +151,16 @@ function Rosettes({ y, color, t0 }: { y: number; color: string; t0: number }) {
     if (bg) {
       const i = Math.min(N - 1, Math.max(0, Math.floor(t / STEP))), into = clamp01((t - i * STEP) / STEP)
       bg.visible = t >= 0 && t < N * STEP + 0.2
-      const a = ((i + into * 0.5) / N) * Math.PI * 2, rr = edge(tin, a, R) - 0.07
-      bg.position.set(Math.cos(a) * rr, y + 0.12 + Math.abs(Math.sin(into * Math.PI)) * 0.06, Math.sin(a) * rr) // a little lift between rosettes
+      const p0 = RO[i], p1 = RO[(i + 1) % N]
+      bg.position.set(p0.x + (p1.x - p0.x) * into * 0.5, y + 0.12 + Math.abs(Math.sin(into * Math.PI)) * 0.06, p0.z + (p1.z - p0.z) * into * 0.5) // a little lift between rosettes
     }
   })
   const m = mat(color, { rough: 0.4 })
   return (
     <group>
       <group ref={g} position={[0, y, 0]}>
-        {Array.from({ length: N }, (_, i) => { const a = (i / N) * Math.PI * 2; return (
-          <group key={i} position={[Math.cos(a) * (edge(tin, a, R) - 0.07), 0, Math.sin(a) * (edge(tin, a, R) - 0.07)]}>
+        {RO.map((p, i) => { return (
+          <group key={i} position={[p.x, 0, p.z]}>
             <mesh position={[0, 0.02, 0]} rotation={[Math.PI / 2, 0, 0]} material={m}><torusGeometry args={[0.055, 0.026, 8, 16]} /></mesh>
             <mesh position={[0, 0.055, 0]} rotation={[Math.PI / 2, 0, 0]} material={m}><torusGeometry args={[0.035, 0.022, 8, 14]} /></mesh>
             <mesh position={[0, 0.095, 0]} material={m}><coneGeometry args={[0.03, 0.06, 10]} /></mesh>
@@ -170,8 +172,14 @@ function Rosettes({ y, color, t0 }: { y: number; color: string; t0: number }) {
 }
 
 // toppings: sprinkles rain down; cherries / strawberries / candles pop on
+// a proper strawberry: a rounded, slightly heart-shaped berry (lathe profile), seed dots, a leafy green top
+const BERRY = (() => { const P = (x: number, y: number) => new THREE.Vector2(x, y)
+  return new THREE.LatheGeometry([P(0, -0.05), P(0.014, -0.046), P(0.03, -0.03), P(0.043, -0.005), P(0.048, 0.02), P(0.042, 0.042), P(0.026, 0.055), P(0, 0.058)], 18) })()
+const SEEDS = Array.from({ length: 14 }, (_, i) => { const a = i * 2.4, yy = -0.035 + (i % 5) * 0.018, rr = 0.016 + Math.min(0.03, (yy + 0.05) * 0.5); return [Math.cos(a) * rr, yy, Math.sin(a) * rr] as [number, number, number] })
+
 function Toppings({ y, kind, t0 }: { y: number; kind: string; t0: number }) {
   const g = useRef<THREE.Group>(null)
+  const tin = useCake((st) => st.cake.tin)
   // scatter: a hash-based random spread over the top (sqrt keeps it even, not bunched in the middle)
   const hash = (n: number) => { const v = Math.sin(n * 12.9898) * 43758.5453; return v - Math.floor(v) }
   const S = useMemo(() => Array.from({ length: 90 }, (_, i) => { const r = Math.sqrt(hash(i + 1)) * (R - 0.13), a = hash(i + 101) * Math.PI * 2; return { x: Math.cos(a) * r, z: Math.sin(a) * r, d: hash(i + 201) * 0.5, rot: hash(i + 301) * 6.28 } }), [])
@@ -183,11 +191,12 @@ function Toppings({ y, kind, t0 }: { y: number; kind: string; t0: number }) {
   }))
   if (kind === 'sprinkles') return <group ref={g}>{S.map((s, i) => <mesh key={i} rotation={[Math.PI / 2, 0, s.rot]} material={mat(cols[i % cols.length], { rough: 0.3 })}><capsuleGeometry args={[0.009, 0.035, 2, 4]} /></mesh>)}</group>
   const n = kind === 'candles' ? 5 : 7
+  const RIMP = useMemo(() => outline(tin, kind === 'candles' ? 0.25 : R - 0.09, n), [tin, kind])
   return (
     <group ref={g}>
-      {Array.from({ length: n }, (_, i) => { const a = (i / n) * Math.PI * 2, r = kind === 'candles' ? 0.25 : R - 0.07; const p: [number, number, number] = [Math.cos(a) * r, y + 0.12, Math.sin(a) * r]
+      {RIMP.map((q, i) => { const p: [number, number, number] = [q.x, y + 0.12, q.z]
         if (kind === 'cherries') return <group key={i} position={p}><mesh material={mat('#b3122e', { rough: 0.2 })}><sphereGeometry args={[0.05, 14, 10]} /></mesh><mesh position={[0.01, 0.07, 0]} rotation={[0, 0, -0.3]} material={mat('#4b6b2a')}><cylinderGeometry args={[0.005, 0.005, 0.09, 4]} /></mesh></group>
-        if (kind === 'strawberries') return <group key={i} position={p}><mesh rotation={[Math.PI, 0, 0]} material={mat('#d8344a', { rough: 0.35 })}><coneGeometry args={[0.055, 0.1, 12]} /></mesh><mesh position={[0, 0.05, 0]} material={mat('#5a8a3a')}><coneGeometry args={[0.045, 0.02, 6]} /></mesh></group>
+        if (kind === 'strawberries') return <group key={i} position={p} rotation={[0.25, i * 1.3, 0]}><mesh geometry={BERRY} material={mat('#e0304a', { rough: 0.25 })} />{SEEDS.map((q, j) => <mesh key={j} position={q} material={mat('#ffd36b')}><sphereGeometry args={[0.005, 4, 3]} /></mesh>)}{[0, 1, 2, 3, 4].map((j) => <mesh key={j} position={[Math.cos(j * 1.256) * 0.022, 0.058, Math.sin(j * 1.256) * 0.022]} rotation={[Math.sin(j * 1.256) * 0.9, 0, -Math.cos(j * 1.256) * 0.9]} material={mat('#4f8a34')}><coneGeometry args={[0.012, 0.04, 4]} /></mesh>)}</group>
         return <group key={i} position={[p[0], y, p[2]]}><mesh position={[0, 0.12, 0]} material={mat(i % 2 ? C.counter : C.lilac)}><cylinderGeometry args={[0.014, 0.014, 0.24, 8]} /></mesh><mesh position={[0, 0.27, 0]} material={glow('#ffb347')}><sphereGeometry args={[0.025, 8, 6]} /></mesh></group>
       })}
     </group>

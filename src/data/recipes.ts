@@ -11,8 +11,10 @@
 export type Milk = 'none' | 'steamed' | 'foamy' | 'micro'
 export type MilkType = 'whole' | 'oat' | 'almond'
 export type Topping = 'none' | 'cocoa' | 'cinnamon' | 'sprinkles' | 'whipped'
+export type CupSize = 'small' | 'medium' | 'large'
 
 export type Drink = {
+  size: CupSize          // which glass from the shelf
   shots: number          // espresso shots pulled
   water: boolean         // hot water added (americano)
   chocolate: boolean     // chocolate sauce (mocha)
@@ -23,7 +25,7 @@ export type Drink = {
 
 export type Recipe = { id: string; name: string; price: number; base: Drink; note: string }
 
-const D = (p: Partial<Drink>): Drink => ({ shots: 2, water: false, chocolate: false, milk: 'none', milkType: 'whole', topping: 'none', ...p })
+const D = (p: Partial<Drink>): Drink => ({ size: 'medium', shots: 2, water: false, chocolate: false, milk: 'none', milkType: 'whole', topping: 'none', ...p })
 
 export const RECIPES: Recipe[] = [
   { id: 'espresso', name: 'Espresso', price: 3, base: D({}), note: '2 shots, that\'s it' },
@@ -40,16 +42,18 @@ export type Order = { recipe: Recipe; want: Drink; label: string }
 export function randomOrder(rand: () => number = Math.random): Order {
   const r = RECIPES[Math.floor(rand() * RECIPES.length)]
   const want = { ...r.base }
+  want.size = r.id === 'espresso' ? 'small' : (['small', 'medium', 'large'] as const)[Math.floor(rand() * 3)]
   const extras: string[] = []
   if (want.milk !== 'none' && rand() < 0.4) { want.milkType = rand() < 0.5 ? 'oat' : 'almond'; extras.push(`${want.milkType} milk`) }
   if (rand() < 0.25) { want.shots = 3; extras.push('extra shot') }
   if (want.milk !== 'none' && want.topping === 'none' && rand() < 0.3) { want.topping = rand() < 0.5 ? 'cinnamon' : 'sprinkles'; extras.push(want.topping) }
-  return { recipe: r, want, label: [r.name, ...extras].join(' · ') }
+  return { recipe: r, want, label: [`${want.size[0].toUpperCase()}${want.size.slice(1)} ${r.name}`, ...extras].join(' · ') }
 }
 
 // how close is the drink to the order? each wrong detail costs points
 export function score(made: Drink, want: Drink) {
   const misses: string[] = []
+  if (made.size !== want.size) misses.push(`${want.size} cup`)
   if (made.shots !== want.shots) misses.push(`${want.shots} shots`)
   if (made.water !== want.water) misses.push(want.water ? 'hot water' : 'no water')
   if (made.chocolate !== want.chocolate) misses.push(want.chocolate ? 'chocolate' : 'no chocolate')
@@ -60,4 +64,4 @@ export function score(made: Drink, want: Drink) {
   return { pct, misses }
 }
 
-export const EMPTY: Drink = { shots: 0, water: false, chocolate: false, milk: 'none', milkType: 'whole', topping: 'none' }
+export const EMPTY: Drink = { size: 'medium', shots: 0, water: false, chocolate: false, milk: 'none', milkType: 'whole', topping: 'none' }

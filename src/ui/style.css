@@ -202,3 +202,5 @@ html, body { overscroll-behavior: none; }
 .dayresults .rows div { display: flex; justify-content: space-between; font-weight: 700; padding: 4px 2px; border-bottom: 1px dashed #e8cfe0; }
 .dayresults .rows .tot { font-size: 20px; border: 0; margin-top: 4px; }
 .dayresults .bank { margin: 12px 0; font-weight: 700; opacity: .8; }
+
+.sizetag { background: rgba(42,24,48,.8); color: #fff6ee; border-radius: 8px; padding: 1px 7px; font: 900 12px 'Trebuchet MS', sans-serif; }
