@@ -1,6 +1,6 @@
 import { useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
-import type * as THREE from 'three'
+import * as THREE from 'three'
 import { Model } from './Models'
 import { C } from '../data/palette'
 import { glow, mat, glass } from './mats'
@@ -97,14 +97,28 @@ export function Stool({ pos, color = C.counter }: { pos: V3; color?: string }) {
   return <group position={pos}><Model name="bar_chair_round_01" scale={0.95} /></group>
 }
 
+const _ray = new THREE.Raycaster(), _o = new THREE.Vector3(), _down = new THREE.Vector3(0, -1, 0)
 export function RoundTable({ pos, top = C.cream }: { pos: V3; top?: string }) {
   void top
+  const table = useRef<THREE.Group>(null), items = useRef<THREE.Group>(null), done = useRef(false)
+  useFrame(() => {
+    if (done.current || !table.current || !items.current || !table.current.children.length) return
+    table.current.updateMatrixWorld(true)
+    table.current.localToWorld(_o.set(0, 2, 0)); _ray.set(_o, _down)
+    const hit = _ray.intersectObject(table.current, true)[0]
+    if (!hit) return
+    items.current.position.y = table.current.worldToLocal(hit.point.clone()).y
+    items.current.visible = true; done.current = true
+  })
   return (
     <group position={pos}>
-      <Model name="sf:table" fit={0.84} />
-      {/* the table set comes with its own four chairs; on top: a cup and a slice of cake */}
-      <Model name="sf:cup" fit={0.1} pos={[0.12, 0.84, 0.02]} rot={[0, 0.6, 0]} />
-      <Model name="strawberry_chocolate_cake" pos={[-0.12, 0.84, -0.02]} scale={0.8} />
+      <group ref={table}><Model name="sf:table" fit={0.84} /></group>
+      {/* the table set comes with its own four chairs (taller than the top), so the cup and cake
+          are dropped onto the real tabletop with a downward ray once the model has loaded */}
+      <group ref={items} visible={false}>
+        <Model name="sf:cup" fit={0.1} pos={[0.12, 0, 0.02]} rot={[0, 0.6, 0]} />
+        <Model name="strawberry_chocolate_cake" pos={[-0.12, 0, -0.02]} scale={0.8} />
+      </group>
     </group>
   )
 }
