@@ -192,7 +192,7 @@ html, body { overscroll-behavior: none; }
 .dayclock { position: fixed; left: 50%; top: 12px; transform: translateX(-50%); z-index: 20; background: rgba(42,24,48,.82); color: #fff6ee; font: 800 16px 'Trebuchet MS', sans-serif; padding: 8px 18px 12px; border-radius: 14px; min-width: 200px; text-align: center; position: fixed; overflow: hidden; }
 .dayclock i { position: absolute; left: 0; bottom: 0; height: 4px; background: #8ee0c4; }
 .dayclock.late i { background: #ff6b81; } .dayclock.closing { background: rgba(110,63,120,.9); }
-.dayopen { position: fixed; left: 50%; bottom: 120px; transform: translateX(-50%); z-index: 20; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.dayopen { position: fixed; left: 50%; top: 64px; transform: translateX(-50%) scale(.82); transform-origin: top center; z-index: 20; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 10px; }
 .dayno { font: 900 46px 'Trebuchet MS', sans-serif; color: #fff6ee; text-shadow: 0 4px 0 #6e3f78, 0 8px 20px rgba(0,0,0,.4); }
 .daybank { font: 800 15px 'Trebuchet MS', sans-serif; color: #fff6ee; background: rgba(42,24,48,.75); padding: 6px 14px; border-radius: 12px; }
 .dayresults { position: fixed; inset: 0; z-index: 40; background: rgba(20,10,24,.6); display: flex; align-items: center; justify-content: center; }
@@ -225,3 +225,7 @@ html, body { overscroll-behavior: none; }
   .rot-phone { font-size: 64px; animation: rot 1.8s ease-in-out infinite; }
   @keyframes rot { 0%, 30% { transform: rotate(0) } 60%, 100% { transform: rotate(-90deg) } }
 }
+
+/* switching areas: a quick fade-cut instead of a slow fly-through */
+.cutfade { position: fixed; inset: 0; background: #2a1830; opacity: 0; pointer-events: none; z-index: 45; transition: opacity .28s ease; }
+.cutfade.on { opacity: 1; transition: none; }

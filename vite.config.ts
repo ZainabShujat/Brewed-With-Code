@@ -11,6 +11,6 @@ export default defineConfig({
   build: {
     outDir: process.env.OUT_DIR || 'dist',
     emptyOutDir: true,
-    rollupOptions: { input: { main: resolve(__dirname, 'index.html'), reel: resolve(__dirname, 'reel.html') } },
+    rollupOptions: { input: { main: resolve(__dirname, 'index.html'), reel: resolve(__dirname, 'reel.html'), play: resolve(__dirname, 'play.html') } },
   },
 })

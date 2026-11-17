@@ -70,6 +70,7 @@ export function Menu({ screen, setScreen }: { screen: Screen; setScreen: (s: Scr
             <button onClick={() => setScreen('howto')}>How to play</button>
             <button onClick={() => setScreen('settings')}>Settings</button>
             <button onClick={() => setScreen('credits')}>Credits</button>
+            <button onClick={() => setScreen('title')}>← Title</button>
           </div>
         </div>
       )}
@@ -83,6 +84,7 @@ export function Menu({ screen, setScreen }: { screen: Screen; setScreen: (s: Scr
             <button onClick={() => setScreen('howto')}>How to play</button>
             <button onClick={() => setScreen('settings')}>Settings</button>
             <button onClick={() => { useShop.getState().openShop(false); setScreen('main') }}>Main menu</button>
+            <button onClick={() => { useShop.getState().openShop(false); setMode('exterior'); setScreen('title') }}>Title screen</button>
           </div>
         </div>
       )}
@@ -90,10 +92,10 @@ export function Menu({ screen, setScreen }: { screen: Screen; setScreen: (s: Scr
       {screen === 'howto' && (
         <div className="panel text">
           <div className="logo small">How to play</div>
-          <p><b>Café:</b> a customer walks up and their order appears over their head. Drag a cup onto the saucer. Click the espresso machine for shots. Drag a milk bottle onto the pitcher, click the pitcher to pick steamed / foamy / micro-foam, then drag it onto the cup. Drag toppings onto the cup. Ring the bell to serve. A perfect drink earns a tip.</p>
-          <p><b>Cakes:</b> click a batter tap to fill a tin; it bakes in the oven and lands on the turntable. Drag fillings, frosting, piping bags and toppings onto the cake, in the order on the card, then drag the box onto it.</p>
-          <p><b>Looking around:</b> hold right-click and move the mouse. <b>A / D</b> step along the bar. In Explore, click to look with the mouse, <b>WASD</b> to walk.</p>
-          <p><b>Keys:</b> <b>Esc</b> pause · <b>Tab</b> next station.</p>
+          <p><b>Café:</b> a customer walks up and their order shows on the ticket. Click a tool to pick it up, then click your glass to use it: a glass from the shelf, chocolate, the shot glass under the machine, the milk pitcher, a topping. Follow the steps at the bottom, then serve.</p>
+          <p><b>Cakes:</b> memorise the order (peek costs 5%). Move the cake along the belt with ◀ ▶ and click a colour on the dispenser above it: tin, sponge, filling, frosting, rosettes, toppings.</p>
+          <p><b>Explore:</b> click to look with the mouse, <b>WASD</b> to walk.</p>
+          <p><b>Keys:</b> <b>Esc</b> pause (or the ☰ Menu button, top-left) · <b>Esc</b> again puts a held tool back.</p>
           <button onClick={() => setScreen(mode === 'exterior' ? 'main' : 'paused')}>Back</button>
         </div>
       )}

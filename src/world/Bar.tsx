@@ -10,6 +10,7 @@ import { useGame } from '../systems/store'
 import { Grab, DropTarget } from '../systems/drag'
 import { RBox } from './Soft'
 import { Model } from './Models'
+import { SHOT_FILL } from '../systems/shop'
 import { liquidMat, surfaceTex, Surface, Stream, WhipSpiral, useCupGeometry, ceramic } from './Liquid'
 
 // The playable bar. Coordinates are the counter's local space (the Counter group in Interior).
@@ -38,7 +39,7 @@ const nowS = () => performance.now() / 1000
 // the latest pour of this kind (and tool tag), if it's still being performed
 function active(kind: string, tag?: string) {
   const ps = useShop.getState().pours
-  for (let i = ps.length - 1; i >= 0; i--) { const p = ps[i]; if (p.kind === kind && (!tag || p.tag === tag)) return nowS() - p.t0 < GO + ACT[kind] + BACK ? p : null }
+  for (let i = ps.length - 1; i >= 0; i--) { const p = ps[i]; if (p.kind === kind && (!tag || p.tag === tag)) return nowS() - p.t0 < GO + ACT[kind] + BACK && nowS() - p.t0 > (kind === 'shot' ? -SHOT_FILL - 0.1 : -0.1) ? p : null }
   return null
 }
 // 0 → 1 → 0 travel weight for a performance, and how far through the action we are
@@ -57,7 +58,9 @@ function Flyer({ kind, tag, home, act, side = 0.14, above = 0.42, children }: {
     const g = ref.current; if (!g) return
     const p = active(kind, tag)
     if (!p) { g.position.set(0, 0, 0); g.rotation.set(0, 0, 0); return }
-    const t = nowS() - p.t0, { w, act: a, acting } = phase(kind, t)
+    const t = nowS() - p.t0
+    if (t < 0) { g.position.set(0, 0, 0); g.rotation.set(0, 0, 0); return }
+    const { w, act: a, acting } = phase(kind, t)
     const tx = CUP_AT[0] + side - home[0], ty = CUP_AT[1] + above - home[1], tz = CUP_AT[2] - home[2]
     g.position.set(tx * w, ty * w + Math.sin(w * Math.PI) * 0.12, tz * w)  // a little arc on the way
     if (act === 'tilt') g.rotation.z = w * (0.35 + 0.75 * Math.sin(Math.min(1, a * 1.4) * Math.PI / 2) * (acting ? 1 : 0.4))
@@ -69,19 +72,35 @@ function Flyer({ kind, tag, home, act, side = 0.14, above = 0.42, children }: {
 
 
 // liquid layers rise smoothly to their target height (an easing lerp every frame)
-function Layer({ h, y, color, r = 0.19 }: { h: number; y: number; color: string; r?: number }) {
+// every layer sits on the CURRENT height of the ones below it, so the drink rises as one column (no floating discs)
+function Layer({ h, i, col, color, r = 0.19 }: { h: number; i: number; col: number[]; color: string; r?: number }) {
   const ref = useRef<THREE.Mesh>(null)
-  const cur = useRef({ h: 0.0001, y })
   useFrame((_, dt) => {
     const m = ref.current; if (!m) return
     const k = 1 - Math.exp(-dt * 1.8) // slow enough to watch the cup fill
-    cur.current.h += (Math.max(0.0001, h) - cur.current.h) * k
-    cur.current.y += (y - cur.current.y) * k
-    m.scale.y = cur.current.h; m.position.y = cur.current.y + cur.current.h / 2
-    m.visible = cur.current.h > 0.002
+    col[i] = (col[i] ?? 0) + (Math.max(0, h) - (col[i] ?? 0)) * k
+    let y = 0.03; for (let j = 0; j < i; j++) y += col[j] ?? 0
+    m.scale.y = Math.max(0.0001, col[i]); m.position.y = y + col[i] / 2
+    m.visible = col[i] > 0.002
   })
   const m = useMemo(() => liquidMat(color), [color])
   return <mesh ref={ref} material={m}><cylinderGeometry args={[r, r * 0.9, 1, 32]} /></mesh>
+}
+
+// the shot glass lives under the machine's group head: espresso streams into it, then it's carried over and poured
+const SHOT_HOME: [number, number, number] = [-1.92, TOP + 0.06, COUNTER.z - 0.6]
+const shotState = () => { const p = active('shot'); if (!p) return { fill: 0, pulling: false }; const t = nowS() - p.t0
+  return t < 0 ? { fill: clamp01((t + SHOT_FILL) / SHOT_FILL), pulling: t < -0.15 } : { fill: 1 - clamp01((t - GO) / ACT.shot), pulling: false } }
+function ShotFill() {
+  const ref = useRef<THREE.Mesh>(null)
+  useFrame(() => { const m = ref.current; if (!m) return; const { fill } = shotState(); m.visible = fill > 0.02; m.scale.y = Math.max(0.01, fill); m.position.y = -0.046 + 0.045 * fill })
+  return <mesh ref={ref} material={mat('#4a2414')} visible={false}><cylinderGeometry args={[0.036, 0.033, 0.09, 16]} /></mesh>
+}
+function MachineStream() {
+  const ref = useRef<THREE.Group>(null)
+  useFrame(() => { const g = ref.current; if (!g) return; const { pulling } = shotState(); g.visible = pulling; g.children.forEach((c, i) => { c.scale.x = c.scale.z = 0.8 + Math.sin(nowS() * 37 + i) * 0.2 }) })
+  // two thin streams from the double spout of the group head into the shot glass
+  return <group ref={ref} visible={false}>{[-0.012, 0.012].map((x) => <mesh key={x} position={[x, 0.2, 0]} material={mat('#5b2e1c', { rough: 0.2 })}><cylinderGeometry args={[0.005, 0.005, 0.32, 6]} /></mesh>)}</group>
 }
 
 // the machine's left group head, in counter space (the cup slides under it for every shot)
@@ -103,7 +122,6 @@ function Cup() {
     const w = p ? phase('shot', nowS() - p.t0).w : 0
     void w; g.position.set(CUP_AT[0], CUP_AT[1], CUP_AT[2]) // the glass never moves: every tool comes to it
   })
-  if (!cup) return null
   // stack the layers bottom-up: espresso, chocolate, water, milk, foam
   const layers: { h: number; color: string }[] = []
   if (d.chocolate) layers.push({ h: 0.06, color: '#3b1d12' })
@@ -121,6 +139,11 @@ function Cup() {
   // what the top of the drink looks like: crema on espresso, foam on milk, a latte-art heart on micro-foam
   const tex = d.milk === 'micro' ? surfaceTex('art', milkC) : d.milk === 'foamy' ? surfaceTex('foam', '#fffaf2') : d.milk === 'steamed' ? surfaceTex('foam', milkC)
     : d.shots ? surfaceTex('crema', d.water ? '#7a4a2c' : '#9a5f33') : surfaceTex('plain', layers.length ? layers[layers.length - 1].color : '#000')
+  // (all hooks above the early return: React needs the same hooks every render)
+  const col = useRef<number[]>([]).current, top = useRef<THREE.Group>(null)
+  if (!cup) col.length = 0 // a fresh glass starts empty
+  useFrame(() => { if (top.current) { let y = 0.03; for (let j = 0; j < placed.length; j++) y += col[j] ?? 0; top.current.position.y = y } })
+  if (!cup) return null
   const lastT = pours.length ? pours[pours.length - 1].t0 + GO : 0
   return (
     <group ref={ref} position={CUP_AT}>
@@ -129,9 +152,11 @@ function Cup() {
         <mesh geometry={GLASS_GEO} material={GLASS_MAT} renderOrder={2} scale={[0.78, 1.45, 0.78]} position={[0, 0.12, 0]} />
         <mesh position={[0, -0.27, 0]} material={GLASS_BASE}><cylinderGeometry args={[0.158, 0.166, 0.05, 40]} /></mesh>
         <group position={[0, -0.23, 0]}>
-          {placed.map((l, i) => <Layer key={i} h={l.h} y={l.y} color={l.color} r={0.162} />)}
-          {placed.length > 0 && <Surface r={0.166} y={y + 0.001} tex={tex} last={lastT} />}
-          <ToppingFx y={y} />
+          {placed.map((l, i) => <Layer key={i} h={l.h} i={i} col={col} color={l.color} r={0.162} />)}
+          <group ref={top}>
+            {placed.length > 0 && <Surface r={0.166} y={0.001} tex={tex} last={lastT} />}
+            <ToppingFx y={0} />
+          </group>
         </group>
         <PourFx />
       </group>
@@ -300,12 +325,13 @@ export function Bar() {
       <Grab id="machine" tip="espresso: 1 shot per click" pos={[-1.6, TOP + 0.6, Z - 0.05]} size={[1.4, 1.3, 1.0]} onClick={() => s().shot()}>
       </Grab>
       {/* the shot glass: fills under the machine, then is poured into your glass */}
-      <group position={[-1.2, TOP + 0.06, BZ]}>
-        <Flyer kind="shot" home={[-1.2, TOP + 0.06, BZ]} act="tilt" side={SPOUT.shot.side} above={pourAbove(size)}>
+      <group position={SHOT_HOME}>
+        <Flyer kind="shot" home={SHOT_HOME} act="tilt" side={SPOUT.shot.side} above={pourAbove(size)}>
           <mesh material={glass()}><cylinderGeometry args={[0.04, 0.034, 0.1, 16, 1, true]} /></mesh>
           <mesh position={[0, -0.05, 0]} material={glass()}><cylinderGeometry args={[0.034, 0.034, 0.008, 16]} /></mesh>
-          <mesh position={[0, -0.02, 0]} material={mat('#4a2414')}><cylinderGeometry args={[0.036, 0.033, 0.055, 16]} /></mesh>
+          <ShotFill />
         </Flyer>
+        <MachineStream />
       </group>
       {/* flavour syrups on the back row (Sketchfab, CC BY: oparaskos) */}
       {[-0.95, -0.78].map((x, i) => <Model key={x} name="sf:syrup" fit={0.36} pos={[x, TOP - 0.06, RZ + 0.05]} rot={[0, i * 0.8, 0]} />)}

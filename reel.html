@@ -15,6 +15,9 @@
         performance.now = () => P.performance.now()
         window.requestAnimationFrame = (f) => P.requestAnimationFrame(f)
         window.cancelAnimationFrame = (id) => P.cancelAnimationFrame(id)
+        // timers too, so things scheduled with setTimeout (a shot reaching the glass) land on the right frame
+        window.setTimeout = (f, ms, ...a) => P.setTimeout(() => f(...a), ms)
+        window.clearTimeout = (id) => P.clearTimeout(id)
       } else document.write('<script src="./clock.js"><\/script>')
     </script>
     <div id="root"></div>

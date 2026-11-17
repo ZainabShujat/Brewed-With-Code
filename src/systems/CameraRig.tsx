@@ -126,7 +126,15 @@ function applyLook(mode: string, dt: number) {
   }
 }
 
-// Smoothly glides between shots: no hard cuts (design bible).
+let lastMode = ''
+function fadeCut() {
+  if (typeof document === 'undefined') return
+  let el = document.querySelector('.cutfade') as HTMLDivElement | null
+  if (!el) { el = document.createElement('div'); el.className = 'cutfade'; document.body.appendChild(el) }
+  el.classList.add('on'); requestAnimationFrame(() => requestAnimationFrame(() => el!.classList.remove('on')))
+}
+
+// Glides within an area; switching areas is a quick fade-cut.
 export function CameraRig() {
   const { camera } = useThree()
   useMouseLook()
@@ -152,6 +160,9 @@ export function CameraRig() {
       setFov(camera as THREE.PerspectiveCamera, c.fov)   // vlog = wider lens (tall 9:16 frame)
       return
     }
+    // switching area: fade to plum, jump the camera straight there, fade back (no slow, tilted fly-through)
+    let cut = false
+    if (lastMode !== mode) { cut = lastMode !== ''; lastMode = mode; if (cut) fadeCut() }
     const asp = (camera as THREE.PerspectiveCamera).aspect
     setFov(camera as THREE.PerspectiveCamera, mode === 'cake' && asp < 1 ? 58 : (mode === 'pov' ? 50 : mode === 'dollhouse' ? 19 : 45) * (asp < 1 ? Math.min(1.7, 1 / asp * 0.95) : 1)) // portrait phone = wider lens // barista view: a slightly wider, human field of view
     if (mode === 'walk') {
@@ -180,7 +191,7 @@ export function CameraRig() {
     wantPos.multiplyScalar(WORLD); wantLook.multiplyScalar(WORLD)
     if (mode !== 'pov') applyLook(mode, dt); else if (view.mode !== mode) { view.mode = mode; view.yaw = 0; view.pitch = 0; view.zoom = 1 }
     // ?snap = jump straight to the shot (used for footage capture and tests)
-    const k = SNAP ? 1 : 1 - Math.exp(-dt * (mode === 'outro' ? 1.4 : view.looking ? 30 : 4)) // mouse look = instant, like a game
+    const k = SNAP || cut ? 1 : 1 - Math.exp(-dt * (mode === 'outro' ? 1.4 : view.looking ? 30 : 4)) // mouse look = instant, like a game
     camera.position.lerp(wantPos, k)
     look.lerp(wantLook, k)
     camera.lookAt(look)

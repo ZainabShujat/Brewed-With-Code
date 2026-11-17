@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Brewed With Code — gameplay capture</title>
+  </head>
+  <body>
+    <!-- The real game, with its whole interface, for filming build-log reels.
+         Embedded in a notes-brain reel page it borrows the parent's clock and timers, so the
+         exporter's frame-stepping drives it exactly. Use ?embed=1&snap to skip the menus. -->
+    <script>
+      if (location.search.includes('embed') && window.parent !== window) {
+        const P = window.parent
+        performance.now = () => P.performance.now()
+        Date.now = () => P.Date.now()
+        window.requestAnimationFrame = (f) => P.requestAnimationFrame(f)
+        window.cancelAnimationFrame = (id) => P.cancelAnimationFrame(id)
+        window.setTimeout = (f, ms, ...a) => P.setTimeout(() => f(...a), ms)
+        window.clearTimeout = (id) => P.clearTimeout(id)
+        window.setInterval = (f, ms) => P.setInterval(f, ms)
+        window.clearInterval = (id) => P.clearInterval(id)
+      }
+    </script>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
