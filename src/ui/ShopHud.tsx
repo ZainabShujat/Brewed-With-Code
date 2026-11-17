@@ -37,7 +37,7 @@ export function ShopHud() {
   useEffect(() => { if (shop.menu === 'milk') { setTab('milk'); shop.setMenu(null) } }, [shop.menu])
   useEffect(() => { if (shop.cup) setTab('shots') }, [shop.cup])
 
-  if (!shop.open) return <button className="openbtn" onClick={() => { shop.openShop(true); setMode('pov') }}>☕ Open the café</button>
+  if (!shop.open) return null // the day system's "Open the café" button does this now
   const front = cafe.line.peek()
   const order = front ? shop.orders[front.id] : undefined
   const fresh = shop.last && performance.now() / 1000 - shop.last.t < 3

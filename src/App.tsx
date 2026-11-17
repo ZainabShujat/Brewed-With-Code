@@ -74,7 +74,7 @@ function FpsProbe() {
 // our own game loop: at most 40 frames a second (30 on Low), so the GPU isn't flat out and the laptop stays cool
 function startLoop(s: { advance: (t: number) => void }) {
   const cap = 1000 / (quality.high ? 40 : 30); let last = 0
-  const tick = (t: number) => { if (t - last >= cap - 1) { last = t; s.advance(t) } requestAnimationFrame(tick) }
+  const tick = (t: number) => { if (t - last >= cap - 1) { last = t; s.advance(t / 1000) } requestAnimationFrame(tick) } // advance() takes SECONDS (ms made everything shake)
   requestAnimationFrame(tick)
 }
 

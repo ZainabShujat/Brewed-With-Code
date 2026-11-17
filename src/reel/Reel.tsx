@@ -10,6 +10,8 @@ import { cafe as line } from '../world/Customers'
 import { cascade, CascadeDriver } from './Cascade'
 import { useCake } from '../systems/cake'
 import { cakeSvg } from '../ui/cakeSvg'
+import { drinkSvg } from '../ui/drinkSvg'
+import { useShop } from '../systems/shop'
 import { machine, ST } from '../world/CakeMachine'
 
 // 1080x1920 split screen: code typing on top, the café building itself below.
@@ -106,6 +108,17 @@ function Embedded() {
         dropAt: (station: string, fn: () => void) => machine.run(station as any, () => flushSync(fn)),
         showOrder: (ms: number) => flushSync(() => useCake.setState({ orderUntil: performance.now() + ms })),
         resetMachine: () => { machine.queue.length = 0; machine.dipT = -1; machine.active = ''; machine.idx = 0; machine.target = machine.x = ST.start },
+      },
+      // drinks (order reels): build in the glass, show the order picture
+      drink: {
+        take: (size: any) => flushSync(() => { useShop.getState().trash(); useShop.getState().takeCup(size) }),
+        shot: () => flushSync(() => useShop.getState().shot()),
+        choc: () => flushSync(() => useShop.getState().choc()),
+        water: () => flushSync(() => useShop.getState().water()),
+        milk: (type: any, style: any) => flushSync(() => { useShop.getState().pickMilk(type); useShop.getState().milk(style) }),
+        top: (t: any) => flushSync(() => useShop.getState().top(t)),
+        trash: () => flushSync(() => useShop.getState().trash()),
+        picture: (want: any, w = 200) => drinkSvg(want, w),
       },
       showAll: () => flushSync(() => useGame.setState({ revealed: null })),
       // vlog controls (BUILDS #002 tour)
