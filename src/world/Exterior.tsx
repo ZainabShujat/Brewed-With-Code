@@ -1,4 +1,3 @@
-import { nightGlow } from './Lighting'
 import * as THREE from 'three'
 import { useMemo } from 'react'
 import { C } from '../data/palette'
@@ -55,9 +54,8 @@ function CoffeePot() {
       })}
       </Reveal>
       <Reveal id="window" at={[3.6, 4.9, 3.7]}><Porthole /></Reveal>
-      <Reveal id="door" at={[0, 0, 5.9]}><ArchDoor /><Awning /></Reveal>
-      {/* at night, warm light spills out of the doorway onto the path */}
-      <mesh position={[0, 0.12, 7.6]} rotation={[-Math.PI / 2, 0, 0]} material={nightGlow}><planeGeometry args={[6.5, 5.5]} /></mesh>
+      {/* the door is drawn inside the 2.95× exterior: shrink it (around its own spot) to a walk-through, human-sized door */}
+      <Reveal id="door" at={[0, 0, 5.9]}><group position={[0, 0, 5.85]} scale={0.45}><group position={[0, 0, -5.85]}><ArchDoor /><Awning /></group></group></Reveal>
     </group>
   )
 }
@@ -125,57 +123,9 @@ function Awning() {
   )
 }
 
-function WindingPath() {
-  const pts = useMemo(() => {
-    const curve = new THREE.CatmullRomCurve3([
-      new THREE.Vector3(0, 0, 6.3), new THREE.Vector3(-0.8, 0, 8), new THREE.Vector3(0.9, 0, 10),
-      new THREE.Vector3(-0.4, 0, 12), new THREE.Vector3(0, 0, 14.2),
-    ])
-    return curve.getSpacedPoints(20).map((p, i) => ({ p, w: 1.7 + i * 0.04 }))
-  }, [])
-  return (
-    <group>
-      {pts.map(({ p, w }, i) => (
-        <mesh key={i} position={[p.x, 0.03, p.z]} material={mat(C.path)} receiveShadow>
-          <cylinderGeometry args={[w / 2, w / 2, 0.06, 24]} />
-        </mesh>
-      ))}
-    </group>
-  )
-}
 
-function Car({ x, color }: { x: number; color: string }) {
-  return (
-    <group position={[x, 0, -0.2]}>
-      <RBox size={[1.3, 0.6, 2.2]} pos={[0, 0.5, 0]} color={color} r={0.25} />
-      <RBox size={[1.1, 0.5, 1.2]} pos={[0, 1.0, -0.1]} color={C.cream} r={0.22} />
-      {[[-0.65, 0.7], [0.65, 0.7], [-0.65, -0.7], [0.65, -0.7]].map(([dx, dz]) => (
-        <mesh key={`${dx}${dz}`} position={[dx, 0.25, dz]} rotation={[0, 0, Math.PI / 2]} material={mat(C.plum)}><cylinderGeometry args={[0.25, 0.25, 0.2, 16]} /></mesh>
-      ))}
-    </group>
-  )
-}
 
-function Parking({ x, cars }: { x: number; cars: [number, string][] }) {
-  return (
-    <group position={[x, 0.02, 10.5]}>
-      <RBox size={[8, 0.06, 5]} color={C.road} r={0.03} shadow={false} />
-      {[-3, -1, 1, 3].map((dx) => <RBox key={dx} size={[0.12, 0.02, 3]} pos={[dx, 0.04, -0.5]} color={C.white} r={0.01} shadow={false} />)}
-      {cars.map(([cx, col]) => <Car key={cx} x={cx} color={col} />)}
-    </group>
-  )
-}
 
-function Road() {
-  return (
-    <group position={[0, 0.02, 17.5]}>
-      <mesh rotation={[-Math.PI / 2, 0, 0]} material={mat(C.road)} receiveShadow><planeGeometry args={[90, 5]} /></mesh>
-      {Array.from({ length: 16 }, (_, i) => -30 + i * 4).map((x) => (
-        <RBox key={x} size={[1.8, 0.02, 0.25]} pos={[x, 0.02, 0]} color={C.cream} r={0.01} shadow={false} />
-      ))}
-    </group>
-  )
-}
 
 // Locked conservatory wings: ghost glass + ⊕ lot. Unlocked later by levelling.
 function LockedWings() {
@@ -224,17 +174,11 @@ function Flowers() {
 export function Exterior({ showPot, fadeIn = false }: { showPot: boolean; fadeIn?: boolean }) {
   return (
     <group>
-      <mesh rotation={[-Math.PI / 2, 0, 0]} material={mat(C.grass)} receiveShadow><planeGeometry args={[100, 80]} /></mesh>
+      <mesh position={[0, 0, 7]} rotation={[-Math.PI / 2, 0, 0]} material={mat(C.grass)} receiveShadow><planeGeometry args={[150, 140]} /></mesh>
       {/* everything outside scales so the pot contains the interior */}
       <group scale={OUT_SCALE}>
       {showPot && (fadeIn ? <FadeIn><CoffeePot /></FadeIn> : <CoffeePot />)}
       {showPot && <Reveal id="flowers"><Flowers /></Reveal>}
-      <Reveal id="path" at={[0, 0, 7]}><WindingPath /></Reveal>
-      <Reveal id="parking" at={[0, 0, 10.5]}>
-        <Parking x={-9.5} cars={[[-2, C.lilac]]} />
-        <Parking x={9.5} cars={[[2, C.mint]]} />
-      </Reveal>
-      <Reveal id="road" at={[0, 0, 17.5]}><Road /></Reveal>
       {showPot && <Reveal id="wings"><LockedWings /></Reveal>}
       <Reveal id="trees">
         <Tree x={-19} z={-5} s={2.6} />

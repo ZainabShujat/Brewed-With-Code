@@ -48,12 +48,12 @@ export function Lighting() {
     const h = tickClock(), k = sky(h)
     if (scene.background instanceof THREE.Color) scene.background.copy(k.sky)
     if (sun.current) { const a = ((h - 6) / 12) * Math.PI; sun.current.position.set(Math.cos(a) * 22, Math.max(2, Math.sin(a) * 22), 9); sun.current.color.copy(k.sun); sun.current.intensity = 2.3 * k.day + 0.25 }
-    if (hemi.current) { hemi.current.intensity = 0.55 + 0.7 * k.day + (useGame.getState().mode !== 'exterior' ? 0.35 * (1 - k.day) : 0); hemi.current.color.copy(k.fill) }
-    // indoors after dark the lamps are on: warm, cosy fill. Outdoors stays moonlit.
-    const inside = useGame.getState().mode !== 'exterior', dark = 1 - k.day
+    // indoors after dark the lamps are on: warm, cosy fill. Outdoors stays moonlit (walking out on the street = outdoors).
+    const g = useGame.getState(), inside = g.mode !== 'exterior' && !(g.mode === 'walk' && Math.hypot(g.player.x, g.player.z) > 14.5), dark = 1 - k.day
+    if (hemi.current) { hemi.current.intensity = 0.55 + 0.7 * k.day + (inside ? 0.35 * dark : 0); hemi.current.color.copy(k.fill) }
     if (amb.current) {
       if (inside) { amb.current.intensity = 0.2 + 0.15 * k.day + 0.75 * dark; amb.current.color.copy(_a.set('#ffe9f0').lerp(_warm, dark)) }
-      else { amb.current.intensity = 0.2 + 0.15 * k.day; amb.current.color.copy(_a.set('#ffe9f0').lerp(_n3, dark)) }
+      else { amb.current.intensity = 0.2 + 0.15 * k.day + 0.3 * dark; amb.current.color.copy(_a.set('#ffe9f0').lerp(_n3, dark)) }
     }
     // after dark the bulbs, string lights and the window glow brighter; the arched windows show the sky outside
     const night = 1 - k.day

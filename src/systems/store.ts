@@ -35,3 +35,6 @@ export const useGame = create<State>((set) => ({
   reveal: (...ids) => set((s) => ({ revealed: new Set([...(s.revealed ?? []), ...ids]) })),
   startBuild: () => set({ revealed: new Set() }),
 }))
+
+// testing / capture hook: window.__game.getState().player, setMode, …
+if (typeof window !== 'undefined') (window as unknown as { __game: typeof useGame }).__game = useGame

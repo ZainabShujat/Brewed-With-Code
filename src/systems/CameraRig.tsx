@@ -198,3 +198,5 @@ export function CameraRig() {
   })
   return null
 }
+// testing / capture hook: turn the camera from tests and reels
+if (typeof window !== 'undefined') (window as unknown as { __view: typeof view }).__view = view

@@ -18,6 +18,7 @@ import { MusicButton } from './ui/MusicButton'
 import { CakeHud } from './ui/CakeHud'
 import { Joystick } from './ui/Joystick'
 import { Landscape } from './ui/Landscape'
+import { Street } from './world/Street'
 import { ClockChip } from './ui/ClockChip'
 import { Credits } from './ui/Credits'
 import { TOUCH } from './systems/CameraRig'
@@ -43,6 +44,7 @@ const MODES: { id: CamMode; label: string; key: string }[] = [
 
 export function World() {
   const mode = useGame((s) => s.mode)
+  useEffect(() => { if (!REEL) document.body.classList.toggle('notags', mode === 'walk') }, [mode])
   const inside = mode !== 'exterior'
   const outro = mode === 'outro'
   const kozie = useGame((s) => s.kozie)
@@ -52,7 +54,7 @@ export function World() {
       <group scale={WORLD}>
       {/* zone culling (like occlusion culling): rooms you can't see from this view aren't drawn at all.
           Behind the bar or at the cake machine you face a wall, so the whole outdoors is skipped. */}
-      <group visible={REEL || (mode !== 'pov' && mode !== 'cake')}><Exterior showPot={!inside || outro} fadeIn={outro} /></group>
+      <group visible={REEL || (mode !== 'pov' && mode !== 'cake')}><Exterior showPot={!inside || outro || mode === 'walk'} fadeIn={outro} />{!outro && <Street />}</group>
       {inside && <Interior cutaway={mode === 'dollhouse' || outro} pov={mode === 'pov'} only={REEL ? '' : mode === 'pov' ? 'bar' : mode === 'cake' ? 'kitchen' : ''} />}
       {inside && mode !== 'pov' && mode !== 'vlog' && mode !== 'walk' && <Reveal id="barista" at={[0.4, 0, 2.4]}><Barista /></Reveal>}
       {inside && <Customers />}

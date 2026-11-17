@@ -173,7 +173,7 @@ function Head({ id, x, top, heads, children, opts, name }: { id: Station; x: num
                 onPointerOver={(e) => { e.stopPropagation(); document.body.style.cursor = 'pointer' }} onPointerOut={() => { document.body.style.cursor = '' }}
                 material={mat(o.color, { rough: 0.3 })}><sphereGeometry args={[0.058, 16, 12]} /></mesh>
               <mesh position={[0, 0, -0.05]} rotation={[Math.PI / 2, 0, 0]} material={mat(C.steel)}><cylinderGeometry args={[0.03, 0.03, 0.08, 8]} /></mesh>
-              {o.icon && <Html position={[0, 0, 0.08]} center zIndexRange={[4, 0]} style={{ pointerEvents: 'none', fontSize: 13 }}>{o.icon}</Html>}
+              {o.icon && <Html position={[0, 0, 0.08]} center zIndexRange={[4, 0]} style={{ pointerEvents: 'none', fontSize: 13 }}><span className="headtag icon">{o.icon}</span></Html>}
             </group>
           )
         })}
@@ -192,7 +192,7 @@ function OrderScreen({ x, y }: { x: number; y: number }) {
   return (
     <group position={[x, y, 0.42]} rotation={[-0.15, 0.25, 0]}>
       <RBox size={[0.8, 0.72, 0.07]} color={C.plum} r={0.06} />
-      <Html transform position={[0, 0, 0.045]} scale={0.15} zIndexRange={[5, 0]}>
+      <Html transform position={[0, 0, 0.045]} scale={0.15} zIndexRange={[5, 0]} className="headtag screen">
         <div className="screen3d">{performance.now() < until ? <div><div dangerouslySetInnerHTML={{ __html: cakeSvg(order.want, 220) }} /><div className="screen-tin">{order.want.tin} tin</div></div> : <div className="screen-q">?</div>}</div>
       </Html>
     </group>
