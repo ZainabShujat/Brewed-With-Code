@@ -235,3 +235,10 @@ html, body { overscroll-behavior: none; }
 .clockchip i { font-style: normal; opacity: .7; font-size: 12px; }
 @media (max-width: 700px) { .clockchip { left: 148px; top: 6px; height: 36px; line-height: 36px; font-size: 13px; } }
 .clockchip.corner { top: auto; bottom: 62px; left: 14px; } /* capture/dev builds: the view tabs own the top-left */
+
+/* crash card: a friendly fallback instead of a blank screen */
+.crash { position: fixed; inset: 0; z-index: 100; display: flex; align-items: center; justify-content: center; background: #2a1830; font-family: inherit; }
+.crash .card { max-width: 420px; text-align: center; color: #fbeee4; background: #3d2547; border-radius: 22px; padding: 28px 24px; }
+.crash .h { font-size: 26px; font-weight: 800; margin-bottom: 8px; }
+.crash p { opacity: .85; margin-bottom: 18px; }
+.crash small { display: block; margin-top: 14px; opacity: .45; font-size: 11px; word-break: break-word; }

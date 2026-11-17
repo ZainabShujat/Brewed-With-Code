@@ -11,7 +11,14 @@ const ZERO: DayStats = { served: 0, perfect: 0, coins: 0, tips: 0, walkouts: 0, 
 
 type Save = { day: number; bank: number; best: number; unlocks: string[]; stars: number }
 const KEY = 'brewed-with-code-save-v1'
-const load = (): Save => { try { return { day: 1, bank: 0, best: 0, unlocks: [], stars: 0, ...JSON.parse(localStorage.getItem(KEY) || '{}') } } catch { return { day: 1, bank: 0, best: 0, unlocks: [], stars: 0 } } }
+// a save from an older version, a hand-edited one or a corrupt one must never break the game: keep only sane values
+const num = (v: unknown, d: number, min = 0) => (typeof v === 'number' && Number.isFinite(v) && v >= min ? v : d)
+const load = (): Save => {
+  let raw: Record<string, unknown> = {}
+  try { const p = JSON.parse(localStorage.getItem(KEY) || '{}'); if (p && typeof p === 'object') raw = p } catch { /* corrupt: start fresh */ }
+  return { day: Math.floor(num(raw.day, 1, 1)), bank: num(raw.bank, 0), best: num(raw.best, 0), stars: num(raw.stars, 0),
+    unlocks: Array.isArray(raw.unlocks) ? raw.unlocks.filter((u): u is string => typeof u === 'string') : [] }
+}
 
 type DayState = Save & {
   phase: 'idle' | 'open' | 'closing' | 'results'

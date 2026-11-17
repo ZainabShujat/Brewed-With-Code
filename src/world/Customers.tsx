@@ -48,7 +48,9 @@ export const cafe = {
     const c = this.pool.find((p) => p.phase === 'off'); if (!c || this.line.size >= SLOTS.length) return false
     c.phase = 'in'; c.pos.copy(V(...DOOR)); c.served = 0; c.patience = 1
     c.hurry = hurry ?? Math.random() < this.hurryChance
-    this.line.enqueue(c, c.hurry ? 1 : 0)               // ← joins the line by urgency (the back, unless in a hurry)
+    // ← joins the line by urgency (the back, unless in a hurry), but never ahead of someone already being served at the counter
+    const front = this.line.peek()
+    this.line.enqueue(c, c.hurry ? 1 : 0, front && front.phase === 'line' ? 1 : 0)
     c.path = [V(IN_LANE, 11.4), V(IN_LANE, 1.2)]
     anim.doorIn = 1
     return true

@@ -21,8 +21,9 @@ export class Queue<T> {
 export class PriorityQueue<T> {
   private items: { c: T; pri: number }[] = []
 
-  enqueue(c: T, pri = 0) {
-    let i = this.items.findIndex((x) => x.pri < pri) // first one less urgent than me
+  // `from`: nobody may cut in ahead of this position (the customer already at the counter keeps their spot)
+  enqueue(c: T, pri = 0, from = 0) {
+    let i = this.items.findIndex((x, k) => k >= from && x.pri < pri) // first one (from `from` on) less urgent than me
     if (i < 0) i = this.items.length                 // nobody is: go to the back
     this.items.splice(i, 0, { c, pri })              // cut in right there
   }
