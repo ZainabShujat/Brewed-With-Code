@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { EMPTY, randomOrder, score, type Drink, type MilkType, type Order, type Topping } from '../data/recipes'
 import { cafe } from '../world/Customers'
+import { useDay } from './day'
 
 // The café's gameplay state: who ordered what, what's in the cup right now, coins, and the last result.
 export type Pour = { kind: 'shot' | 'water' | 'choc' | 'milk' | 'sprinkle' | 'whip'; t0: number; color: string; tag?: string }
@@ -55,7 +56,9 @@ export const useShop = create<Shop>((set, get) => ({
     if (!s.cup || !front || front.phase !== 'line') return
     const order = s.orders[front.id]; if (!order) return
     const r = score(s.drink, order.want)
-    const coins = Math.round(order.recipe.price * r.pct / 100) + (r.pct === 100 ? 2 : 0) // perfect = tip
+    const tip = r.pct === 100 ? 1 + Math.round(front.patience * 3) : r.pct >= 75 ? Math.round(front.patience * 2) : 0 // quick + right = bigger tip
+    const coins = Math.round(order.recipe.price * r.pct / 100) + tip
+    const D = useDay.getState(); D.record('served'); D.record('coins', coins - tip); D.record('tips', tip); if (r.pct === 100) D.record('perfect')
     const mood = r.pct === 100 ? '😍' : r.pct >= 75 ? '🙂' : r.pct >= 50 ? '😐' : '😤'
     const orders = { ...s.orders }; delete orders[front.id]
     cafe.serve() // dequeue: the front of the line leaves first

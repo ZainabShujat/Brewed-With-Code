@@ -13,6 +13,7 @@ import { Kozie } from './world/Kozie'
 import { Customers, cafe as cafeLine } from './world/Customers'
 import { ShopHud } from './ui/ShopHud'
 import { BrewHud } from './ui/BrewHud'
+import { DayHud } from './ui/DayHud'
 import { CakeHud } from './ui/CakeHud'
 import { Joystick } from './ui/Joystick'
 import { Credits } from './ui/Credits'
@@ -99,6 +100,7 @@ export default function App() {
       {SNAP && <div className="hud"><div className="modes">
         {MODES.map((m) => <button key={m.id} className={m.id === mode ? 'on' : ''} onClick={() => setMode(m.id)}><span>{m.key}</span>{m.label}</button>)}
       </div></div>}
+      {playing && !SNAP && (mode === 'pov' || mode === 'cake' || mode === 'dollhouse' || mode === 'walk') && <DayHud />}
       {playing && mode === 'pov' && <BrewHud />}
       {playing && mode !== 'cake' && mode !== 'pov' && <ShopHud />}
       {playing && <CakeHud />}

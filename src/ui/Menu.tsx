@@ -44,7 +44,7 @@ export function Menu({ screen, setScreen }: { screen: Screen; setScreen: (s: Scr
     window.addEventListener('keydown', k); return () => window.removeEventListener('keydown', k)
   })
 
-  const start = (p: typeof PLAY[number]) => { setMode(p.id); if (p.shop && !useShop.getState().open) useShop.getState().openShop(true); setScreen('playing') }
+  const start = (p: typeof PLAY[number]) => { setMode(p.id); if (p.shop && !useShop.getState().open) useShop.getState().openShop(true); setScreen('playing') } // the day starts from the 'Open the café' button
 
   if (screen === 'playing') return (
     <button className="menubtn" onClick={() => setScreen('paused')}>☰ Menu <span>Esc</span></button>

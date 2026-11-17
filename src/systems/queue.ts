@@ -30,4 +30,5 @@ export class PriorityQueue<T> {
   peek(): T | undefined { return this.items[0]?.c }
   get size() { return this.items.length }
   at(i: number): T | undefined { return this.items[i]?.c }
+  remove(c: T) { const i = this.items.findIndex((x) => x.c === c); if (i >= 0) this.items.splice(i, 1) } // someone gives up and leaves the line
 }

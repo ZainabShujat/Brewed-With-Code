@@ -186,3 +186,19 @@ html, body { overscroll-behavior: none; }
 
 .tinbadge { display: inline-block; margin-top: 4px; padding: 3px 10px; border-radius: 10px; background: #f3e8f8; font: 800 13px 'Trebuchet MS', sans-serif; color: #6e3f78; }
 .screen-tin { text-align: center; font: 900 30px 'Trebuchet MS', sans-serif; color: #6e3f78; margin-top: -6px; }
+
+/* ── day loop ─────────────────────────────────────────────── */
+.obubble i { display: block; height: 5px; border-radius: 3px; margin-top: 5px; }
+.dayclock { position: fixed; left: 50%; top: 12px; transform: translateX(-50%); z-index: 20; background: rgba(42,24,48,.82); color: #fff6ee; font: 800 16px 'Trebuchet MS', sans-serif; padding: 8px 18px 12px; border-radius: 14px; min-width: 200px; text-align: center; position: fixed; overflow: hidden; }
+.dayclock i { position: absolute; left: 0; bottom: 0; height: 4px; background: #8ee0c4; }
+.dayclock.late i { background: #ff6b81; } .dayclock.closing { background: rgba(110,63,120,.9); }
+.dayopen { position: fixed; left: 50%; bottom: 120px; transform: translateX(-50%); z-index: 20; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.dayno { font: 900 46px 'Trebuchet MS', sans-serif; color: #fff6ee; text-shadow: 0 4px 0 #6e3f78, 0 8px 20px rgba(0,0,0,.4); }
+.daybank { font: 800 15px 'Trebuchet MS', sans-serif; color: #fff6ee; background: rgba(42,24,48,.75); padding: 6px 14px; border-radius: 12px; }
+.dayresults { position: fixed; inset: 0; z-index: 40; background: rgba(20,10,24,.6); display: flex; align-items: center; justify-content: center; }
+.dayresults .card { background: #fff6ee; color: #5e2a75; border-radius: 24px; padding: 24px 28px; width: min(400px, calc(100vw - 32px)); text-align: center; box-shadow: 0 10px 0 #c4528a, 0 30px 60px rgba(0,0,0,.4); font-family: 'Trebuchet MS', sans-serif; }
+.dayresults .h { font: 900 32px 'Trebuchet MS', sans-serif; }
+.dayresults .stars { font-size: 46px; color: #ffcf5c; text-shadow: 0 3px 0 #b8892a; margin: 4px 0 10px; }
+.dayresults .rows div { display: flex; justify-content: space-between; font-weight: 700; padding: 4px 2px; border-bottom: 1px dashed #e8cfe0; }
+.dayresults .rows .tot { font-size: 20px; border: 0; margin-top: 4px; }
+.dayresults .bank { margin: 12px 0; font-weight: 700; opacity: .8; }

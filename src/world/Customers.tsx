@@ -7,6 +7,7 @@ import { anim } from '../systems/anim'
 import { mat } from './mats'
 import { useShop } from '../systems/shop'
 import { TABLES } from './layout'
+import { useDay } from '../systems/day'
 
 // reels (embed) keep the old queue look: numbers over heads, everyone leaves after being served
 const EMBED = typeof location !== 'undefined' && location.search.includes('embed')
@@ -25,7 +26,7 @@ const IN_LANE = 2.6, OUT_LANE = 3.1
 export const SLOTS: [number, number][] = Array.from({ length: 6 }, (_, i) => [1.8, -5.3 + i * 1.15])
 
 type Phase = 'off' | 'in' | 'line' | 'out' | 'seat' | 'sit'
-export type Cust = { id: number; phase: Phase; pos: THREE.Vector3; path: THREE.Vector3[]; look: number; served: number; hurry: boolean; seat: number; sitT: number }
+export type Cust = { id: number; phase: Phase; pos: THREE.Vector3; path: THREE.Vector3[]; look: number; served: number; hurry: boolean; seat: number; sitT: number; patience: number }
 
 export const LOOKS = [
   { shirt: '#6fe0c4', hair: '#3b2a22', skin: '#f6cdb4' }, { shirt: '#ffcf5c', hair: '#1d1838', skin: '#c98a62' },
@@ -38,14 +39,14 @@ const V = (x: number, z: number) => new THREE.Vector3(x, 0, z)
 
 // shared state: the pool, the queue, and controls (used by the game loop and by reel pages)
 export const cafe = {
-  pool: Array.from({ length: POOL }, (_, id): Cust => ({ id, phase: 'off', pos: V(...DOOR), path: [], look: id % LOOKS.length, served: 0, hurry: false, seat: -1, sitT: 0 })),
+  pool: Array.from({ length: POOL }, (_, id): Cust => ({ id, phase: 'off', pos: V(...DOOR), path: [], look: id % LOOKS.length, served: 0, hurry: false, seat: -1, sitT: 0, patience: 1 })),
   line: new PriorityQueue<Cust>(),   // in-a-hurry customers (priority 1) go ahead of normal ones (0)
   hurryChance: 0.2,
   auto: false,            // normal game: customers keep arriving and getting served on their own
   spawnEvery: 3.2, serveEvery: 3.8, _spawnT: 0, _serveT: 0,
   spawn(hurry?: boolean) {
     const c = this.pool.find((p) => p.phase === 'off'); if (!c || this.line.size >= SLOTS.length) return false
-    c.phase = 'in'; c.pos.copy(V(...DOOR)); c.served = 0
+    c.phase = 'in'; c.pos.copy(V(...DOOR)); c.served = 0; c.patience = 1
     c.hurry = hurry ?? Math.random() < this.hurryChance
     this.line.enqueue(c, c.hurry ? 1 : 0)               // ← joins the line by urgency (the back, unless in a hurry)
     c.path = [V(IN_LANE, 11.4), V(IN_LANE, 1.2)]
@@ -133,7 +134,16 @@ function Body({ c }: { c: Cust }) {
     g.position.set(c.pos.x, moving ? Math.abs(Math.sin(t * 7 + c.id)) * 0.025 : 0, c.pos.z)
     g.rotation.x = 0; g.rotation.z = moving ? Math.sin(t * 7 + c.id) * 0.02 : 0
     hips.current?.children.forEach((l, i) => { l.rotation.x = moving ? Math.sin(t * 7 + c.id + i * Math.PI) * 0.45 : l.rotation.x * 0.8 })
-    if (bubble.current) { const o = useShop.getState().orders[c.id]; const txt = o && idx === 0 ? o.label : ''; if (bubble.current.textContent !== txt) bubble.current.textContent = txt }
+    if (!EMBED && idx >= 0 && c.phase === 'line') {
+      c.patience -= dt / (c.hurry ? 45 : 80)
+      if (c.patience <= 0) { cafe.line.remove(c); c.phase = 'out'; c.path = [V(OUT_LANE, c.pos.z), V(OUT_LANE, 11.4), V(...DOOR)]; useDay.getState().record('walkouts') }
+    }
+    if (bubble.current) {
+      const o = useShop.getState().orders[c.id]; const show = !!o && idx === 0
+      const mood = c.patience > 0.6 ? '🙂' : c.patience > 0.3 ? '😐' : '😠'
+      const html = show ? `${mood} ${o.label}<i style="width:${Math.max(0, c.patience) * 100}%;background:${c.patience > 0.6 ? '#6ee0a0' : c.patience > 0.3 ? '#ffcf5c' : '#ff6b81'}"></i>` : ''
+      if (bubble.current.dataset.h !== html) { bubble.current.innerHTML = html; bubble.current.dataset.h = html }
+    }
     if (tag.current) { tag.current.textContent = idx >= 0 ? (c.hurry ? '⚡' : '') + String(idx + 1) : ''; tag.current.style.opacity = EMBED && idx >= 0 ? '1' : '0' }
   })
   return (
@@ -165,7 +175,9 @@ function Body({ c }: { c: Cust }) {
 export function Customers() {
   const pool = useMemo(() => cafe.pool, [])
   useFrame((_, dtRaw) => {
-    if (!cafe.auto) return
+    const day = useDay.getState()
+    if (!EMBED) day.tick(Math.min(dtRaw, 0.1), cafe.line.size === 0)
+    if (!cafe.auto || (!EMBED && day.phase !== 'open')) return  // customers only arrive while the café is open
     const dt = Math.min(dtRaw, 0.05)
     cafe._spawnT += dt; cafe._serveT += dt
     if (cafe._spawnT > cafe.spawnEvery) { cafe._spawnT = 0; cafe.spawn() }

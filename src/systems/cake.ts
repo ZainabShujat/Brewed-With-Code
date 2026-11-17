@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { useDay } from './day'
 
 // The cake bench: stack sponges, fill, frost, pipe rosettes, top, box. Every step is data,
 // so the 3D cake (world/Cake.tsx) just draws whatever is in this state, animating new parts in.
@@ -88,6 +89,7 @@ export const useCake = create<CakeState>((set, get) => ({
   box: () => { const s = get(); if (!s.cake.layers.length) return
     const r0 = scoreCake(s.cake, s.order.want), r = { ...r0, pct: Math.max(0, r0.pct - s.peeks * 5) } // each peek at the order costs a little
     const coins = Math.round(12 * r.pct / 100) + (r.pct === 100 ? 4 : 0)
+    useDay.getState().record('cakes'); useDay.getState().record('coins', coins); if (r.pct === 100) useDay.getState().record('perfect')
     set({ coins: s.coins + coins, last: { ...r, coins, t: now() }, cake: { ...EMPTY }, t: {}, order: randomCakeOrder(), orderUntil: performance.now() + 8000, peeks: 0 }) },
   reset: () => set({ cake: { ...EMPTY }, t: {} }),
   newOrder: () => set({ order: randomCakeOrder(), orderUntil: performance.now() + 8000, peeks: 0 }),
