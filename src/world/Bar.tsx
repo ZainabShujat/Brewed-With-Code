@@ -17,7 +17,7 @@ import { liquidMat, surfaceTex, Surface, Stream, WhipSpiral, useCupGeometry, cer
 const TOP = COUNTER.top + 0.1, Z = COUNTER.z - 0.1
 // the working cup sits front and centre on the barista's side, big enough to watch it fill
 export const CUP_AT: [number, number, number] = [0.2, TOP + 0.06, COUNTER.z - 0.3]
-const CUP_SCALE = 0.62 // a big café mug, in proportion with the pitcher and the machine
+const CUP_SCALE = 0.85 // a big see-through glass: you watch the drink build in layers (like the cake)
 
 // ── animation timing (all derived from the pour's start time, so reels stay frame-exact) ──
 export const GO = 0.35, BACK = 0.35          // tool flies over / flies home
@@ -77,9 +77,14 @@ function Layer({ h, y, color, r = 0.19 }: { h: number; y: number; color: string;
 // the machine's left group head, in counter space (the cup slides under it for every shot)
 const UNDER_MACHINE: [number, number, number] = [-1.92, CUP_AT[1], COUNTER.z - 0.6]
 
+// the drink glass: a lathe-turned tumbler, thin and clear (no transmission pass: cheap on laptop GPUs)
+const GLASS_GEO = (() => { const P = (x: number, y: number) => new THREE.Vector2(x, y)
+  return new THREE.LatheGeometry([P(0.205, -0.28), P(0.215, -0.1), P(0.235, 0.2), P(0.245, 0.33), P(0.25, 0.34), P(0.24, 0.34), P(0.228, 0.2), P(0.208, -0.1), P(0.198, -0.23)], 48) })()
+const GLASS_MAT = new THREE.MeshPhysicalMaterial({ color: '#ffffff', roughness: 0.04, clearcoat: 1, transparent: true, opacity: 0.2, side: THREE.DoubleSide, depthWrite: false })
+const GLASS_BASE = new THREE.MeshPhysicalMaterial({ color: '#e8f2f4', roughness: 0.05, clearcoat: 1, transparent: true, opacity: 0.55 })
+
 function Cup() {
   const cup = useShop((s) => s.cup), d = useShop((s) => s.drink), pours = useShop((s) => s.pours)
-  const cupGeo = useCupGeometry()
   const ref = useRef<THREE.Group>(null)
   useFrame(() => {
     const g = ref.current; if (!g) return
@@ -90,13 +95,13 @@ function Cup() {
   if (!cup) return null
   // stack the layers bottom-up: espresso, chocolate, water, milk, foam
   const layers: { h: number; color: string }[] = []
-  if (d.chocolate) layers.push({ h: 0.04, color: '#3b1d12' })
-  if (d.shots) layers.push({ h: 0.045 * d.shots, color: '#5b2e1c' })
-  if (d.water) layers.push({ h: 0.09, color: '#7a4a2c' })
-  const milkC = d.milkType === 'oat' ? '#efdcbc' : d.milkType === 'almond' ? '#f3e6cf' : '#f6e7d4'
-  if (d.milk === 'steamed') layers.push({ h: 0.11, color: '#c99a6c' }, { h: 0.025, color: milkC })
-  if (d.milk === 'foamy') layers.push({ h: 0.06, color: '#c99a6c' }, { h: 0.08, color: '#fffaf2' })
-  if (d.milk === 'micro') layers.push({ h: 0.07, color: '#b88a5e' }, { h: 0.025, color: milkC })
+  if (d.chocolate) layers.push({ h: 0.06, color: '#3b1d12' })
+  if (d.shots) layers.push({ h: 0.06 * d.shots, color: '#4a2414' })
+  if (d.water) layers.push({ h: 0.14, color: '#7a4a2c' })
+  const milkC = d.milkType === 'oat' ? '#efdcbc' : d.milkType === 'almond' ? '#f3e6cf' : '#f6eadb'
+  if (d.milk === 'steamed') layers.push({ h: 0.17, color: '#d8b48c' }, { h: 0.04, color: milkC })
+  if (d.milk === 'foamy') layers.push({ h: 0.09, color: '#d8b48c' }, { h: 0.13, color: '#fffaf2' })
+  if (d.milk === 'micro') layers.push({ h: 0.1, color: '#c89c70' }, { h: 0.04, color: milkC })
   let y = 0.03
   const placed = layers.map((l) => { const o = { ...l, y }; y += l.h; return o })
   // what the top of the drink looks like: crema on espresso, foam on milk, a latte-art heart on micro-foam
@@ -106,14 +111,13 @@ function Cup() {
   return (
     <group ref={ref} position={CUP_AT}>
       <group scale={CUP_SCALE}>
-        {/* ceramic cup: open cylinder + base + handle */}
-        {/* glazed ceramic mug: lathe-turned body with a rolled rim, plus a handle */}
-        <mesh geometry={cupGeo} material={ceramic} castShadow />
-        <mesh position={[0.25, 0.03, 0]} rotation={[0, 0, 0]} material={ceramic}><torusGeometry args={[0.075, 0.022, 12, 24, Math.PI * 1.25]} /></mesh>
-        <group position={[0, -0.12, 0]}>
-          {placed.map((l, i) => <Layer key={i} h={l.h} y={l.y} color={l.color} r={0.2} />)}
-          {placed.length > 0 && <Surface r={0.205} y={y + 0.001} tex={tex} last={lastT} />}
-          <ToppingFx y={y} />
+        {/* a tall clear glass: you see every layer go in (espresso, chocolate, milk, foam, cream) */}
+        <mesh geometry={GLASS_GEO} material={GLASS_MAT} renderOrder={2} scale={[0.78, 1.45, 0.78]} position={[0, 0.12, 0]} />
+        <mesh position={[0, -0.27, 0]} material={GLASS_BASE}><cylinderGeometry args={[0.158, 0.166, 0.05, 40]} /></mesh>
+        <group position={[0, -0.23, 0]}>
+          {placed.map((l, i) => <Layer key={i} h={l.h * 1.55} y={l.y * 1.55} color={l.color} r={0.162} />)}
+          {placed.length > 0 && <Surface r={0.166} y={y * 1.55 + 0.001} tex={tex} last={lastT} />}
+          <ToppingFx y={y * 1.55} />
         </group>
         <PourFx />
       </group>

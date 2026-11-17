@@ -4,6 +4,7 @@ import { cafe } from '../world/Customers'
 import { brewCam } from '../systems/CameraRig'
 import { loop, sfx } from '../systems/sound'
 import type { Milk, MilkType, Topping } from '../data/recipes'
+import { drinkSvg } from './drinkSvg'
 
 // ── The coffee bar as a sequence of short, skill-based steps (Papa's-style stations) ─────────
 // Grind → Pull the shot → Extras → Steam the milk → Pour → Top → Serve.
@@ -109,7 +110,7 @@ export function BrewHud() {
       {/* the ticket, pinned top-right */}
       <div className="ticket">
         <div className="tk-h">order</div>
-        {order ? <><div className="cc-name">{order.label}</div><div className="tk-note">{order.recipe.note}</div></>
+        {order ? <><div className="cc-pic" dangerouslySetInnerHTML={{ __html: drinkSvg(order.want, 150) }} /><div className="cc-name">{order.label}</div><div className="tk-note">{order.recipe.note}</div></>
           : <div className="tk-note">{cafe.line.size ? 'customer walking up…' : 'waiting for customers…'}</div>}
         {step !== 'start' && <div className="tk-steps">{STEPS.map((s) => <span key={s} className={s === step ? 'on' : score[s] !== undefined ? 'done' : ''}>{LABEL[s]}{score[s] !== undefined ? ' ' + '★'.repeat(score[s]!) : ''}</span>)}</div>}
       </div>
