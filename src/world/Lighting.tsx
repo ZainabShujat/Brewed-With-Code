@@ -22,8 +22,8 @@ const starGeo = (() => { const g = new THREE.BufferGeometry(), n = 420, p = new 
   for (let i = 0; i < n; i++) { const u = Math.random(), v = Math.random() * 0.9, th = u * Math.PI * 2, ph = Math.acos(1 - v), r = 160
     p[i * 3] = Math.sin(ph) * Math.cos(th) * r; p[i * 3 + 1] = Math.cos(ph) * r + 6; p[i * 3 + 2] = Math.sin(ph) * Math.sin(th) * r }
   g.setAttribute('position', new THREE.BufferAttribute(p, 3)); return g })()
-// reel pages (reel.html?embed) get the fixed, art-directed HQ light; play.html is the real game, so it keeps the live day/night
-export const HQ = typeof location !== 'undefined' && ((location.search.includes('embed') && !location.pathname.includes('play')) || location.search.includes('hq'))
+// reel pages (reel.html?embed) get the fixed, art-directed HQ light; the real game (index/play, even embedded) keeps the live day/night
+export const HQ = typeof location !== 'undefined' && ((location.search.includes('embed') && location.pathname.includes('reel')) || location.search.includes('hq'))
 
 export function Lighting() {
   const { gl, scene } = useThree()

@@ -40,6 +40,8 @@ export const machine = {
   nudge: '' as string, nudgeT: 0,
 }
 const ORDER: Station[] = ['start', 'tin', 'layer', 'fill', 'frost', 'pipe', 'top', 'star']
+// testing / capture hook: drive the machine exactly like a player (◀ ▶ = step, a bulb = drop)
+if (typeof window !== 'undefined') (window as unknown as { __machine: typeof machine }).__machine = machine
 
 const DIP = 0.9 // seconds: down, act, up
 

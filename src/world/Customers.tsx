@@ -10,7 +10,7 @@ import { TABLES } from './layout'
 import { useDay } from '../systems/day'
 
 // reels (embed) keep the old queue look: numbers over heads, everyone leaves after being served
-const EMBED = typeof location !== 'undefined' && location.search.includes('embed')
+const EMBED = typeof location !== 'undefined' && location.search.includes('embed') && location.pathname.includes('reel')
 // two stools per table (FURN 1.3 scale): where a seated customer's body goes, and which way they face
 // the café table set has four chairs, two on each long side, facing the table (FURN 1.6 scale)
 const SEATS = TABLES.flatMap(([x, z]) => [-0.56, 0.56].flatMap((dx) => [{ x: x + dx, z: z - 0.68, face: 0 }, { x: x + dx, z: z + 0.68, face: Math.PI }]))
