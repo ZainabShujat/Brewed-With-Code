@@ -1,5 +1,7 @@
 import * as THREE from 'three'
-import { useMemo } from 'react'
+import { useMemo, useRef } from 'react'
+import { useFrame } from '@react-three/fiber'
+import { nightGlow } from './Lighting'
 import { C } from '../data/palette'
 import { mat, glass, glow } from './mats'
 import { PlusSpot } from './PlusSpot'
@@ -61,11 +63,16 @@ function CoffeePot() {
   )
 }
 
-// fairy-light bulbs all the way round the lid's edge (warm white + pink), glowing brighter at night.
-// Two instanced meshes = two draw calls for 56 bulbs.
+// fairy-light bulbs all the way round the lid's edge, and real warm lights round the rim that switch on after dark,
+// so the light actually falls on the lid, the pot's shoulder and the ground (no fake glow bands).
 function LidLights() {
   const N = 56, R = 5.3, Y = 7.0
   const geo = useMemo(() => new THREE.SphereGeometry(0.11, 10, 8), [])
+  const lights = useRef<THREE.Group>(null)
+  useFrame(() => {
+    const n = nightGlow.opacity / 0.85 // 0 by day → 1 at night (Lighting drives it from the clock)
+    const g = lights.current; if (g) { g.visible = n > 0.12; g.children.forEach((l) => { (l as THREE.PointLight).intensity = 55 * n }) }
+  })
   const set = (m: THREE.InstancedMesh | null, odd: number) => {
     if (!m) return; const o = new THREE.Object3D(); let k = 0
     for (let i = odd; i < N; i += 2) { const a = (i / N) * Math.PI * 2; o.position.set(Math.sin(a) * R, Y, Math.cos(a) * R); o.updateMatrix(); m.setMatrixAt(k++, o.matrix) }
@@ -73,8 +80,10 @@ function LidLights() {
   }
   return (
     <group>
-      <instancedMesh ref={(m) => set(m, 0)} args={[geo, glow('#fff1c9'), N / 2]} />
-      <instancedMesh ref={(m) => set(m, 1)} args={[geo, glow('#ffb3d1'), N / 2]} />
+      <instancedMesh ref={(m) => set(m, 0)} args={[geo, glow(C.butter), N / 2]} />
+      <instancedMesh ref={(m) => set(m, 1)} args={[geo, glow('#ffc4dd'), N / 2]} />
+      <group ref={lights}>{[0, 1, 2, 3, 4, 5].map((i) => { const a = (i / 6) * Math.PI * 2 + Math.PI / 6
+        return <pointLight key={i} position={[Math.sin(a) * (R + 1.6), Y + 0.4, Math.cos(a) * (R + 1.6)]} color="#ffd8ae" intensity={0} distance={22} decay={2} /> })}</group>
     </group>
   )
 }

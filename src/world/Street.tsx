@@ -101,7 +101,7 @@ function Gate({ at, width, rotY = 0 }: { at: [number, number]; width: number; ro
 // a streetlamp on the kerb side; the lantern is a shared glow material, so it brightens at night with the clock
 function Lamp({ x, z }: { x: number; z: number }) {
   return (
-    <group position={[x, 0.16, z]}>
+    <group position={[x, 0.16, z]} scale={1.5}>{/* 18 Nov: lamps 50% bigger (~6.6 m), the pool of light grows with them */}
       <mesh position={[0, 2.1, 0]} material={ironMat} castShadow><cylinderGeometry args={[0.07, 0.11, 4.2, 10]} /></mesh>
       <mesh position={[0, 0.15, 0]} material={ironMat}><cylinderGeometry args={[0.22, 0.26, 0.3, 12]} /></mesh>
       <mesh position={[0, 4.35, 0]} material={ironMat}><coneGeometry args={[0.36, 0.3, 6]} /></mesh>
@@ -119,7 +119,7 @@ function CafeLights() {
   return (
     <group>
       {ring.map(([x, z]) => (
-        <group key={`${x.toFixed(1)}`} position={[x, 0, z]}>
+        <group key={`${x.toFixed(1)}`} position={[x, 0, z]} scale={1.6}>
           <mesh position={[0, 0.35, 0]} material={ironMat}><cylinderGeometry args={[0.08, 0.1, 0.7, 8]} /></mesh>
           <mesh position={[0, 0.8, 0]} material={glow()}><sphereGeometry args={[0.2, 14, 10]} /></mesh>
           <mesh position={[0, 1.0, 0]} material={ironMat}><coneGeometry args={[0.24, 0.18, 8]} /></mesh>
