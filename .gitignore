@@ -8,3 +8,4 @@ music-previews/
 
 .test-build
 tests/out
+*.tsbuildinfo

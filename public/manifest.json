@@ -1,0 +1,18 @@
+{
+  "name": "Brewed With Code",
+  "short_name": "Brewed",
+  "description": "A cozy, low-poly 3D café game that runs in the browser",
+  "start_url": "./",
+  "display": "standalone",
+  "orientation": "landscape",
+  "background_color": "#2b1d33",
+  "theme_color": "#2b1d33",
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

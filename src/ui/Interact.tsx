@@ -4,6 +4,7 @@ import { useDay } from '../systems/day'
 import { useShop } from '../systems/shop'
 import { cafe, dirty } from '../world/Customers'
 import { sfx } from '../systems/sound'
+import { TOUCH } from '../systems/CameraRig'
 import { frontOrder, takeOrder } from './TakeOrder'
 
 // One key for doing things on your feet: E. Whatever you're standing next to wins: the door sign (open up in the
@@ -39,5 +40,12 @@ export function Interact() {
     window.addEventListener('keydown', k); return () => window.removeEventListener('keydown', k)
   }, [])
   const a = currentAct()
-  return a ? <div className="wd-prompt">press <b>E</b> to {a.label}</div> : null
+  if (!a) return null
+  return TOUCH ? (
+    <button className="wd-prompt touch-interact" onClick={a.run}>
+      👆 tap to {a.label}
+    </button>
+  ) : (
+    <div className="wd-prompt">press <b>E</b> to {a.label}</div>
+  )
 }

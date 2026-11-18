@@ -1,7 +1,7 @@
 import { WORLD } from './world/layout'
 import { Canvas, useFrame } from '@react-three/fiber'
 import { useEffect, useRef, useState } from 'react'
-import { useGame, type CamMode } from './systems/store'
+import { useGame, onFoot, type CamMode } from './systems/store'
 import { CameraRig } from './systems/CameraRig'
 import { Exterior } from './world/Exterior'
 import { Interior } from './world/Interior'
@@ -145,7 +145,7 @@ export default function App() {
       {/* the old ShopHud (order card + 'back behind the bar') is retired: Take order replaces it */}
       {playing && <CakeHud />}
       {SNAP && <Credits />}
-      {playing && (TOUCH ? mode !== 'cake' && mode !== 'pov' && <Joystick /> : mode !== 'pov' && <LookHint mode={mode} />)}
+      {playing && (TOUCH ? onFoot(mode) && <Joystick /> : mode !== 'pov' && <LookHint mode={mode} />)}
       {playing && mode === 'fp' && <div className="crosshair" />}
       {playing && !SNAP && <ViewBar />}
       {!SNAP && <MusicButton />}

@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <rect width="512" height="512" rx="128" fill="#2b1d33"/>
+  <!-- Coffee Pot Body -->
+  <path d="M140 220 C130 360, 180 430, 256 430 C332 430, 382 360, 372 220 Z" fill="#f6b8d2" stroke="#6e3f78" stroke-width="12" stroke-linejoin="round"/>
+  <!-- Spout -->
+  <path d="M145 250 C100 240, 80 280, 70 310 C90 320, 120 310, 142 290 Z" fill="#f6b8d2" stroke="#6e3f78" stroke-width="12"/>
+  <!-- Handle -->
+  <path d="M370 240 C430 250, 440 350, 365 370" fill="none" stroke="#6e3f78" stroke-width="24" stroke-linecap="round"/>
+  <!-- Rim & Lid -->
+  <ellipse cx="256" cy="210" rx="120" ry="24" fill="#9d6fd0" stroke="#6e3f78" stroke-width="12"/>
+  <path d="M170 205 C170 140, 342 140, 342 205 Z" fill="#9d6fd0" stroke="#6e3f78" stroke-width="12"/>
+  <!-- Knob Chimney -->
+  <path d="M236 140 L236 100 L276 100 L276 140 Z" fill="#6e3f78"/>
+  <ellipse cx="256" cy="98" rx="30" ry="10" fill="#ffcf5c"/>
+  <!-- Porthole Window -->
+  <circle cx="310" cy="280" r="32" fill="#ffd98a" stroke="#6e3f78" stroke-width="8"/>
+  <line x1="278" y1="280" x2="342" y2="280" stroke="#6e3f78" stroke-width="6"/>
+  <line x1="310" y1="248" x2="310" y2="312" stroke="#6e3f78" stroke-width="6"/>
+  <!-- Little Door -->
+  <path d="M226 428 L226 350 C226 335, 286 335, 286 350 L286 428 Z" fill="#6e3f78"/>
+  <circle cx="250" cy="385" r="4" fill="#ffd98a"/>
+</svg>

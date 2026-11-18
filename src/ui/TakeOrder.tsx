@@ -5,6 +5,7 @@ import { useDay } from '../systems/day'
 import { useGame } from '../systems/store'
 import { useTutorial } from '../systems/tutorial'
 import { sfx } from '../systems/sound'
+import { TOUCH } from '../systems/CameraRig'
 import { lastFoot } from './ViewBar'
 import { currentAct } from './Interact'
 
@@ -38,7 +39,7 @@ export function TakeOrder() {
   return (
     <button className="takeorder" onClick={takeOrder}>
       <span className="to-bell">🔔</span>
-      <span><b>Take order</b><small>{o.label} · press E</small></span>
+      <span><b>Take order</b><small>{o.label} · {TOUCH ? 'tap to brew' : 'press E'}</small></span>
     </button>
   )
 }

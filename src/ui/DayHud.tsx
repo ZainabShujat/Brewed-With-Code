@@ -6,6 +6,7 @@ import { cafe } from '../world/Customers'
 import { useGame, onFoot } from '../systems/store'
 import { useTutorial } from '../systems/tutorial'
 import { windDown, useWind } from './WindDown'
+import { TOUCH } from '../systems/CameraRig'
 
 // Top-centre day clock while the café is open, the "open for the day" button, and the results card.
 export function DayHud() {
@@ -18,10 +19,14 @@ export function DayHud() {
   if (winding) return null
   if (d.phase === 'idle') return (
     <div className="dayopen">
-      <div className="dayno">Day {d.day}</div>
-      <div className="dayhint">🪧 the café is closed · walk to the door and press <b>E</b> to flip the sign to OPEN</div>
-      {!onFoot(mode) && <button className="brew-go" onClick={() => { const g = useGame.getState(); g.setMode('walk'); Object.assign(g.player, { x: 0, z: 10.4, facing: 0 }) }}>🚪 go to the door</button>}
-      <div className="daybank">💰 {d.bank} saved · ⭐ {d.stars}</div>
+      <div className="dayopen-top">
+        <span className="dayno">Day {d.day}</span>
+        <span className="daybank">💰 {d.bank} saved · ⭐ {d.stars}</span>
+      </div>
+      <div className="dayhint">
+        🪧 the café is closed · {TOUCH ? 'walk to door & tap sign to OPEN' : <span>walk to the door and press <b>E</b> to flip the sign to OPEN</span>}
+      </div>
+      {!onFoot(mode) && <button className="brew-go daygo-btn" onClick={() => { const g = useGame.getState(); g.setMode('walk'); Object.assign(g.player, { x: 0, z: 10.4, facing: 0 }) }}>🚪 go to the door</button>}
     </div>
   )
 
