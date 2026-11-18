@@ -68,7 +68,7 @@ The 17 Nov glass crash (a blank screen the moment you placed a glass) went unnot
 | Mon 30 | Buffer | "tomorrow" teaser |
 | **Tue 1 Dec** | **Public launch** | launch reel ("it's playable · link in bio") |
 
-## After launch (until 12 Dec)
+## After launch (until 12 Jan 2027: access extended a month on 18 Nov)
 | Dates | Work |
 |---|---|
 | 2–4 Dec | Fix what players report; small content (new cakes/drinks) |
