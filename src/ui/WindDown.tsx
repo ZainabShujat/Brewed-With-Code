@@ -17,11 +17,12 @@ const CHORES: Chore[] = [
   { id: 'bye', label: 'say goodnight to a guest', how: 'say goodnight', done: 'They waved back. 👋', near: (x, z) => cafe.pool.some((c) => c.phase === 'sit' && Math.hypot(c.pos.x - x, c.pos.z - z) < 2.6) },
   { id: 'air', label: 'step outside', how: 'take a breath of night air', done: 'The lid lights look lovely from out here.', near: (_x, z) => z > 16 },
 ]
+const HOW: Record<string, string> = { bye: 'walk up to a guest with 🌙 over them, then press E (or tap)', wipe: 'stand by any table, press E', air: 'walk out of the front door' }
 type Wind = { on: boolean; done: string[]; say: string; sayT: number; open: boolean; wipe: { x: number; z: number; t: number } | null }
 export const useWind = create<Wind>(() => ({ on: false, done: [], say: '', sayT: 0, open: true, wipe: null }))
 
 export function windDown() {
-  useWind.setState({ on: true, done: [], say: 'Lovely day. Take a breath, have a little wander. 🌙', sayT: performance.now() })
+  useWind.setState({ on: true, done: [], say: 'Lovely day! A couple of guests are still finishing their drinks: walk up to one with a 🌙 over their head to say goodnight.', sayT: performance.now() })
   cafe.seed(2) // a couple of regulars linger over their last cup
   useGame.getState().setMode('walk')
 }
@@ -52,14 +53,14 @@ export function WindDown() {
     window.addEventListener('keydown', k); return () => window.removeEventListener('keydown', k)
   }, [])
   if (!w.on) return null
-  const talking = performance.now() - w.sayT < 4000
+  const talking = performance.now() - w.sayT < (w.say.length > 60 ? 8000 : 4000) // long lines stay up longer
   return (
     <>
       <div className={'wind' + (w.open ? '' : ' shut')}>
         <div className="wd-h" onClick={() => useWind.setState({ open: !w.open })}>🌙 Winding down <small>{w.open ? '▾' : '▸'}</small></div>
         {w.open && <>
           <div className="wd-sub">little things, if you feel like it</div>
-          {CHORES.map((c) => <div key={c.id} className={'wd-row' + (w.done.includes(c.id) ? ' ok' : '')}><i>{w.done.includes(c.id) ? '✓' : '○'}</i>{c.label}</div>)}
+          {CHORES.map((c) => <div key={c.id} className={'wd-row' + (w.done.includes(c.id) ? ' ok' : '')}><i>{w.done.includes(c.id) ? '✓' : '○'}</i>{c.label}{!w.done.includes(c.id) && HOW[c.id] && <div className="wd-how">{HOW[c.id]}</div>}</div>)}
         </>}
         <button className="wd-go" onClick={endWind}>Start Day {day + 1} →</button>
       </div>

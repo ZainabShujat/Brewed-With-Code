@@ -737,3 +737,4 @@ body.station-cursor, body.station-cursor canvas { cursor: url("data:image/svg+xm
   .phone .stmat { font-size: 8px; padding: 0 5px 0 1px; } .phone .stmat b { width: 12px; height: 12px; font-size: 8px; }
   .phone .stmat:not(.on) { opacity: .45; }
 }
+.wd-how { font-size: 10px; font-weight: 600; opacity: .65; margin-left: 18px; line-height: 1.3; }

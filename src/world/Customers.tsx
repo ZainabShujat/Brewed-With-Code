@@ -10,7 +10,7 @@ import { TABLES, TABLE_SCALE } from './layout'
 import { useDay, DAY_LEN } from '../systems/day'
 import { useTutorial } from '../systems/tutorial'
 import { useGame } from '../systems/store'
-import { WipeFx } from '../ui/WindDown'
+import { WipeFx, useWind } from '../ui/WindDown'
 import { Townsperson, seatHip, type Pose } from './folk/Townsperson'
 import { folk, type FolkSpec } from './folk/specs'
 
@@ -156,7 +156,7 @@ function Body({ c }: { c: Cust }) {
       // a sip now and then, a little chat with whoever's at the table
       if (c.byeT && c.byeT > 0) c.byeT -= dt
       if (c.thankT && c.thankT > 0) c.thankT -= dt
-      if (bubble.current) { const k = (c.sitT + c.id * 3.1) % 14, txt = c.byeT && c.byeT > 0 ? 'Night! See you tomorrow 🌙' : c.refill === 'ask' ? '☕ a refill, please?' : c.thankT && c.thankT > 0 ? 'thank you! 💛' : k < 2.2 ? SIT_SAY[(c.id + Math.floor(c.sitT / 14)) % SIT_SAY.length] : ''; if (bubble.current.textContent !== txt) { bubble.current.textContent = txt; bubble.current.innerHTML = txt } }
+      if (bubble.current) { const k = (c.sitT + c.id * 3.1) % 14, txt = c.byeT && c.byeT > 0 ? 'Night! See you tomorrow 🌙' : useWind.getState().on && !useWind.getState().done.includes('bye') ? '🌙 say goodnight?' : c.refill === 'ask' ? '☕ a refill, please?' : c.thankT && c.thankT > 0 ? 'thank you! 💛' : k < 2.2 ? SIT_SAY[(c.id + Math.floor(c.sitT / 14)) % SIT_SAY.length] : ''; if (bubble.current.textContent !== txt) { bubble.current.textContent = txt; bubble.current.innerHTML = txt } }
       return
     }
     if (seatLift.current) seatLift.current.position.y = 0
@@ -230,8 +230,7 @@ function DoorSign() {
     <group position={[1.7, 2.5, 11.7]}>
       <mesh position={[0, 0.55, 0]} material={mat('#3b2a1e')}><cylinderGeometry args={[0.01, 0.01, 0.6, 4]} /></mesh>
       <mesh material={mat(open ? '#7fd6a0' : '#e98fa6')}><boxGeometry args={[1.2, 0.5, 0.05]} /></mesh>
-      <Html transform position={[0, 0, -0.03]} rotation={[0, Math.PI, 0]} distanceFactor={4} zIndexRange={[5, 0]} style={{ pointerEvents: 'none' }}><div className={'doorsign' + (open ? ' open' : '')}>{label}</div></Html>
-      <Html transform position={[0, 0, 0.03]} distanceFactor={4} zIndexRange={[5, 0]} style={{ pointerEvents: 'none' }}><div className={'doorsign' + (open ? ' open' : '')}>{label}</div></Html>
+      <Html position={[0, 0, 0]} center distanceFactor={6} zIndexRange={[5, 0]} style={{ pointerEvents: 'none' }}><div className={'doorsign' + (open ? ' open' : '')}>{label}</div></Html> {/* always faces you: readable from inside and out */}
     </group>
   )
 }
