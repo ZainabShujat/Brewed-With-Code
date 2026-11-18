@@ -1,0 +1,11 @@
+Model Information:
+* title:	Cake Stand
+* source:	https://sketchfab.com/3d-models/cake-stand-e76b28d5fcd348aa8837c98349582b52
+* author:	Sam_H (https://sketchfab.com/Sam_H)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Cake Stand" (https://sketchfab.com/3d-models/cake-stand-e76b28d5fcd348aa8837c98349582b52) by Sam_H (https://sketchfab.com/Sam_H) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

@@ -1,0 +1,11 @@
+Model Information:
+* title:	Willoughsby Espresso Machine
+* source:	https://sketchfab.com/3d-models/willoughsby-espresso-machine-221f20f292144abebf748f837931388c
+* author:	Kuba Wójcik (https://sketchfab.com/KWojcik)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Willoughsby Espresso Machine" (https://sketchfab.com/3d-models/willoughsby-espresso-machine-221f20f292144abebf748f837931388c) by Kuba Wójcik (https://sketchfab.com/KWojcik) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
