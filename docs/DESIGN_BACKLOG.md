@@ -29,3 +29,6 @@ current code first, then a written proposal, before any implementation.
   orbit, first-person walk, the fixed top-down bar, fade-cuts), movement (`systems/movement.ts`), interactions
   (`systems/drag.tsx`), what can be added without restructuring, and what needs changes.
 - Then: camera/POV spec, movement/controls spec, interaction spec, gameplay-to-camera mapping, architecture, phased roadmap.
+
+## Backdrop beyond the street (requested 18 Nov, do later)
+Outside the café and the shop street, the far background should show random buildings and a residential area (houses, flats, rooftops) instead of empty space: a cheap backdrop ring of low-poly building blocks/cards past the walls, instanced, no collision, lit by the day/night clock (windows glow at night).
