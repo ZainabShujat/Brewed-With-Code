@@ -79,3 +79,8 @@ The 17 Nov glass crash (a blank screen the moment you placed a glass) went unnot
 
 Level 4 (two storeys) comes after launch.
 Deliberately later (after 12 Dec, or never): physics props, decorate mode, cleaning loop, VR.
+
+## Launch decision (18 Nov)
+**1 Dec ships Zen Mode only:** the café, coffee, cakes, the street and shops, no money pressure or failure. **Story Mode**
+(companions Mira / Theo / Juno, weekly ledger, decision cards, bank + loans, Foamfeed with the meta twist) follows as
+a big December update; see `STORY_DESIGN.md`.

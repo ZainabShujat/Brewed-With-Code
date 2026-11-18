@@ -266,3 +266,34 @@ neighbours. The creator approves voice and tone for each companion before more i
 2. Should the companion appear in the bar view while you work, or only in Walk and in scenes?
 3. Foamfeed: is the name OK? Should it echo the creator's own reel journey (the café account grows like yours did)?
 4. Launch slice: is the prologue (week 1) enough for 1 Dec?
+
+---
+
+## Decisions from the creator (18 Nov 2026)
+1. **Companions approved:** Mira (Creative), Theo (Practical), Juno (Social), as drafted.
+2. **The bite is right:** real consequences, never shattering. **Recovery length varies:** a rough patch lasts as
+   long as the situation does (a quick promo can fix a bad week, while an over-expansion can take a month to dig out of).
+3. **Loans + a bank:** a bank on the street (see below).
+4. **Launch on 1 Dec is Zen Mode only.** Story Mode ships later as a big update (S1 moves to December).
+5. **The meta twist is in:** the café's Foamfeed account grows the way the creator's own reels did, with
+   milestone posts that echo real build-log moments.
+
+### The bank: "Copper Kettle Savings & Loans" (a new building on the street)
+- **Savings account:** park spare coins, earn a little each Sunday (1%). Safe and boring, Theo's favourite.
+- **Loans:** three sizes, unlocked by reputation and your repayment history.
+
+| Loan | Amount | Repay | Total cost | Unlocks |
+|---|---|---|---|---|
+| Starter | 200 | 4 weeks | +5% | from week 1 |
+| Growth | 600 | 8 weeks | +8% | reputation 3★, no missed payments |
+| Expansion | 1500 | 12 weeks | +12% | reputation 4★, one loan repaid |
+
+- **Repayments come out on Sunday** in the ledger. A missed payment adds a late fee and lowers your **bank trust**,
+  which means smaller loans and worse rates later. It's never a repossession: the bank just restructures (longer term,
+  higher cost) and the companion has words about it.
+- **The bank is a recovery tool, not a trap:** a rough patch can be bridged with a loan, but borrowing to cover rent
+  week after week shows up in the "what happened" card.
+- **Companion takes:** Mira wants the Expansion loan for the pretty upstairs; Theo says take the Starter and repay
+  it early to build trust; Juno says paperwork is "a vibe killer" but will happily spend it on an event.
+- **Where:** a narrow bank between Petal Post and the café on the café's side (x −27…−19), with columns, a clock
+  and a brass sign. It sits in the visual-upgrade backlog and comes with Story Mode.
