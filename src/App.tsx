@@ -5,7 +5,7 @@ import { useGame, type CamMode } from './systems/store'
 import { CameraRig } from './systems/CameraRig'
 import { Exterior } from './world/Exterior'
 import { Interior } from './world/Interior'
-import { Hotspots } from './world/Hotspots'
+// import { Hotspots } from './world/Hotspots' (retired: stations come from Take order, views from the view bar)
 import { Barista } from './world/Barista'
 import { PlayerAvatar } from './world/PlayerAvatar'
 import { StreetLife } from './world/StreetLife'
@@ -80,7 +80,7 @@ export function World() {
       {REEL && inside && mode !== 'pov' && mode !== 'vlog' && mode !== 'walk' && <Reveal id="barista" at={[0.4, 0, 2.4]}><Barista /></Reveal>}
       {!REEL && (mode === 'walk' || mode === 'dollhouse') && <PlayerAvatar />}
       {inside && <Customers />}
-      {inside && <Hotspots />}
+      {/* station hotspots retired */}
       {kozie && <Kozie />}
       </group>
       <CameraRig />
