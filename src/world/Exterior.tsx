@@ -39,6 +39,7 @@ function CoffeePot() {
       <mesh position={[0, 7.2, 0]} scale={[1, 0.38, 1]} material={mat(C.lilac)} castShadow>
         <sphereGeometry args={[4.9, 40, 16, 0, Math.PI * 2, 0, Math.PI / 2]} />
       </mesh>
+      <LidLights />
       </Reveal>
       <Reveal id="chimney" at={[0.6, 8.2, -0.6]}>
       {/* spout chimney with a wide cap (sketch) */}
@@ -56,6 +57,24 @@ function CoffeePot() {
       <Reveal id="window" at={[3.6, 4.9, 3.7]}><Porthole /></Reveal>
       {/* the door is drawn inside the 2.95× exterior: shrink it (around its own spot) to a walk-through, human-sized door */}
       <Reveal id="door" at={[0, 0, 5.9]}><group position={[0, 0, 5.85]} scale={0.45}><group position={[0, 0, -5.85]}><ArchDoor /><Awning /></group></group></Reveal>
+    </group>
+  )
+}
+
+// fairy-light bulbs all the way round the lid's edge (warm white + pink), glowing brighter at night.
+// Two instanced meshes = two draw calls for 56 bulbs.
+function LidLights() {
+  const N = 56, R = 5.3, Y = 7.0
+  const geo = useMemo(() => new THREE.SphereGeometry(0.11, 10, 8), [])
+  const set = (m: THREE.InstancedMesh | null, odd: number) => {
+    if (!m) return; const o = new THREE.Object3D(); let k = 0
+    for (let i = odd; i < N; i += 2) { const a = (i / N) * Math.PI * 2; o.position.set(Math.sin(a) * R, Y, Math.cos(a) * R); o.updateMatrix(); m.setMatrixAt(k++, o.matrix) }
+    m.instanceMatrix.needsUpdate = true
+  }
+  return (
+    <group>
+      <instancedMesh ref={(m) => set(m, 0)} args={[geo, glow('#fff1c9'), N / 2]} />
+      <instancedMesh ref={(m) => set(m, 1)} args={[geo, glow('#ffb3d1'), N / 2]} />
     </group>
   )
 }
