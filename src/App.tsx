@@ -59,6 +59,7 @@ const MODES: { id: CamMode; label: string; key: string }[] = [
 export function World() {
   const mode = useGame((s) => s.mode)
   useEffect(() => { if (!REEL) document.body.classList.toggle('notags', mode === 'walk' || mode === 'fp') }, [mode])
+  useEffect(() => { if (!REEL) document.body.classList.toggle('not-cake', mode !== 'cake') }, [mode]) // the cake machine's labels only at the cake bench
   useEffect(() => { document.body.classList.toggle('station-cursor', mode === 'pov' || mode === 'cake') }, [mode]) // the game's own arrow cursor at the stations
   const inside = mode !== 'exterior'
   const outro = mode === 'outro'

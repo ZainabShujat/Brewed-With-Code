@@ -426,3 +426,4 @@ body.station-cursor, body.station-cursor canvas { cursor: url("data:image/svg+xm
 .dayhint { background: rgba(42,24,58,.85); color: #ffeccc; border-radius: 12px; padding: 7px 14px; font: 700 14px 'Trebuchet MS', sans-serif; margin: 6px 0; }
 .doorsign { font: 900 34px 'Trebuchet MS', sans-serif; letter-spacing: 3px; color: #fff; text-shadow: 0 2px 0 rgba(0,0,0,.25); padding: 4px 18px; }
 @media (max-width: 1000px) { .viewbar { top: 60px; } }
+.not-cake .headtag { display: none !important; }
