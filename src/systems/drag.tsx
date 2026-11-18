@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { useFrame, type ThreeEvent } from '@react-three/fiber'
-import { Html } from '@react-three/drei'
 import * as THREE from 'three'
 import { mat } from '../world/mats'
 import { C } from '../data/palette'
@@ -13,6 +12,7 @@ import { C } from '../data/palette'
 
 type Target = { obj: THREE.Object3D; r: number }
 const targets = new Map<string, Target>()
+export const hoverTip = { text: '' } // what the pointer is over: shown in the bottom bar, not over the item
 export const drag = { active: '' as string, over: '' as string }
 
 // a place things can be dropped onto (the cup, the pitcher, the turntable…)
@@ -22,7 +22,7 @@ export function DropTarget({ id, pos, r = 0.3, show = true }: { id: string; pos:
   const ring = useRef<THREE.Mesh>(null)
   useFrame(({ clock }) => { if (ring.current) { const on = drag.active !== '' && show && !!held.drops?.[id]; ring.current.visible = on; ring.current.scale.setScalar(drag.over === id ? 1.15 + Math.sin(clock.elapsedTime * 8) * 0.05 : 1) } })
   return (
-    <group ref={ref} position={pos}>
+    <group ref={ref} position={pos} name={`drop:${id}`}>
       {/* a soft glowing ring shows where you can drop while you're carrying something */}
       <mesh ref={ring} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.005, 0]} visible={false} material={mat(C.butter, { emissive: C.butter, opacity: 0.55 })}><ringGeometry args={[r * 0.8, r, 32]} /></mesh>
     </group>
@@ -45,24 +45,36 @@ function nearestTarget(world: THREE.Vector3, accepts: string[]) {
 // Anything you can pick up (and optionally click). `drops` maps a target id → what happens when used there.
 // CLICK AND PICK (Papa's-style): click a tool and it sticks to your cursor, floating over the counter;
 // click the glass (or another target) to use it there. Click anywhere else, or press Esc, to put it back.
-const held = { id: '', drops: null as Record<string, () => void> | null }
-export function putBack() { held.id = ''; held.drops = null; drag.active = ''; drag.over = ''; document.body.style.cursor = '' }
+// DRAG AND DROP works too: press on a tool, drag it over the target and let go. Pours and shakes (holdDrops) start the
+// moment you drag over your glass with the button still down, and stop when you let go, like a real pour.
+const held = { id: '', drops: null as Record<string, () => void> | null, hold: [] as string[], pressed: false, moved: false, x: 0, y: 0 }
+export function putBack() { held.id = ''; held.drops = null; held.hold = []; held.pressed = false; held.moved = false; drag.active = ''; drag.over = ''; document.body.style.cursor = '' }
+function use(t: string) { const d = held.drops; putBack(); if (t && d?.[t]) d[t]() }
 if (typeof window !== 'undefined') {
   window.addEventListener('keydown', (e) => { if (e.key === 'Escape') putBack() })
   // the click that USES the held tool: whatever target it's hovering over, or put it back
   window.addEventListener('pointerdown', (e) => {
     if (!held.id || e.button !== 0) return
     if ((e.target as HTMLElement)?.tagName !== 'CANVAS') return
-    const t = drag.over, d = held.drops
-    putBack()
-    if (t && d?.[t]) d[t]()
+    use(drag.over)
     e.stopPropagation()
   }, true)
+  window.addEventListener('pointermove', (e) => {
+    if (!held.id || !held.pressed) return
+    if (!held.moved && Math.hypot(e.clientX - held.x, e.clientY - held.y) > 12) held.moved = true
+    if (held.moved && drag.over && held.hold.includes(drag.over)) use(drag.over) // a pour starts over the glass, button still down
+  })
+  window.addEventListener('pointerup', () => {
+    if (!held.id || !held.pressed) return
+    held.pressed = false
+    if (held.moved) use(drag.over) // dragged and let go: drop it there (or it floats home)
+    // not moved: it was a click, so the tool stays on your cursor (click-and-pick)
+  })
 }
 
-export function Grab({ id, pos, size, children, tip, onClick, drops, disabled = false }: {
+export function Grab({ id, pos, size, children, tip, onClick, drops, holdDrops = [], disabled = false }: {
   id: string; pos: [number, number, number]; size: [number, number, number]; children?: ReactNode; tip?: string
-  onClick?: () => void; drops?: Record<string, () => void>; disabled?: boolean
+  onClick?: () => void; drops?: Record<string, () => void>; holdDrops?: string[]; disabled?: boolean
 }) {
   const [hover, setHover] = useState(false)
   const outer = useRef<THREE.Group>(null), inner = useRef<THREE.Group>(null)
@@ -73,8 +85,10 @@ export function Grab({ id, pos, size, children, tip, onClick, drops, disabled = 
       raycaster.setFromCamera(pointer, camera)
       o.getWorldPosition(_w); _plane.constant = -(_w.y + 0.3)
       if (raycaster.ray.intersectPlane(_plane, _p)) {
-        drag.over = drops ? nearestTarget(_p, Object.keys(drops)) : '' // where the cursor points, not where the tool has got to
         g.position.lerp(o.worldToLocal(_p.clone()), 1 - Math.exp(-dt * 25))
+        // the drop spot is where the cursor meets the COUNTER (targets sit on it), not the carry plane above it
+        _plane.constant = -(_w.y - 0.1)
+        if (raycaster.ray.intersectPlane(_plane, _p)) drag.over = drops ? nearestTarget(_p, Object.keys(drops)) : ''
       }
       return
     }
@@ -84,7 +98,7 @@ export function Grab({ id, pos, size, children, tip, onClick, drops, disabled = 
   const down = (e: ThreeEvent<PointerEvent>) => {
     if (e.button !== 0) return
     e.stopPropagation()
-    if (drops) { held.id = id; held.drops = drops; drag.active = id; document.body.style.cursor = 'none'; return }
+    if (drops) { Object.assign(held, { id, drops, hold: holdDrops, pressed: true, moved: false, x: e.nativeEvent.clientX, y: e.nativeEvent.clientY }); drag.active = id; document.body.style.cursor = 'none'; return }
     onClick?.()
   }
   const holding = held.id === id
@@ -92,11 +106,10 @@ export function Grab({ id, pos, size, children, tip, onClick, drops, disabled = 
     <group ref={outer} position={pos}>
       <group ref={inner}>{children}</group>
       {!disabled && <mesh name={`station:${id}`} visible={false} onPointerDown={down}
-        onPointerOver={(e) => { e.stopPropagation(); setHover(true); if (!held.id) document.body.style.cursor = 'pointer' }}
-        onPointerOut={() => { setHover(false); if (!held.id) document.body.style.cursor = '' }}>
+        onPointerOver={(e) => { e.stopPropagation(); setHover(true); hoverTip.text = disabled ? '' : (tip ?? ''); if (!held.id) document.body.style.cursor = 'pointer' }}
+        onPointerOut={() => { setHover(false); hoverTip.text = ''; if (!held.id) document.body.style.cursor = '' }}>
         <boxGeometry args={size} />
       </mesh>}
-      {hover && !holding && !held.id && tip && !disabled && <Html zIndexRange={[19, 0]} position={[0, size[1] / 2 + 0.08, 0]} center className="tag tool">{tip}</Html>}
     </group>
   )
 }
@@ -120,11 +133,10 @@ export function Hold({ id, pos, size, tip, onHold, onStart, onEnd, children }: {
     <group position={pos}>
       {children}
       <mesh name={`hold:${id}`} visible={false} onPointerDown={start}
-        onPointerOver={(e) => { e.stopPropagation(); setHover(true); if (!held.id) document.body.style.cursor = 'pointer' }}
-        onPointerOut={() => { setHover(false); if (!held.id) document.body.style.cursor = '' }}>
+        onPointerOver={(e) => { e.stopPropagation(); setHover(true); hoverTip.text = tip ?? ''; if (!held.id) document.body.style.cursor = 'pointer' }}
+        onPointerOut={() => { setHover(false); hoverTip.text = ''; if (!held.id) document.body.style.cursor = '' }}>
         <boxGeometry args={size} />
       </mesh>
-      {hover && !held.id && tip && <Html zIndexRange={[19, 0]} position={[0, size[1] / 2 + 0.08, 0]} center className="tag tool">{tip}</Html>}
     </group>
   )
 }

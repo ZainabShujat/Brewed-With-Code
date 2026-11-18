@@ -88,7 +88,7 @@ export function useMouseLook() {
       if (document.pointerLockElement !== el) view.looking = false
       pts.delete(e.pointerId); if (pts.size < 2) pinch = 0; down = -1 }
     window.addEventListener('pointercancel', pu)
-    const zoomBy = (f: number) => { view.zoom = Math.max(view.mode === 'dollhouse' ? 0.35 : 0.6, Math.min(view.mode === 'dollhouse' ? 3.4 : 1.3, view.zoom * f)) } // dollhouse: zoom far enough out to see the whole street
+    const zoomBy = (f: number) => { view.zoom = Math.max(view.mode === 'dollhouse' ? 0.35 : view.mode === 'pov' ? 0.45 : 0.6, Math.min(view.mode === 'dollhouse' ? 3.4 : view.mode === 'pov' ? 1.2 : 1.3, view.zoom * f)) } // dollhouse: zoom far enough out to see the whole street
     const wh = (e: WheelEvent) => { e.preventDefault(); zoomBy(e.deltaY > 0 ? 1.1 : 0.9) }
     const cm = (e: Event) => e.preventDefault()
     el.addEventListener('pointerdown', pd); window.addEventListener('pointermove', pm); window.addEventListener('pointerup', pu)
@@ -145,7 +145,7 @@ function fadeCut() {
 export function CameraRig() {
   const { camera } = useThree()
   useMouseLook()
-  useFrame((_, dtRaw) => {
+  useFrame(({ pointer }, dtRaw) => {
     const dt = Math.min(dtRaw, 0.05)
     const { mode, player } = useGame.getState()
     stepTweens(dt)
@@ -197,6 +197,12 @@ export function CameraRig() {
       const glance = (keys.has('arrowleft') ? 1 : 0) - (keys.has('arrowright') ? 1 : 0)
       if (glance) view.yaw = Math.max(-0.6, Math.min(0.6, view.yaw + glance * dt * 1.4)); else if (!view.looking) view.yaw *= Math.max(0, 1 - dt * 3)
       wantLook.y += view.pitch * 2.6; wantLook.z += view.pitch * 3.5; wantLook.x += Math.sin(view.yaw) * 2.5
+      // scroll zooms the bar view: in towards whatever the mouse is over, or out a little for the whole counter
+      if (view.zoom !== 1) {
+        const inK = Math.max(0, 1 - view.zoom) * 1.6 // how far in we are: follow the pointer that much
+        _off.set(pointer.x * inK * 1.4, pointer.y * inK * 0.5, 0); wantLook.add(_off); wantPos.add(_off)
+        wantPos.sub(wantLook).multiplyScalar(view.zoom).add(wantLook)
+      }
       { const asp = (camera as THREE.PerspectiveCamera).aspect; setFov(camera as THREE.PerspectiveCamera, Math.min(100, 2 * Math.atan(Math.tan(25 * Math.PI / 180) * Math.max(1, 1.75 / asp)) * 180 / Math.PI)) } // narrower screens: a wider lens so the whole bar fits (the wall is right behind you)
     }
     // portrait phone: step back from the stations so the whole machine / bar fits the narrow screen
@@ -204,7 +210,7 @@ export function CameraRig() {
     // frame the dispenser it's under, gliding left/right as ◀ ▶ move it along the belt
     if ((camera as THREE.PerspectiveCamera).aspect < 1 && mode === 'cake') { const x = machine.target; wantLook.set(x, 1.85, -9.05); wantPos.set(x + 0.15, 2.75, -5.8) }
     wantPos.multiplyScalar(WORLD); wantLook.multiplyScalar(WORLD)
-    if (mode !== 'pov') applyLook(mode, dt); else if (view.mode !== mode) { view.mode = mode; view.yaw = 0; view.pitch = 0; view.zoom = 1 }
+    if (mode !== 'pov') applyLook(mode, dt); else if (view.mode !== mode) { view.mode = mode; view.yaw = 0; view.pitch = 0; view.zoom = 1 } // (pov keeps its zoom while you work)
     // ?snap = jump straight to the shot (used for footage capture and tests)
     const k = SNAP || cut ? 1 : 1 - Math.exp(-dt * (mode === 'walk' ? 7 : mode === 'outro' ? 1.4 : view.looking ? 30 : 4)) // Explore: a smooth follow cam // mouse look = instant, like a game
     camera.position.lerp(wantPos, k)

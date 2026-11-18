@@ -47,3 +47,33 @@ export function judgeFill() {
 }
 
 export { coverage } from '../data/recipes'
+
+// ── the next thing to do, worked out from the ticket and what's already in your glass ──
+// One source of truth for the glowing hint on the counter, the hint line and Kozie's tutorial.
+export type Step = 'wait' | 'glass' | 'choc' | 'pull' | 'pourShot' | 'water' | 'fillPitcher' | 'pitcherToWand' | 'steam' | 'pourMilk' | 'topping' | 'serve'
+export function nextStep(): { id: Step; text: string } {
+  const s = useShop.getState(), w = want(), d = s.drink, p = s.pitcher, inPitcher = p.milk + p.foam
+  const fill = s.cup ? filled(s.ml) / CAP[d.size] : 0
+  if (!w) return { id: 'wait', text: cafe.line.size ? 'a customer is walking up…' : 'waiting for customers…' }
+  if (!s.cup) return { id: 'glass', text: `grab a ${w.size} glass and drop it on the mat` }
+  if (w.chocolate && !d.chocolate) return { id: 'choc', text: 'chocolate first: drag the sauce onto your glass' }
+  if (d.shots < w.shots && s.shotGlass < 5) return { id: 'pull', text: 'hold the espresso machine… let go on the gold line' }
+  if (d.shots < w.shots) return { id: 'pourShot', text: 'drag the shot glass onto your glass' }
+  if (w.water && !d.water) return { id: 'water', text: 'drag the kettle onto your glass' }
+  if (w.milk !== 'none' && d.milk === 'none') {
+    if (inPitcher < 20) return { id: 'fillPitcher', text: `hold the ${w.milkType} milk to fill the pitcher` }
+    if (p.at !== 'wand' && p.stretch === 0) return { id: 'pitcherToWand', text: 'drag the pitcher onto the steam wand' }
+    if (p.at === 'wand' && p.stretch < STEAM_ZONES[w.milk][0]) return { id: 'steam', text: 'hold the steam wand till the needle reaches the glowing zone' }
+  }
+  if (w.milk !== 'none' && fill < 0.75) return { id: 'pourMilk', text: 'drag the pitcher over your glass and hold to pour' }
+  if (w.topping !== 'none' && d.topping === 'none') return { id: 'topping', text: w.topping === 'whipped' ? 'drag the cream onto your glass' : `drag the ${w.topping} over your glass and shake` }
+  return { id: 'serve', text: 'drag your glass onto the pass 🔔' }
+}
+/** which tools this order needs out on the counter (no order: everything) */
+export function needs() {
+  const w = want()
+  if (!w) return { choc: true, water: true, milk: true, milkType: null as string | null, topping: null as string | null, all: true }
+  return { choc: w.chocolate, water: w.water, milk: w.milk !== 'none', milkType: w.milk !== 'none' ? w.milkType : null, topping: w.topping !== 'none' ? w.topping : 'none', all: false }
+}
+
+if (typeof window !== 'undefined') (window as unknown as { __tutStep: () => Step }).__tutStep = () => nextStep().id // for the tutorial recorder

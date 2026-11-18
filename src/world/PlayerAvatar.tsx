@@ -10,7 +10,7 @@ import { Townsperson, type Pose } from './folk/Townsperson'
 
 // You, in the world: Kozie (the notebook from the reels) or the character you made, walking where you walk,
 // with your name above your head. Shown in Explore (third person) and in the Dollhouse.
-const FOLK_SCALE = 1.5
+const FOLK_SCALE = 1.95
 
 export function KozieBody({ walking }: { walking: () => boolean }) {
   const m = useMemo(() => { const k = makeMascot3D(THREE, { RoundedBoxGeometry }); k.pencil.visible = true; k.group.traverse((o: THREE.Object3D) => { if ((o as THREE.Mesh).isMesh) o.castShadow = true }); k.pose('idle'); return k }, [])

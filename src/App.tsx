@@ -19,6 +19,8 @@ import { ShopHud } from './ui/ShopHud'
 import { HoldRing } from './ui/HoldRing'
 import { FolkLineup, FolkGallery, SHOW_FOLK } from './world/Folk'
 import { StreetShop, PantryNote } from './ui/StreetShop'
+import { ModeFade } from './ui/ModeFade'
+import { TutorialBubble } from './ui/TutorialBubble'
 import { RecipeCard } from './ui/RecipeCard' // made by hand (the old meter HUD, ui/BrewHud.tsx, is kept for reference)
 import { DayHud } from './ui/DayHud'
 import { MusicButton } from './ui/MusicButton'
@@ -126,6 +128,8 @@ export default function App() {
       </div></div>}
       {playing && !SNAP && (mode === 'pov' || mode === 'cake' || mode === 'dollhouse' || mode === 'walk') && <DayHud />}
       {playing && mode === 'pov' && <RecipeCard />}
+      {playing && mode === 'pov' && <TutorialBubble />}
+      {playing && !SNAP && <ModeFade />}
       {playing && mode === 'pov' && <HoldRing />}
       {playing && mode === 'walk' && <StreetShop />}
       {playing && <PantryNote />}

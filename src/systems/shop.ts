@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { useTutorial, tutorialOrder } from './tutorial'
 import { stationStars, EMPTY, randomOrder, score, craft as craftScore, CAP, SHOT_ML, NO_CONTENTS, filled, type Contents, type Drink, type MilkType, type Order, type Topping } from '../data/recipes'
 import { cafe } from '../world/Customers'
 import { useDay } from './day'
@@ -121,6 +122,7 @@ export const useShop = create<Shop>((set, get) => ({
     const orders = { ...s.orders }; delete orders[front.id]
     glass++; pending = 0
     cafe.serve() // dequeue: the front of the line leaves first
+    useTutorial.getState().next() // Kozie's tutorial moves on to the next lesson
     set({ cup: false, drink: { ...EMPTY }, ...fresh(), hint: '', coins: s.coins + coins, served: s.served + 1, orders, last: { ...r, coins, mood, t: now(), craft: cr, tip, stations: stationStars(s.drink, order.want, s.ml, s.grains, front.patience) } })
   },
   // ── made by hand ──
@@ -164,7 +166,7 @@ export const useShop = create<Shop>((set, get) => ({
   // every frame: give the customer at the front an order once they reach the counter
   tick: () => {
     const s = get(), front = cafe.line.peek()
-    if (front && front.phase === 'line' && !s.orders[front.id]) set({ orders: { ...s.orders, [front.id]: randomOrder() } })
+    if (front && front.phase === 'line' && !s.orders[front.id]) set({ orders: { ...s.orders, [front.id]: tutorialOrder() ?? randomOrder() } })
     // finished pour animations are tidied away (a hold-to-pour stays until it's released and done)
     const keep = (p: Pour) => now() - p.t0 < 3 + (p.dur === undefined ? 0 : Number.isFinite(p.dur) ? p.dur : 1e9)
     if (s.pours.length && !keep(s.pours[0])) set({ pours: s.pours.filter(keep) })

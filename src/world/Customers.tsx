@@ -47,7 +47,7 @@ export const MAX_LINE = 3, CALM_DAYS = 2
 
 // Townsfolk: marshmallows live to the LEFT of the market (west, -x), notebooks to the RIGHT (east, +x). Each customer
 // walks in along the pavement from their own side, comes in through the door, and goes back home the same way.
-const STREET_Z = 19.6, FROM = 30, FOLK_SCALE = 1.5, SEAT_TOP = 0.672 * TABLE_SCALE / 1.6 // the chair seat's height
+const STREET_Z = 19.6, FROM = 30, FOLK_SCALE = 1.95, SEAT_TOP = 0.672 * TABLE_SCALE / 1.6 // the chair seat's height
 const inPath = (side: number) => [V(side * 2, STREET_Z), V(0, 18.4), V(0, 13.3), V(IN_LANE, 11.4), V(IN_LANE, 1.2)]
 const homePath = (side: number) => [V(0, 13.3), V(0, 18.4), V(side * 2, STREET_Z), V(side * FROM, STREET_Z)]
 

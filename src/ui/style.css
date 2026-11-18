@@ -351,3 +351,37 @@ body.station-cursor, body.station-cursor canvas { cursor: url("data:image/svg+xm
 .talkbox b { font: 900 16px 'Trebuchet MS', sans-serif; color: #a63f78; } .talkbox span { font: 700 19px/1.3 'Trebuchet MS', sans-serif; } .talkbox small { font-size: 11px; opacity: .6; align-self: flex-end; }
 .nametag.keeper { background: #a63f78; }
 .sc-keeper { font-size: 13px; color: #f6d9ea; font-weight: 700; }
+
+/* numbered station mats on the coffee bar */
+.stmat { display: flex; align-items: center; gap: 4px; white-space: nowrap; background: rgba(255,248,236,.85); color: #5a3a4a; border-radius: 10px; padding: 1px 8px 1px 2px; font: 800 10px 'Trebuchet MS', sans-serif; opacity: .75; transition: all .25s; }
+.stmat b { display: inline-grid; place-items: center; width: 16px; height: 16px; border-radius: 50%; background: #5a3a4a; color: #fff6ee; font-size: 10px; }
+.stmat.on { opacity: 1; background: #ffd166; transform: scale(1.18); box-shadow: 0 0 12px rgba(255,179,0,.7); }
+.notags .stmat { display: none; }
+
+/* Kozie's tutorial (first two orders) */
+.tut { position: fixed; left: 16px; bottom: 18px; z-index: 30; display: flex; align-items: flex-end; gap: 4px; max-width: min(460px, calc(100vw - 32px)); pointer-events: none; }
+.tut-kozie { width: 120px; height: 140px; flex: none; }
+.tut-bubble { position: relative; background: #fff8ec; color: #4a2c3e; border: 3px solid #5a3a4a; border-radius: 16px; padding: 9px 13px 10px; box-shadow: 0 6px 18px rgba(40,20,40,.35); margin-bottom: 40px; pointer-events: auto; }
+.tut-bubble::before { content: ''; position: absolute; left: -12px; bottom: 18px; border: 8px solid transparent; border-right-color: #5a3a4a; }
+.tut-name { font: 900 12px 'Trebuchet MS', sans-serif; color: #c45a7a; margin-bottom: 3px; }
+.tut-name span { color: #9a8090; font-weight: 700; }
+.tut-text { font: 700 15px/1.3 'Trebuchet MS', sans-serif; animation: tutin .3s ease-out; }
+.tut-skip { margin-top: 6px; background: none; border: 0; color: #9a8090; font: 700 11px 'Trebuchet MS', sans-serif; text-decoration: underline; cursor: pointer; padding: 0; }
+@keyframes tutin { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+/* 18 Nov: a compact order card (it was covering the bar); hover tips live in the bottom bar */
+.ticket { width: 250px !important; grid-template-columns: 54px 1fr !important; column-gap: 8px !important; padding: 7px 10px 9px !important; border-top-width: 6px !important; top: 10px !important; right: 10px !important; }
+.ticket .tk-h { font-size: 10px; letter-spacing: 1.5px; }
+.ticket .cc-pic svg { width: 54px !important; max-height: 70px !important; }
+.ticket .cc-name { font-size: 13px; }
+.ticket .rc-row { font-size: 11px; line-height: 1.3; }
+.ticket .rc-row em { font-size: 10px; }
+.ticket .rc-fill { height: 12px; margin-top: 4px; } .ticket .rc-fill span { font-size: 9px; line-height: 12px; }
+.brew-tip { font-size: 12px; font-weight: 700; opacity: .85; margin-top: 3px; }
+
+/* loading card between views */
+.modefade { position: fixed; inset: 0; z-index: 60; display: grid; place-content: center; justify-items: center; gap: 8px; background: radial-gradient(circle at 50% 45%, #6e3f78, #2a1830); color: #fff6ee; opacity: 0; pointer-events: none; transition: opacity .35s ease; }
+.modefade.on { opacity: 1; transition: opacity .12s ease; pointer-events: auto; }
+.mf-cup { font-size: 46px; animation: mfbob 1s ease-in-out infinite; }
+.mf-name { font: 900 20px 'Trebuchet MS', sans-serif; letter-spacing: 1px; }
+@keyframes mfbob { 50% { transform: translateY(-6px) rotate(-6deg); } }
