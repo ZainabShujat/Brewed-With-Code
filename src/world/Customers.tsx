@@ -38,6 +38,8 @@ export const LOOKS = [
 ]
 
 const V = (x: number, z: number) => new THREE.Vector3(x, 0, z)
+// gentle start: at most 3 in line, and no patience timer on the first two days
+export const MAX_LINE = 3, CALM_DAYS = 2
 
 // Townsfolk: marshmallows live to the LEFT of the market (west, -x), notebooks to the RIGHT (east, +x). Each customer
 // walks in along the pavement from their own side, comes in through the door, and goes back home the same way.
@@ -53,7 +55,7 @@ export const cafe = {
   auto: false,            // normal game: customers keep arriving and getting served on their own
   spawnEvery: 3.2, serveEvery: 3.8, _spawnT: 0, _serveT: 0,
   spawn(hurry?: boolean) {
-    const c = this.pool.find((p) => p.phase === 'off'); if (!c || this.line.size >= SLOTS.length) return false
+    const c = this.pool.find((p) => p.phase === 'off'); if (!c || this.line.size >= Math.min(SLOTS.length, MAX_LINE)) return false
     // a new townsperson each time: a marshmallow (from the west) or a notebook (from the east)
     const kind = Math.random() < 0.5 ? 'mallow' : 'paper'; c.spec = folk(kind, Math.floor(Math.random() * 50)); c.side = kind === 'mallow' ? -1 : 1; c.ver++
     c.phase = 'in'; c.served = 0; c.patience = 1
@@ -137,14 +139,15 @@ function Body({ c }: { c: Cust }) {
     // walking: legs swing from the hips in opposite phase, a gentle bob, no cartoon hop
     g.position.set(c.pos.x, 0, c.pos.z); g.rotation.x = 0; g.rotation.z = 0
     poseWalk.current = moving
-    if (!EMBED && idx >= 0 && c.phase === 'line') {
+    if (!EMBED && idx >= 0 && c.phase === 'line' && useDay.getState().day > CALM_DAYS) { // the first days are untimed: nobody walks out while you learn
       c.patience -= dt / (c.hurry ? 45 : 80)
       if (c.patience <= 0) { cafe.line.remove(c); c.phase = 'out'; c.path = [V(OUT_LANE, c.pos.z), V(OUT_LANE, 11.4), ...(EMBED ? [V(...DOOR)] : homePath(c.side))]; useDay.getState().record('walkouts') }
     }
     if (bubble.current) {
       const o = useShop.getState().orders[c.id]; const show = !!o && idx === 0
       const mood = c.patience > 0.6 ? '🙂' : c.patience > 0.3 ? '😐' : '😠'
-      const html = show ? `${mood} ${o.label}<i style="width:${Math.max(0, c.patience) * 100}%;background:${c.patience > 0.6 ? '#6ee0a0' : c.patience > 0.3 ? '#ffcf5c' : '#ff6b81'}"></i>` : ''
+      const calm = useDay.getState().day <= CALM_DAYS // no patience bar while you're learning
+      const html = show && calm ? `🙂 ${o.label}` : show ? `${mood} ${o.label}<i style="width:${Math.max(0, c.patience) * 100}%;background:${c.patience > 0.6 ? '#6ee0a0' : c.patience > 0.3 ? '#ffcf5c' : '#ff6b81'}"></i>` : ''
       if (bubble.current.dataset.h !== html) { bubble.current.innerHTML = html; bubble.current.dataset.h = html }
     }
     if (tag.current) { tag.current.textContent = idx >= 0 ? (c.hurry ? '⚡' : '') + String(idx + 1) : ''; tag.current.style.opacity = EMBED && idx >= 0 ? '1' : '0' }
