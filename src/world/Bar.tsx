@@ -20,8 +20,8 @@ import { liquidMat, surfaceTex, Surface, Stream, WhipSpiral, useCupGeometry, cer
 // calls onClick on the first mesh it hits.
 // every position comes from ./barLayout (measured from the real machine), so nothing drifts out of line
 export const CUP_AT = BAR.cup
-// real-world glass sizes, in proportion to the machine: large ≈ 28 cm here (the machine is ~85 cm), small ≈ 17 cm
-const CUP_SCALE = 0.3 // (large; small and medium scale down from this)
+// real-world glass sizes, in proportion to the machine: large ≈ 46 cm here, small ≈ 31 cm (readable from the barista camera, still well under the machine)
+const CUP_SCALE = 0.5 // (large; small and medium scale down from this)
 // the glass model's base sits 0.3075 below its origin: lift it so it stands ON the coaster
 const lift = (S: number) => 0.3075 * S - 0.06
 // where the pitcher / kettle hovers for each glass size, and where its spout ends up when tilted (counter units).
@@ -34,7 +34,7 @@ export const pourAbove = (size: keyof typeof SIZE_K) => glassTop(size) + 0.12
 const NOZZLE = { choc: 0.175, whip: 0.195 } as const
 const SHAKE_ABOVE = 0.16 // a shaker's centre this far over the rim
 const SHAKE_TILT = 2.0 // a shaker tips this far over the glass (rad) — tilted, not upside down
-export const SIZE_K = { small: 0.62, medium: 0.79, large: 1 } as const // a big see-through glass: you watch the drink build in layers (like the cake)
+export const SIZE_K = { small: 0.68, medium: 0.83, large: 1 } as const // a big see-through glass: you watch the drink build in layers (like the cake)
 
 // ── animation timing (all derived from the pour's start time, so reels stay frame-exact) ──
 export const GO = 0.35, BACK = 0.35          // tool flies over / flies home
@@ -384,8 +384,8 @@ export function Bar() {
       <DropTarget id="wand" pos={[WAND[0], TOP + 0.01, WAND[2]]} r={0.22} />
       <DropTarget id="pass" pos={[BAR.pass[0], TOP + 0.01, BAR.pass[2]]} r={0.3} />
       {/* your cup on a saucer, front and centre */}
-      <mesh position={[CUP_AT[0], TOP + 0.005, CUP_AT[2]]} material={mat(C.cream)}><cylinderGeometry args={[0.13, 0.11, 0.02, 28]} /></mesh>
-      <Grab id="glass" tip="your glass: pick it up, put it on the pass (🔔) to serve" pos={CUP_AT} size={[0.26, 0.4, 0.26]} disabled={!hasCup} drops={{ pass: () => s().serve() }}>
+      <mesh position={[CUP_AT[0], TOP + 0.005, CUP_AT[2]]} material={mat(C.cream)}><cylinderGeometry args={[0.17, 0.15, 0.02, 28]} /></mesh>
+      <Grab id="glass" tip="your glass: pick it up, put it on the pass (🔔) to serve" pos={CUP_AT} size={[0.34, 0.55, 0.34]} disabled={!hasCup} drops={{ pass: () => s().serve() }}>
         <Cup />
       </Grab>
       <HandPour />
