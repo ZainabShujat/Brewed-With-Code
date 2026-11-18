@@ -10,7 +10,7 @@ import { useGame } from '../systems/store'
 import { Grab, DropTarget, Hold } from '../systems/drag'
 import { RBox } from './Soft'
 import { Model } from './Models'
-import { SHOT_FILL, textureOf } from '../systems/shop'
+import { SHOT_FILL, textureOf, FULL } from '../systems/shop'
 import { CAP, filled, type Topping } from '../data/recipes'
 import { BAR, TOP, BZ, RZ, SPOUT_Y, MACHINE } from './barLayout'
 import { shotTarget, want, judgeShot, judgeSteam, judgeFill, STEAM_ZONES, STEAM_MAX, FILL_ZONE } from '../systems/targets'
@@ -70,7 +70,8 @@ function Flyer({ kind, tag, home, act, side = 0.14, above = 0.42, children }: {
     const t = nowS() - p.t0
     if (t < 0) { g.position.set(0, 0, 0); g.rotation.set(0, 0, 0); return }
     const { w, act: a, acting } = phase(kind, t, p.dur)
-    const tx = CUP_AT[0] + side - home[0], ty = CUP_AT[1] + above - home[1], tz = CUP_AT[2] - home[2]
+    const st = useShop.getState(), follow = kind === 'sprinkle' ? CUP_SCALE * SIZE_K[st.drink.size] : 0 // shakers follow your mouse over the glass
+    const tx = CUP_AT[0] + side + st.shakeAt[0] * follow - home[0], ty = CUP_AT[1] + above - home[1], tz = CUP_AT[2] + st.shakeAt[1] * follow - home[2]
     g.position.set(tx * w, ty * w + Math.sin(w * Math.PI) * 0.12, tz * w)  // a little arc on the way
     if (act === 'tilt') g.rotation.z = w * (0.35 + 0.75 * Math.sin(Math.min(1, a * 1.4) * Math.PI / 2) * (acting ? 1 : 0.4))
     else if (act === 'shake') { g.rotation.z = w * (SHAKE_TILT + (acting ? Math.sin(t * 34) * 0.18 : 0)); g.position.y += acting ? Math.abs(Math.sin(t * 34)) * 0.025 : 0 } // tilted over the glass, a quick wrist shake
@@ -145,7 +146,8 @@ function Cup() {
   // stack the layers bottom-up: espresso, chocolate, water, milk, foam
   // the layers are what's really in the glass (ml), bottom-up: chocolate, espresso, water, milk, foam
   const ml = useShop((s) => s.ml)
-  const H = 0.76 / CAP[d.size] // local height per ml (the glass scales with its size, so every size fills the same way)
+  const w = want(), plain = w && w.milk === 'none' && !w.water // espresso / chocolate shots only: draw them filling the glass
+  const H = 0.76 * 0.95 / (plain ? Math.max(filled(ml), w.shots * 30 + (w.chocolate ? 20 : 0), 1) : CAP[d.size]) // local height per ml
   const milkC = d.milkType === 'oat' ? '#efdcbc' : d.milkType === 'almond' ? '#f3e6cf' : '#f6eadb'
   const layers: { h: number; color: string }[] = []
   if (ml.choc) layers.push({ h: ml.choc * H, color: '#3b1d12' })
@@ -189,14 +191,14 @@ function Cup() {
 const DOTS = Array.from({ length: 60 }, (_, i) => { const a = i * 2.39996, r = Math.sqrt((i + 0.5) / 60) * 0.15; return [Math.cos(a) * r, Math.sin(a) * r, (i * 7) % 4] as const })
 // toppings stay on the drink: cocoa/cinnamon dust or sprinkles, or a whipped-cream swirl
 function ToppingFx({ y }: { y: number }) {
-  const t = useShop((s) => s.drink.topping), shake = useShop((s) => s.shake)
+  const t = useShop((s) => s.drink.topping), shake = useShop((s) => s.shake), grains = useShop((s) => s.grains)
   // the more you shake, the more lands on the drink (spread across the surface, a little denser in the middle)
   const dots = DOTS
   if (t === 'none') return null
   if (t === 'whipped') return <Whip y={y} />
-  const n = Math.min(60, Math.round(shake * 70))
+  const pts = grains.length ? grains.map(([x, z], i) => [x, z, (i * 7) % 4] as const) : dots.slice(0, Math.min(60, Math.round(shake * 70)))
   const cols = t === 'sprinkles' ? [C.counter, C.mint, C.butter, C.lilac] : t === 'cocoa' ? ['#5b2e1c', '#6b3a24'] : ['#b0602a', '#c0763a']
-  return <group position={[0, y + 0.004, 0]}>{dots.slice(0, n).map(([x, z, k], i) => t === 'sprinkles'
+  return <group position={[0, y + 0.004, 0]}>{pts.map(([x, z, k], i) => t === 'sprinkles'
     ? <mesh key={i} position={[x, 0.004, z]} rotation={[Math.PI / 2, 0, i]} material={mat(cols[k % cols.length])}><capsuleGeometry args={[0.006, 0.02, 2, 5]} /></mesh>
     : <mesh key={i} position={[x, 0.001, z]} rotation={[-Math.PI / 2, 0, 0]} material={mat(cols[k % cols.length])}><circleGeometry args={[0.012 + (k % 2) * 0.006, 7]} /></mesh>)}</group>
 }
@@ -245,7 +247,8 @@ function OnePour({ p }: { p: Pour }) {
         const fallT = k * period, y = mouthY - 9 * fallT * fallT
         c.visible = k >= 0 && y > surf
         // fans out from the mouth to exactly where the settled grains are drawn (ToppingFx uses the same spots)
-        c.position.set(DOTS[i * 2 % 60][0] * k, Math.max(surf, y), DOTS[i * 2 % 60][1] * k)
+        const [ax, az] = st.shakeAt
+        c.position.set(ax + DOTS[i * 2 % 60][0] * 0.2 * k, Math.max(surf, y), az + DOTS[i * 2 % 60][1] * 0.2 * k)
       })
     } else if (g) g.children.forEach((c) => { c.visible = false })
   })
@@ -288,7 +291,7 @@ function MilkBottle({ x, milk, color, cap }: { x: number; milk: 'whole' | 'oat' 
   const picked = useShop((st) => st.milkType === milk)
   return (
     <Hold id={`milk-${milk}`} tip={`${milk} milk: hold to fill the pitcher`} pos={[x, TOP + 0.2, BZ]} size={[0.2, 0.42, 0.2]}
-      onStart={() => { pouring.current = true }} onEnd={() => { pouring.current = false }} onHold={(dt) => s().fillPitcher(milk, dt)}>
+      onStart={() => { pouring.current = true; useShop.setState({ filling: true }) }} onEnd={() => { pouring.current = false; useShop.setState({ filling: false }) }} onHold={(dt) => s().fillPitcher(milk, dt)}>
       {/* the milk stream, from the tipped bottle's mouth down into the pitcher */}
       <mesh ref={stream} visible={false} position={[mouth[0] - x, (mouth[1] + pp[1] + 0.02) / 2 - HY, pp[2] - BZ]} material={liquidMat(color)}><cylinderGeometry args={[0.012, 0.014, mouth[1] - pp[1] - 0.02, 8]} /></mesh>
       <group ref={fly}><group ref={tilt}>
@@ -425,7 +428,7 @@ function startMilkPour() {
   const color = p.type === 'oat' ? '#f1e2c6' : p.type === 'almond' ? '#f5ead8' : '#fffaf2'
   const pour = { kind: 'milk' as const, t0: nowS(), color, dur: Infinity }
   useShop.setState({ pouringMilk: true, pours: [...s.pours, pour], hint: '' })
-  const up = () => { window.removeEventListener('pointerup', up); pour.dur = Math.max(0.3, nowS() - pour.t0 - GO); useShop.setState({ pouringMilk: false }); judgeFill() }
+  const up = () => { window.removeEventListener('pointerup', up); if (pour.dur === Infinity) { pour.dur = Math.max(0.3, nowS() - pour.t0 - GO); useShop.setState({ pouringMilk: false }); judgeFill() } }
   window.addEventListener('pointerup', up)
 }
 // while the pour is in its acting phase, move milk from the pitcher into the glass
@@ -434,6 +437,8 @@ function HandPour() {
     const s = useShop.getState(); if (!s.pouringMilk) return
     const p = s.pours[s.pours.length - 1]; if (!p || p.kind !== 'milk' || nowS() - p.t0 < GO) return
     s.pourMilkTick(Math.min(dt, 0.1))
+    // full to the brim: the pour finishes by itself (the pitcher tips back, a little 'perfect fill')
+    const n = useShop.getState(); if (n.cup && filled(n.ml) >= FULL * CAP[n.drink.size] - 0.5 && p.dur === Infinity) { p.dur = Math.max(0.3, nowS() - p.t0 - GO); useShop.setState({ pouringMilk: false }); judgeFill() }
   })
   return null
 }
@@ -488,12 +493,25 @@ function startShake(t: Topping) {
   window.addEventListener('pointerup', up)
 }
 function HandShake() {
-  useFrame((_, dt) => {
+  const ref = useRef<THREE.Group>(null)
+  const plane = useMemo(() => new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), []), hit = useMemo(() => new THREE.Vector3(), []), v = useMemo(() => new THREE.Vector3(), [])
+  useFrame(({ raycaster, pointer, camera }, dt) => {
     const s = useShop.getState(); if (!s.shaking) return
+    // where the pointer is over the glass (on the plane of the rim), in the glass's own units, kept inside the rim
+    const g = ref.current, S = CUP_SCALE * SIZE_K[s.drink.size]
+    if (g) {
+      v.set(CUP_AT[0], CUP_AT[1] + glassTop(s.drink.size), CUP_AT[2]); g.localToWorld(v); plane.constant = -v.y
+      raycaster.setFromCamera(pointer, camera)
+      if (raycaster.ray.intersectPlane(plane, hit)) {
+        g.worldToLocal(hit); let ax = (hit.x - CUP_AT[0]) / S, az = (hit.z - CUP_AT[2]) / S; const d = Math.hypot(ax, az); if (d > 0.13) { ax *= 0.13 / d; az *= 0.13 / d }
+        const k = Math.min(1, dt * 14), [px, pz] = s.shakeAt
+        useShop.setState({ shakeAt: [px + (ax - px) * k, pz + (az - pz) * k] })
+      }
+    }
     const p = s.pours[s.pours.length - 1]; if (!p || p.kind !== 'sprinkle' || nowS() - p.t0 < GO) return
-    s.shakeTick(s.shaking as Topping, Math.min(dt, 0.1))
+    useShop.getState().shakeTick(s.shaking as Topping, Math.min(dt, 0.1))
   })
-  return null
+  return <group ref={ref} />
 }
 
 // ── sweet spots you can see ──

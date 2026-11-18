@@ -34,7 +34,7 @@ export const useMusic = create<Music>((set, get) => {
   const save = () => { const { track, volume, on } = get(); try { localStorage.setItem(KEY, JSON.stringify({ track, volume, on })) } catch { /* private mode */ } }
   return {
     ...load(), playing: '',
-    start: () => { const s = get(); if (!s.on || (audio && !audio.paused)) return; play(s.track === 'shuffle' ? TRACKS[shuffleIdx].id : s.track) },
+    start: () => { const s = get(); if (typeof location !== 'undefined' && location.search.includes('embed')) return; if (!s.on || (audio && !audio.paused)) return; play(s.track === 'shuffle' ? TRACKS[shuffleIdx].id : s.track) },
     setTrack: (t) => { set({ track: t, on: true }); save(); play(t === 'shuffle' ? TRACKS[shuffleIdx].id : t) },
     setVolume: (v) => { set({ volume: v }); if (audio) audio.volume = v; save() },
     toggle: () => { const on = !get().on; set({ on }); save(); if (!on) audio?.pause(); else get().start() },

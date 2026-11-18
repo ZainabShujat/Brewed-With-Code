@@ -12,6 +12,7 @@ import { Lighting } from './world/Lighting'
 import { Kozie } from './world/Kozie'
 import { Customers, cafe as cafeLine } from './world/Customers'
 import { ShopHud } from './ui/ShopHud'
+import { HoldRing } from './ui/HoldRing'
 import { RecipeCard } from './ui/RecipeCard' // made by hand (the old meter HUD, ui/BrewHud.tsx, is kept for reference)
 import { DayHud } from './ui/DayHud'
 import { MusicButton } from './ui/MusicButton'
@@ -46,6 +47,7 @@ const MODES: { id: CamMode; label: string; key: string }[] = [
 export function World() {
   const mode = useGame((s) => s.mode)
   useEffect(() => { if (!REEL) document.body.classList.toggle('notags', mode === 'walk') }, [mode])
+  useEffect(() => { document.body.classList.toggle('station-cursor', mode === 'pov' || mode === 'cake') }, [mode]) // the game's own arrow cursor at the stations
   const inside = mode !== 'exterior'
   const outro = mode === 'outro'
   const kozie = useGame((s) => s.kozie)
@@ -111,6 +113,7 @@ export default function App() {
       </div></div>}
       {playing && !SNAP && (mode === 'pov' || mode === 'cake' || mode === 'dollhouse' || mode === 'walk') && <DayHud />}
       {playing && mode === 'pov' && <RecipeCard />}
+      {playing && mode === 'pov' && <HoldRing />}
       {playing && mode !== 'cake' && mode !== 'pov' && <ShopHud />}
       {playing && <CakeHud />}
       {SNAP && <Credits />}

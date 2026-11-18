@@ -30,8 +30,8 @@ test('steam: stopping in the wanted zone cheers, too long does not, too early wa
   hold(S().steamTick, 0.5); judgeSteam(); assert.equal(S().cheer?.good, true)
   useShop.setState({ cheer: null }); hold(S().steamTick, 2); judgeSteam(); assert.equal(S().cheer?.good, false)
 })
-test('fill: 85–100% cheers, a spill does not', () => {
+test('fill: a full glass cheers, and pouring on never overflows it', () => {
   setup(); hold(S().pullTick, 2.4); S().pourShotGlass(); hold((dt) => S().fillPitcher('oat', dt), 3); S().placePitcher('wand'); hold(S().steamTick, 0.6)
   hold(S().pourMilkTick, 2.6); judgeFill(); assert.equal(S().cheer?.good, true, `fill ${JSON.stringify(S().ml)}`)
-  hold(S().pourMilkTick, 3); judgeFill(); assert.equal(S().cheer?.good, false)
+  useShop.setState({ cheer: null }); hold(S().pourMilkTick, 3); judgeFill(); assert.equal(S().cheer?.good, true); assert.equal(S().spilled, false)
 })

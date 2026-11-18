@@ -38,11 +38,15 @@ test('EDGE: nothing happens (and you get a hint) when the step is impossible', (
   reset(); S().takeCup('small'); hold(S().pourMilkTick, 1)            // nothing in the pitcher
   assert.match(S().hint, /empty/); assert.equal(filled(S().ml), 0)
 })
-test('EDGE: overfilling stops at the brim and counts as a spill', () => {
+test('EDGE: pouring for too long just stops at the brim (every glass ends up full, nothing spills)', () => {
   reset(); S().takeCup('small')
   hold((dt) => S().fillPitcher('whole', dt), 4); S().placePitcher('wand'); hold(S().steamTick, 1.5)
   hold(S().pourMilkTick, 6)
-  assert.ok(filled(S().ml) <= CAP.small + 0.01, 'never more than the glass holds'); assert.equal(S().spilled, true)
+  assert.ok(Math.abs(filled(S().ml) - 0.95 * CAP.small) < 1, `full to the brim: ${filled(S().ml)}`); assert.equal(S().spilled, false)
+})
+test('hot water tops the glass up to the brim', () => {
+  reset(); S().takeCup('medium'); hold(S().pullTick, 2.4); S().pourShotGlass(); S().water()
+  assert.ok(Math.abs(filled(S().ml) - 0.95 * CAP.medium) < 1)
 })
 test('EDGE: the pitcher never overflows, and a shot glass caps at 95 ml', () => {
   reset(); hold((dt) => S().fillPitcher('whole', dt), 10); assert.ok(S().pitcher.milk + S().pitcher.foam <= 360.01)

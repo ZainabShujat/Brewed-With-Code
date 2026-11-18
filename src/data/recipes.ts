@@ -76,9 +76,9 @@ export const SHOT_ML = 30
 export const filled = (c: Contents) => c.espresso + c.choc + c.water + c.milk + c.foam
 // craft: how well it was made (0..1), separate from whether it was the right order.
 // shots close to 30 ml each, and the glass filled to 75–100% without spilling.
-export function craft(c: Contents, size: CupSize, wantShots: number, spilled: boolean) {
+export function craft(c: Contents, size: CupSize, wantShots: number, spilled: boolean, topUp = true) {
   const shotErr = wantShots ? Math.min(1, Math.abs(c.espresso - wantShots * SHOT_ML) / (wantShots * SHOT_ML)) : 0
   const fill = filled(c) / CAP[size]
-  const fillErr = fill < 0.75 ? Math.min(1, (0.75 - fill) / 0.5) : 0
+  const fillErr = topUp && fill < 0.75 ? Math.min(1, (0.75 - fill) / 0.5) : 0 // a plain espresso isn't 'underfilled'
   return Math.max(0, 1 - shotErr * 0.6 - fillErr * 0.5 - (spilled ? 0.25 : 0))
 }

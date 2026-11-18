@@ -49,8 +49,11 @@ type Shop = {
   steamTick: (dt: number) => void     // hold the steam wand (pitcher on it)
   pourMilkTick: (dt: number) => void  // hold the pitcher over your glass
   hint: string                        // why the last action did nothing (shown on the recipe card)
+  filling: boolean                    // holding a milk bottle over the pitcher
   cheer: { text: string; t: number; good: boolean } | null // a sweet-spot release: a ding and a little "spot on"
   shake: number                       // seconds of shaking a topping onto this glass (how much lands)
+  grains: [number, number][]          // where each grain landed on the drink (glass space, within r 0.15)
+  shakeAt: [number, number]           // where the shaker's mouth is over the glass right now (glass space)
   shaking: string | null              // which shaker is being held over the glass right now
   shakeTick: (t: Topping, dt: number) => void
 }
@@ -65,13 +68,16 @@ export const textureOf = (stretch: number): Texture => (stretch < 1.0 ? 'micro' 
 const foamFrac = (t: Texture) => (t === 'micro' ? 0.06 : t === 'steamed' ? 0.12 : 0.45)
 // the Drink fields follow from what's really in the glass
 const derive = (d: Drink, c: Contents, texture: Texture | null): Drink => ({ ...d, shots: Math.round(c.espresso / SHOT_ML), chocolate: c.choc > 0, water: c.water > 0, milk: c.milk + c.foam > 15 ? texture ?? 'steamed' : 'none' })
-const fresh = () => ({ ml: { ...NO_CONTENTS }, spilled: false, texture: null as Texture | null, shake: 0 })
+const fresh = () => ({ ml: { ...NO_CONTENTS }, spilled: false, texture: null as Texture | null, shake: 0, grains: [] as [number, number][], shakeAt: [0, 0] as [number, number] })
 const pour = (kind: Pour['kind'], color: string, tag?: string): Pour => ({ kind, t0: now(), color, tag })
+
+// a glass counts as full at 95% (just under the rim): milk and water stop pouring there
+export const FULL = 0.95
 
 export const useShop = create<Shop>((set, get) => ({
   open: false, orders: {}, cup: false, drink: { ...EMPTY }, milkType: 'whole', milkStyle: 'steamed', pours: [],
   coins: 0, served: 0, last: null, menu: null,
-  ...fresh(), shotGlass: 0, pulling: false, steaming: false, pouringMilk: false, hint: '', shaking: null, cheer: null,
+  ...fresh(), shotGlass: 0, pulling: false, steaming: false, pouringMilk: false, hint: '', shaking: null, cheer: null, filling: false,
   pitcher: { milk: 0, foam: 0, type: 'whole', at: 'home', stretch: 0 },
   setMenu: (menu) => set({ menu }),
   openShop: (on) => { cafe.auto = on; cafe.serveEvery = 1e9; set({ open: on }) }, // customers arrive on their own; YOU serve them
@@ -83,7 +89,7 @@ export const useShop = create<Shop>((set, get) => ({
     const last = s.pours[s.pours.length - 1], same = last?.kind === 'shot' && last.t0 - now() > SHOT_FILL - 0.3
     set({ pours: same ? s.pours : [...s.pours, { ...pour('shot', '#5b2e1c'), t0: now() + SHOT_FILL }] })
     setTimeout(() => { if (g !== glass) return; pending--; const st = get(); if (st.cup) { const ml = { ...st.ml, espresso: st.ml.espresso + SHOT_ML }; set({ ml, drink: derive(st.drink, ml, st.texture) }) } }, (SHOT_FILL + 0.35) * 1000) },
-  water: () => { const s = get(); if (!s.cup || s.drink.water) return; const ml = { ...s.ml, water: Math.min(140, CAP[s.drink.size] * 0.45) }; set({ ml, drink: derive(s.drink, ml, s.texture), pours: [...s.pours, pour('water', '#bfe3f2')] }) },
+  water: () => { const s = get(); if (!s.cup || s.drink.water) return; const ml = { ...s.ml, water: Math.max(0, FULL * CAP[s.drink.size] - filled(s.ml)) } /* hot water tops the glass up to the brim */; set({ ml, drink: derive(s.drink, ml, s.texture), pours: [...s.pours, pour('water', '#bfe3f2')] }) },
   choc: () => { const s = get(); if (!s.cup || s.drink.chocolate) return; const ml = { ...s.ml, choc: 20 }; set({ ml, drink: derive(s.drink, ml, s.texture), pours: [...s.pours, pour('choc', '#3b1d12')] }) },
   // one-click milk (reels and the old flow): tops the glass up to ~90% with milk of that texture
   milk: (kind) => { const s = get(); if (!s.cup || s.drink.milk !== 'none' || kind === 'none') return
@@ -102,7 +108,7 @@ export const useShop = create<Shop>((set, get) => ({
     if (filled(s.ml) < 10) { set({ hint: 'that glass is empty!' }); return }
     const r = score(s.drink, order.want)
     // right order = full price; craft (shot volume, fill level, no spills) and speed earn the tip
-    const cr = craftScore(s.ml, s.drink.size, order.want.shots, s.spilled)
+    const cr = craftScore(s.ml, s.drink.size, order.want.shots, s.spilled, order.want.milk !== 'none' || order.want.water)
     const tip = r.pct === 100 ? 1 + Math.round(front.patience * 2 + cr * 3) : r.pct >= 75 ? Math.round(front.patience * 2 + cr) : 0
     const coins = Math.round(order.recipe.price * r.pct / 100) + tip
     const D = useDay.getState(); D.record('served'); D.record('coins', coins - tip); D.record('tips', tip); if (r.pct === 100) D.record('perfect')
@@ -114,7 +120,12 @@ export const useShop = create<Shop>((set, get) => ({
   },
   // ── made by hand ──
   shakeTick: (t, dt) => { const s = get(); if (!s.cup) return; const shake = s.shake + dt
-    set(s.drink.topping === 'none' && shake >= 0.35 ? { shake, drink: { ...s.drink, topping: t } } : { shake }) },
+    // ~40 grains a second land right under the shaker's mouth (a little scatter), so where you shake is where it goes
+    const grains = s.grains.slice(), n = Math.floor(shake * 40) - Math.floor(s.shake * 40)
+    for (let i = 0; i < n && grains.length < 90; i++) { const k = grains.length, a = k * 2.39996, r = 0.012 + ((k * 37) % 23) / 23 * 0.03
+      let x = s.shakeAt[0] + Math.cos(a) * r, z = s.shakeAt[1] + Math.sin(a) * r; const d = Math.hypot(x, z); if (d > 0.15) { x *= 0.15 / d; z *= 0.15 / d }
+      grains.push([x, z]) }
+    set(s.drink.topping === 'none' && shake >= 0.35 ? { shake, grains, drink: { ...s.drink, topping: t } } : { shake, grains }) },
   pullTick: (dt) => { const s = get(); if (s.shotGlass >= 95) return; set({ shotGlass: Math.min(95, s.shotGlass + 25 * dt) }) },
   pourShotGlass: () => { const s = get()
     if (!s.cup) { set({ hint: 'put a glass on the coaster first' }); return }
@@ -133,8 +144,8 @@ export const useShop = create<Shop>((set, get) => ({
   pourMilkTick: (dt) => { const s = get(), p = s.pitcher
     if (!s.cup) return
     if (p.milk + p.foam < 1) { set({ hint: 'the pitcher is empty' }); return }
-    const room = CAP[s.drink.size] - filled(s.ml), amt = 90 * dt
-    if (room <= 0) { set({ spilled: true, hint: "careful, it's overflowing!" }); return }
+    const room = FULL * CAP[s.drink.size] - filled(s.ml), amt = 90 * dt
+    if (room <= 0.01) return // full to the brim: the pour stops by itself (no spills, every glass ends up full)
     // the silky milk pours first; the foam slides out last and sits on top
     const fromMilk = Math.min(p.milk, amt), fromFoam = Math.min(p.foam, amt - fromMilk), k = Math.min(1, room / Math.max(0.0001, fromMilk + fromFoam))
     const texture = s.texture ?? textureOf(p.stretch), ml = { ...s.ml, milk: s.ml.milk + fromMilk * k, foam: s.ml.foam + fromFoam * k }
