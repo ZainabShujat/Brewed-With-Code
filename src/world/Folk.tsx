@@ -205,3 +205,19 @@ export function FolkLineup() {
   )
 }
 export const SHOW_FOLK = typeof location !== 'undefined' && location.search.includes('folk')
+
+// ── the town gallery: all 50 paper folk and all 50 marshmallows (10 models × 5 colourways), out on the road ──
+import { Townsperson } from './folk/Townsperson'
+import { folk, PAPER_MODELS, MALLOW_MODELS } from './folk/specs'
+export function FolkGallery() {
+  return (
+    <group position={[0, 0.16, 0]}>
+      {(['paper', 'mallow'] as const).map((kind, b) => Array.from({ length: 50 }, (_, n) => {
+        const col = n % 10, row = Math.floor(n / 10), x = (b ? 1.6 : -11.4) + col * 1.05, z = 22.4 + row * 1.25
+        return <group key={kind + n} position={[x, 0, z]}><Townsperson spec={folk(kind, n)} pose={n % 7 === 3 ? 'walk' : 'wait'} phase={n * 0.37} /></group>
+      }))}
+      {PAPER_MODELS.map((m, i) => <Html key={'p' + m} position={[-11.4 + i * 1.05, 1.7, 21.8]} center distanceFactor={14}><div style={{ font: '800 11px Trebuchet MS', background: '#5e2a75', color: '#fff6ee', padding: '2px 6px', borderRadius: 7 }}>{m}</div></Html>)}
+      {MALLOW_MODELS.map((m, i) => <Html key={'m' + m} position={[1.6 + i * 1.05, 1.7, 21.8]} center distanceFactor={14}><div style={{ font: '800 11px Trebuchet MS', background: '#a63f78', color: '#fff6ee', padding: '2px 6px', borderRadius: 7 }}>{m}</div></Html>)}
+    </group>
+  )
+}
