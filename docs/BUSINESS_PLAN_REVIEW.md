@@ -147,3 +147,10 @@ Cut from launch if time runs out: groups, dirty tables, A* (keep furniture to fi
 4. One order with a drink **and** a cake, paid at the till, shown in the day summary.
 
 If that feels good, everything else is more items, more rules and more space.
+
+## Update 18 Nov: ingredients from the street shops (light version, by request)
+Four neighbours are now real ingredient shops (The Daily Grind, Moo & Oat, Flour & Co., Sugar Plum). A pantry in real units
+(`systems/pantry.ts`, `data/ingredients.ts`) is used up by every shot, pour, layer and topping and refilled by buying packs
+with coins from the bank. Bulk (5x, 25% off) unlocks at café level 3 and wholesale (20x, 40% off) at level 6
+(level = 1 + stars / 6). Still not a warehouse: no expiry, no deliveries, no shelves, and a friendly note when something runs out.
+Next: show low stock in the day summary; Chill mode = an always-full pantry.
