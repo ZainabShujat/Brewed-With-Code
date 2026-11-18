@@ -43,6 +43,7 @@ export function RecipeCard() {
     : 'pick up your glass and put it on the pass 🔔'
 
   const fresh = s.last && performance.now() / 1000 - s.last.t < 2.5
+  const cheering = s.cheer && performance.now() / 1000 - s.cheer.t < 1.3
   return (
     <>
       <div className="ticket">
@@ -63,6 +64,7 @@ export function RecipeCard() {
           {s.last.mood} {s.last.pct}% right{s.last.craft !== undefined ? ` · craft ${'★'.repeat(Math.round(s.last.craft * 3))}${'☆'.repeat(3 - Math.round(s.last.craft * 3))}` : ''} · +{s.last.coins}💰
         </div>
       )}
+      {cheering && s.cheer && <div className={'cheer' + (s.cheer.good ? '' : ' off')} key={s.cheer.t}>{s.cheer.text}</div>}
       {s.cup && <button className="brew-bin" onClick={() => s.trash()} title="bin this glass and start again">🗑 start over</button>}
     </>
   )

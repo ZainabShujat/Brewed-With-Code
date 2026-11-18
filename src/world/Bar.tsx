@@ -13,6 +13,7 @@ import { Model } from './Models'
 import { SHOT_FILL, textureOf } from '../systems/shop'
 import { CAP, filled, type Topping } from '../data/recipes'
 import { BAR, TOP, BZ, RZ, SPOUT_Y, MACHINE } from './barLayout'
+import { shotTarget, want, judgeShot, judgeSteam, judgeFill, STEAM_ZONES, STEAM_MAX, FILL_ZONE } from '../systems/targets'
 import { liquidMat, surfaceTex, Surface, Stream, WhipSpiral, useCupGeometry, ceramic } from './Liquid'
 
 // The playable bar. Coordinates are the counter's local space (the Counter group in Interior).
@@ -178,6 +179,7 @@ function Cup() {
           </group>
         </group>
         <PourFx />
+        <FillBand />
       </group>
     </group>
   )
@@ -344,6 +346,7 @@ export function Bar() {
       <Grab id="milk" tip="milk pitcher: put it on the steam wand, or hold it over your glass to pour" pos={pHome} size={[0.26, 0.3, 0.26]} drops={{ cup: startMilkPour, wand: () => s().placePitcher('wand'), pitcherHome: () => s().placePitcher('home') }}>
         <Flyer kind="milk" home={pHome} act="tilt" side={SPOUT.milk.side} above={pourAbove(size)}>
           <PitcherLevel />
+          <SteamGauge />
           {/* steel milk pitcher (the downloaded one turned out to be a flat cut-out): bell body, spout, handle */}
           <mesh material={mat(C.steel, { rough: 0.25 })}><cylinderGeometry args={[0.075, 0.095, 0.22, 24, 1, true]} /></mesh>
           <mesh position={[0, -0.11, 0]} material={mat(C.steel)}><cylinderGeometry args={[0.095, 0.095, 0.01, 24]} /></mesh>
@@ -378,7 +381,7 @@ export function Bar() {
       </Grab>
       {/* espresso machine (pull a shot) */}
       <Hold id="machine" tip="hold to pull a shot (watch the shot glass)" pos={[MACHINE.x, TOP + 0.45, MACHINE.z]} size={[0.5, 0.9, 0.62]}
-        onStart={() => useShop.setState({ pulling: true })} onEnd={() => useShop.setState({ pulling: false })} onHold={(dt) => s().pullTick(dt)} />
+        onStart={() => useShop.setState({ pulling: true })} onEnd={() => { useShop.setState({ pulling: false }); judgeShot() }} onHold={(dt) => s().pullTick(dt)} />
       <SteamWand />
       {/* the shot glass: fills under the machine, then is poured into your glass */}
       <Grab id="shotglass" tip="shot glass: click, then click your glass" pos={SHOT_HOME} size={[0.16, 0.22, 0.16]} drops={{ cup: () => s().pourShotGlass() }}>
@@ -386,6 +389,7 @@ export function Bar() {
           <mesh material={glass()}><cylinderGeometry args={[0.04, 0.034, 0.1, 16, 1, true]} /></mesh>
           <mesh position={[0, -0.05, 0]} material={glass()}><cylinderGeometry args={[0.034, 0.034, 0.008, 16]} /></mesh>
           <ShotFill />
+          <ShotLine />
         </Flyer>
       </Grab>
       <group position={SHOT_HOME}><MachineStream /></group>
@@ -421,7 +425,7 @@ function startMilkPour() {
   const color = p.type === 'oat' ? '#f1e2c6' : p.type === 'almond' ? '#f5ead8' : '#fffaf2'
   const pour = { kind: 'milk' as const, t0: nowS(), color, dur: Infinity }
   useShop.setState({ pouringMilk: true, pours: [...s.pours, pour], hint: '' })
-  const up = () => { window.removeEventListener('pointerup', up); pour.dur = Math.max(0.3, nowS() - pour.t0 - GO); useShop.setState({ pouringMilk: false }) }
+  const up = () => { window.removeEventListener('pointerup', up); pour.dur = Math.max(0.3, nowS() - pour.t0 - GO); useShop.setState({ pouringMilk: false }); judgeFill() }
   window.addEventListener('pointerup', up)
 }
 // while the pour is in its acting phase, move milk from the pitcher into the glass
@@ -444,7 +448,7 @@ function SteamWand() {
   })
   return (
     <Hold id="wand" tip="steam wand: put the pitcher here, then hold to steam" pos={[WAND[0], TOP + 0.03, WAND[2]]} size={[0.3, 0.4, 0.3]}
-      onStart={() => useShop.setState({ steaming: useShop.getState().pitcher.at === 'wand' })} onEnd={() => useShop.setState({ steaming: false })} onHold={(dt) => useShop.getState().steamTick(dt)}>
+      onStart={() => useShop.setState({ steaming: useShop.getState().pitcher.at === 'wand' })} onEnd={() => { useShop.setState({ steaming: false }); judgeSteam() }} onHold={(dt) => useShop.getState().steamTick(dt)}>
       {/* arm out of the machine's side, an elbow, and the pipe down into the pitcher */}
       <mesh position={[-0.08, 0.27, 0]} rotation={[0, 0, Math.PI / 2]} material={mat(C.steel, { rough: 0.25 })}><cylinderGeometry args={[0.013, 0.013, 0.17, 8]} /></mesh>
       <mesh position={[0, 0.27, 0]} material={mat(C.steel)}><sphereGeometry args={[0.02, 10, 8]} /></mesh>
@@ -490,4 +494,44 @@ function HandShake() {
     s.shakeTick(s.shaking as Topping, Math.min(dt, 0.1))
   })
   return null
+}
+
+// ── sweet spots you can see ──
+const TARGET_MAT = new THREE.MeshStandardMaterial({ color: '#ffd166', emissive: '#ffb300', emissiveIntensity: 0.9 })
+// a gold line on the shot glass at exactly the espresso this order still needs (one shot = 30 ml)
+function ShotLine() {
+  const ref = useRef<THREE.Mesh>(null)
+  useFrame(() => { const m = ref.current; if (!m) return; const t = shotTarget(); m.visible = t > 0 && !active('shot')
+    m.position.y = -0.046 + 0.09 * Math.min(1, t / 90) })
+  return <mesh ref={ref} rotation={[Math.PI / 2, 0, 0]} material={TARGET_MAT} visible={false}><torusGeometry args={[0.04, 0.0035, 6, 28]} /></mesh>
+}
+// a little thermometer clipped to the pitcher (real baristas use one): three zones, the one this order wants lit up,
+// and a needle that climbs while you steam. Let go inside the lit zone.
+const ZONE_COL = { micro: '#f6d7a7', steamed: '#f3a96b', foamy: '#e86f6f' } as const
+function SteamGauge() {
+  const needle = useRef<THREE.Mesh>(null), g = useRef<THREE.Group>(null)
+  const w = useShop(() => want()?.milk ?? 'none')
+  const H = 0.17, y0 = -0.085, yOf = (st: number) => y0 + (Math.min(STEAM_MAX, st) / STEAM_MAX) * H
+  useFrame(() => {
+    const p = useShop.getState().pitcher, on = w !== 'none' && p.milk + p.foam > 1
+    if (g.current) g.current.visible = on
+    if (needle.current) needle.current.position.y = yOf(p.stretch)
+  })
+  return (
+    <group ref={g} position={[0.03, 0, -0.1]} visible={false}>
+      <mesh position={[0, y0 + H / 2, -0.004]} material={mat('#fffaf2')}><boxGeometry args={[0.04, H + 0.02, 0.006]} /></mesh>
+      {(Object.keys(STEAM_ZONES) as (keyof typeof STEAM_ZONES)[]).map((k) => { const [a, b] = STEAM_ZONES[k], lit = k === w
+        return <mesh key={k} position={[0, (yOf(a) + yOf(b)) / 2, -0.009]} material={lit ? mat(ZONE_COL[k], { emissive: ZONE_COL[k] }) : mat('#d9cfd6')}><boxGeometry args={[lit ? 0.03 : 0.018, yOf(b) - yOf(a) - 0.004, 0.004]} /></mesh> })}
+      <mesh ref={needle} position={[0, y0, -0.013]} material={mat('#3b1d12')}><boxGeometry args={[0.046, 0.006, 0.004]} /></mesh>
+    </group>
+  )
+}
+// a soft gold band on your glass marking a good fill (85–100%), shown while you pour milk or water
+function FillBand() {
+  const ref = useRef<THREE.Mesh>(null)
+  const pouring = useShop((s) => s.pouringMilk || s.pours.some((p) => p.kind === 'water'))
+  const yA = -0.2 + FILL_ZONE[0] * 0.76, yB = -0.2 + FILL_ZONE[1] * 0.76, r = glassR(yB) + 0.012
+  useFrame(({ clock }) => { const m = ref.current; if (m) (m.material as THREE.MeshStandardMaterial).opacity = 0.25 + Math.sin(clock.elapsedTime * 5) * 0.1 })
+  if (!pouring) return null
+  return <mesh ref={ref} position={[0, (yA + yB) / 2, 0]} renderOrder={4}><cylinderGeometry args={[r, glassR(yA) + 0.012, yB - yA, 40, 1, true]} /><meshStandardMaterial color="#ffd166" emissive="#ffb300" emissiveIntensity={0.6} transparent opacity={0.3} side={THREE.DoubleSide} depthWrite={false} /></mesh>
 }

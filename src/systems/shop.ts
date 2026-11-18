@@ -49,6 +49,7 @@ type Shop = {
   steamTick: (dt: number) => void     // hold the steam wand (pitcher on it)
   pourMilkTick: (dt: number) => void  // hold the pitcher over your glass
   hint: string                        // why the last action did nothing (shown on the recipe card)
+  cheer: { text: string; t: number; good: boolean } | null // a sweet-spot release: a ding and a little "spot on"
   shake: number                       // seconds of shaking a topping onto this glass (how much lands)
   shaking: string | null              // which shaker is being held over the glass right now
   shakeTick: (t: Topping, dt: number) => void
@@ -70,7 +71,7 @@ const pour = (kind: Pour['kind'], color: string, tag?: string): Pour => ({ kind,
 export const useShop = create<Shop>((set, get) => ({
   open: false, orders: {}, cup: false, drink: { ...EMPTY }, milkType: 'whole', milkStyle: 'steamed', pours: [],
   coins: 0, served: 0, last: null, menu: null,
-  ...fresh(), shotGlass: 0, pulling: false, steaming: false, pouringMilk: false, hint: '', shaking: null,
+  ...fresh(), shotGlass: 0, pulling: false, steaming: false, pouringMilk: false, hint: '', shaking: null, cheer: null,
   pitcher: { milk: 0, foam: 0, type: 'whole', at: 'home', stretch: 0 },
   setMenu: (menu) => set({ menu }),
   openShop: (on) => { cafe.auto = on; cafe.serveEvery = 1e9; set({ open: on }) }, // customers arrive on their own; YOU serve them
