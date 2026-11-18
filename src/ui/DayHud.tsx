@@ -42,7 +42,7 @@ export function DayHud() {
             <div className="tot"><span>Today</span><b>💰 {total}</b></div>
           </div>
           <div className="bank">Saved so far: 💰 {d.bank} · best day 💰 {d.best}</div>
-          <div className="dr-btns"><button className="brew-go wind" onClick={() => { windDown(); sfx.tap() }}>🌙 Wind down</button><button className="brew-go" onClick={() => { d.next(); sfx.tap() }}>Next day →</button></div>
+          <div className="dr-btns"><button className="brew-go wd-btn" onClick={() => { windDown(); sfx.tap() }}>🌙 Wind down</button><button className="brew-go" onClick={() => { d.next(); sfx.tap() }}>Next day →</button></div>
         </div>
       </div>
     )

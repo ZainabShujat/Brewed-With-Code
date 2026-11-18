@@ -9,6 +9,7 @@ import { useShop } from '../systems/shop'
 import { TABLES, TABLE_SCALE } from './layout'
 import { useDay } from '../systems/day'
 import { useGame } from '../systems/store'
+import { WipeFx } from '../ui/WindDown'
 import { Townsperson, seatHip, type Pose } from './folk/Townsperson'
 import { folk, type FolkSpec } from './folk/specs'
 
@@ -34,7 +35,7 @@ export const SLOTS: [number, number][] = Array.from({ length: 6 }, (_, i) => [1.
 
 type Phase = 'off' | 'in' | 'line' | 'out' | 'seat' | 'sit'
 const SIT_SAY = ['mmm ☕', 'so cozy here', 'best latte in town', '📖 one more chapter…', 'this foam! ✨', 'ahh, warm', 'did you hear about the bakery?', '😌', 'refill later?', 'love this place']
-export type Cust = { stay: number; id: number; phase: Phase; pos: THREE.Vector3; path: THREE.Vector3[]; look: number; served: number; hurry: boolean; seat: number; sitT: number; patience: number; spec: FolkSpec; side: number; ver: number }
+export type Cust = { byeT?: number; stay: number; id: number; phase: Phase; pos: THREE.Vector3; path: THREE.Vector3[]; look: number; served: number; hurry: boolean; seat: number; sitT: number; patience: number; spec: FolkSpec; side: number; ver: number }
 
 export const LOOKS = [
   { shirt: '#6fe0c4', hair: '#3b2a22', skin: '#f6cdb4' }, { shirt: '#ffcf5c', hair: '#1d1838', skin: '#c98a62' },
@@ -148,7 +149,8 @@ function Body({ c }: { c: Cust }) {
       if (c.sitT > c.stay) { taken.delete(c.seat); c.seat = -1; c.phase = 'out'; c.path = [V(...away(st, 0.9)), V(OUT_LANE, away(st, 0.9)[1]), V(OUT_LANE, 11.4), ...(EMBED ? [V(...DOOR)] : homePath(c.side))] }
       if (tag.current) tag.current.style.opacity = '0'
       // a sip now and then, a little chat with whoever's at the table
-      if (bubble.current) { const k = (c.sitT + c.id * 3.1) % 14, txt = k < 2.2 ? SIT_SAY[(c.id + Math.floor(c.sitT / 14)) % SIT_SAY.length] : ''; if (bubble.current.textContent !== txt) { bubble.current.textContent = txt; bubble.current.innerHTML = txt } }
+      if (c.byeT && c.byeT > 0) c.byeT -= dt
+      if (bubble.current) { const k = (c.sitT + c.id * 3.1) % 14, txt = c.byeT && c.byeT > 0 ? 'Night! See you tomorrow 🌙' : k < 2.2 ? SIT_SAY[(c.id + Math.floor(c.sitT / 14)) % SIT_SAY.length] : ''; if (bubble.current.textContent !== txt) { bubble.current.textContent = txt; bubble.current.innerHTML = txt } }
       return
     }
     if (seatLift.current) seatLift.current.position.y = 0
@@ -193,5 +195,5 @@ export function Customers() {
     const front = cafe.line.peek()
     if (front && front.phase === 'line' && cafe._serveT > cafe.serveEvery) { cafe._serveT = 0; cafe.serve() }
   })
-  return <group>{pool.map((c) => <Body key={c.id} c={c} />)}</group>
+  return <group>{pool.map((c) => <Body key={c.id} c={c} />)}<WipeFx /></group>
 }
