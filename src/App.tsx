@@ -13,6 +13,7 @@ import { Kozie } from './world/Kozie'
 import { Customers, cafe as cafeLine } from './world/Customers'
 import { ShopHud } from './ui/ShopHud'
 import { HoldRing } from './ui/HoldRing'
+import { FolkLineup, SHOW_FOLK } from './world/Folk'
 import { StreetShop, PantryNote } from './ui/StreetShop'
 import { RecipeCard } from './ui/RecipeCard' // made by hand (the old meter HUD, ui/BrewHud.tsx, is kept for reference)
 import { DayHud } from './ui/DayHud'
@@ -59,6 +60,7 @@ export function World() {
       {/* zone culling (like occlusion culling): rooms you can't see from this view aren't drawn at all.
           Behind the bar or at the cake machine you face a wall, so the whole outdoors is skipped. */}
       <group visible={REEL || (mode !== 'pov' && mode !== 'cake')}><Exterior showPot={!inside || outro || mode === 'walk'} fadeIn={outro} />{!outro && <><Street /><Neighbours /></>}</group>
+      {inside && SHOW_FOLK && <FolkLineup />}
       {inside && <Interior cutaway={mode === 'dollhouse' || outro} pov={mode === 'pov'} only={REEL ? '' : mode === 'pov' ? 'bar' : mode === 'cake' ? 'kitchen' : ''} />}
       {inside && mode !== 'pov' && mode !== 'vlog' && mode !== 'walk' && <Reveal id="barista" at={[0.4, 0, 2.4]}><Barista /></Reveal>}
       {inside && <Customers />}
