@@ -1,6 +1,13 @@
 import { useEffect, useState } from 'react'
 
+/** fullscreen on its own (title tap, Play): phones only, and never inside an embed (reels, other pages) */
+export function autoFullscreen() {
+  if (typeof window === 'undefined' || window.self !== window.top || location.search.includes('embed')) return
+  if (!document.documentElement.classList.contains('phone')) return // laptops: the player decides (⛶ or F11)
+  enterFullscreen()
+}
 export async function enterFullscreen() {
+  if (window.self !== window.top) return // inside an iframe it would cover the whole parent page
   const doc = document as any
   const el = document.documentElement as any
   try {

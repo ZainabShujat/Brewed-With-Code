@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { enterFullscreen } from './FullscreenButton'
+import { enterFullscreen, autoFullscreen } from './FullscreenButton'
 
 // Phones play sideways, like any mobile game: on tap we go fullscreen and lock to landscape
 // (Android Chrome allows this; iPhone Safari doesn't, so a portrait phone gets a "turn your phone" card).
@@ -13,7 +13,7 @@ export function Landscape() {
     const tryFs = () => {
       window.removeEventListener('click', tryFs); window.removeEventListener('touchend', tryFs)
       const doc = document as any
-      if (!doc.fullscreenElement && !doc.webkitFullscreenElement) enterFullscreen()
+      if (!doc.fullscreenElement && !doc.webkitFullscreenElement) autoFullscreen()
     }
 
     window.addEventListener('click', tryFs)

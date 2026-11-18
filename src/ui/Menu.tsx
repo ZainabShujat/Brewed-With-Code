@@ -6,7 +6,7 @@ import { view, setSens } from '../systems/CameraRig'
 import { CREDITS } from '../data/credits'
 import { useAvatar } from '../systems/avatar'
 import { Creator } from './Creator'
-import { enterFullscreen } from './FullscreenButton'
+import { autoFullscreen } from './FullscreenButton'
 
 // ── The game's front end: title screen → main menu → play, with a pause menu (Esc) ──────────
 export type Screen = 'title' | 'main' | 'howto' | 'settings' | 'credits' | 'playing' | 'paused' | 'creator'
@@ -51,7 +51,7 @@ export function Menu({ screen, setScreen }: { screen: Screen; setScreen: (s: Scr
   })
 
   const start = (p: typeof PLAY[number]) => {
-    enterFullscreen()
+    autoFullscreen()
     if (!useAvatar.getState().made) { setPending(p); setScreen('creator'); return } // first time: make your character
     setMode(p.id); if (p.shop && !useShop.getState().open) useShop.getState().openShop(true); setScreen('playing') } // the day starts from the 'Open the café' button
 
@@ -62,7 +62,7 @@ export function Menu({ screen, setScreen }: { screen: Screen; setScreen: (s: Scr
   )
 
   return (
-    <div className={`gmenu ${screen === 'title' ? 'title-screen' : ''}`} onClick={() => { if (screen === 'title') { enterFullscreen(); setScreen('main') } }}>
+    <div className={`gmenu ${screen === 'title' ? 'title-screen' : ''}`} onClick={() => { if (screen === 'title') { autoFullscreen(); setScreen('main') } }}>
       {screen === 'title' && (
         <div className="title-wrap">
           <div className="logo">Brewed<br />With Code</div>
