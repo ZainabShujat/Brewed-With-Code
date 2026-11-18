@@ -25,7 +25,7 @@ with sync_playwright() as p:
     pg.on('pageerror', lambda e: errs.append(f'pageerror: {e}'))
     pg.on('response', lambda r: errs.append(f'404: {r.url}') if r.status >= 400 and 'favicon' not in r.url else None)
     pg.on('console', lambda m: errs.append(f'console: {m.text}') if m.type == 'error' and 'favicon' not in m.text and 'Failed to load resource' not in m.text else None)
-    pg.add_init_script("localStorage.clear(); localStorage.setItem('bwc.tutorial.done','1'); localStorage.setItem('brewed-with-code-avatar-v1', JSON.stringify({ made: true, kind: 'kozie', name: 'Tester' }))")
+    pg.add_init_script("localStorage.clear(); localStorage.setItem('bwc.tutorial.done','1'); localStorage.setItem('bwc.navtut.done','1'); localStorage.setItem('brewed-with-code-avatar-v1', JSON.stringify({ made: true, kind: 'kozie', name: 'Tester' }))")
     pg.goto(URL); pg.wait_for_function('window.__game && window.__day && window.game', timeout=60000); pg.wait_for_timeout(1500)
     key(pg, 'Space'); pg.wait_for_timeout(800)
     pg.get_by_text('Explore', exact=True).first.click(); pg.wait_for_timeout(2500)

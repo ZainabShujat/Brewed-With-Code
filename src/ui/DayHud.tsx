@@ -6,6 +6,7 @@ import { cafe } from '../world/Customers'
 import { useGame, onFoot } from '../systems/store'
 import { useTutorial } from '../systems/tutorial'
 import { windDown, useWind } from './WindDown'
+import { useNavTut } from './NavTutorial'
 import { TOUCH } from '../systems/CameraRig'
 
 // Top-centre day clock while the café is open, the "open for the day" button, and the results card.
@@ -15,17 +16,18 @@ export function DayHud() {
   useEffect(() => { const id = setInterval(() => tick((n) => n + 1), 250); return () => clearInterval(id) }, [])
   useEffect(() => { if (d.phase === 'results') sfx.perfect() }, [d.phase])
 
-  const winding = useWind((w) => w.on), mode = useGame((s) => s.mode)
+  const winding = useWind((w) => w.on), navDone = useNavTut((t) => t.done), mode = useGame((s) => s.mode)
   if (winding) return null
+  const pl = useGame.getState().player, nearDoor = Math.hypot(pl.x, pl.z - 12.2) < 2.8 // the door's own prompt says it
   if (d.phase === 'idle') return (
     <div className="dayopen">
       <div className="dayopen-top">
         <span className="dayno">Day {d.day}</span>
         <span className="daybank">💰 {d.bank} saved · ⭐ {d.stars}</span>
       </div>
-      <div className="dayhint">
+      {navDone && !nearDoor && <div className="dayhint">
         🪧 the café is closed · {TOUCH ? 'walk to door & tap sign to OPEN' : <span>walk to the door and press <b>E</b> to flip the sign to OPEN</span>}
-      </div>
+      </div>}
       {!onFoot(mode) && <button className="brew-go daygo-btn" onClick={() => { const g = useGame.getState(); g.setMode('walk'); Object.assign(g.player, { x: 0, z: 10.4, facing: 0 }) }}>🚪 go to the door</button>}
     </div>
   )

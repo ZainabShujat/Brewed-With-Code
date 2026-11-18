@@ -35,6 +35,16 @@ function Spin({ children }: { children: React.ReactNode }) {
   return <group ref={g}>{children}</group>
 }
 
+/** a little 3D Kozie for speech bubbles */
+export function KozieAvatar() {
+  return (
+    <Canvas camera={{ position: [0, 0.9, 5.2], fov: 30 }} dpr={1} gl={{ alpha: true }}>
+      <hemisphereLight args={['#fff3e6', '#5a3a70', 1.6]} />
+      <directionalLight position={[3, 4, 5]} intensity={2.2} />
+      <group position={[0, -0.9, 0]}><Spin><KozieBody walking={() => false} /></Spin></group>
+    </Canvas>
+  )
+}
 export function TutorialBubble() {
   const { lesson, skip, t } = useTutorial()
   const pouring = useShop((s) => s.pouringMilk || !!s.shaking)
@@ -49,13 +59,7 @@ export function TutorialBubble() {
     : LINES[lesson][step] ?? nextStep().text
   return (
     <div className="tut">
-      <div className="tut-kozie">
-        <Canvas camera={{ position: [0, 0.9, 5.2], fov: 30 }} dpr={1} gl={{ alpha: true }}>
-          <hemisphereLight args={['#fff3e6', '#5a3a70', 1.6]} />
-          <directionalLight position={[3, 4, 5]} intensity={2.2} />
-          <group position={[0, -0.9, 0]}><Spin><KozieBody walking={() => false} /></Spin></group>
-        </Canvas>
-      </div>
+      <div className="tut-kozie"><KozieAvatar /></div>
       <div className="tut-bubble">
         <div className="tut-name">Kozie{lesson < 2 && <span> · lesson {lesson + 1} of 2</span>}</div>
         <div className="tut-text" key={text}>{text}</div>

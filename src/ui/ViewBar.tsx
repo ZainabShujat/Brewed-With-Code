@@ -1,4 +1,5 @@
 import { useGame, type CamMode } from '../systems/store'
+import { navSpot, useNavTut } from './NavTutorial'
 
 // Three ways to look at your café, any time (even mid-day): Explore (third person), First person (your own eyes)
 // and the Dollhouse. The camera glides between them. At a station (the bar, the cake bench) there's no bar here:
@@ -16,10 +17,12 @@ if (typeof window !== 'undefined') window.addEventListener('keydown', (e) => {
 })
 export function ViewBar() {
   const mode = useGame((s) => s.mode), setMode = useGame((s) => s.setMode)
+  useNavTut((t) => t.step) // re-render when the tour moves on
+  const spot = navSpot()
   if (!VIEWS.some((v) => v.id === mode)) return null
   return (
     <div className="viewbar">
-      {VIEWS.map((v) => <button key={v.id} className={v.id === mode ? 'on' : ''} onClick={() => { if (v.id !== 'dollhouse') lastFoot = v.id; setMode(v.id) }}>
+      {VIEWS.map((v) => <button key={v.id} className={(v.id === mode ? 'on' : '') + (v.id === spot && v.id !== mode ? ' spot' : '')} onClick={() => { if (v.id !== 'dollhouse') lastFoot = v.id; setMode(v.id) }}>
         <span className="vb-i">{v.icon}</span>{v.label}<kbd>{v.key}</kbd></button>)}
     </div>
   )

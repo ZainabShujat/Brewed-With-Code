@@ -4,6 +4,7 @@ import { cafe } from '../world/Customers'
 import { CAP, SHOT_ML, filled } from '../data/recipes'
 import { drinkSvg } from './drinkSvg'
 import { nextStep } from '../systems/targets'
+import { useTutorial } from '../systems/tutorial'
 import { hoverTip } from '../systems/drag'
 
 // The coffee bar's HUD for making drinks by hand: the order ticket, a live recipe card that ticks itself off as you
@@ -31,6 +32,7 @@ export function RecipeCard() {
 
   // the next thing to do, in plain words (or why the last action did nothing)
   const next = s.hint || nextStep().text
+  const tutOn = useTutorial((t) => t.lesson < 2)
 
   const fresh = s.last && performance.now() / 1000 - s.last.t < 2.5
   const cheering = s.cheer && performance.now() / 1000 - s.cheer.t < 1.3
@@ -48,7 +50,7 @@ export function RecipeCard() {
         )}
       </div>
       <div className="coins">💰 {s.coins} · served {s.served}</div>
-      <div className={'brew-next' + (ready ? ' ready' : '')}>{next}{hoverTip.text && <div className="brew-tip">👆 {hoverTip.text}</div>}</div>
+      <div className={'brew-next' + (ready ? ' ready' : '')} style={tutOn ? { display: 'none' } : undefined}>{next}{hoverTip.text && <div className="brew-tip">👆 {hoverTip.text}</div>}</div>
       {fresh && s.last && (
         <div className="brewpop" key={s.last.t}>
           {s.last.mood} {s.last.pct}% right · +{s.last.coins}💰

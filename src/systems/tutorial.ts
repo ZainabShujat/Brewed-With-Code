@@ -27,3 +27,4 @@ export function tutorialOrder(): Order | null {
   if (l === 1) return { recipe: RECIPES.find((r) => r.id === 'latte')!, want: D({ milk: 'steamed' }), label: 'Medium Latte' }
   return null
 }
+if (typeof window !== 'undefined') (window as unknown as { __tut: typeof useTutorial }).__tut = useTutorial // tests

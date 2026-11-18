@@ -23,6 +23,7 @@ import { ModeFade } from './ui/ModeFade'
 import { ViewBar } from './ui/ViewBar'
 import { TakeOrder, ServeReturn } from './ui/TakeOrder'
 import { WindDown } from './ui/WindDown'
+import { NavTutorial, useNavTut } from './ui/NavTutorial'
 import { Interact } from './ui/Interact'
 import { TutorialBubble } from './ui/TutorialBubble'
 import { RecipeCard } from './ui/RecipeCard' // made by hand (the old meter HUD, ui/BrewHud.tsx, is kept for reference)
@@ -42,6 +43,7 @@ import { useCake } from './systems/cake'
 import { useShop } from './systems/shop'
 import { Menu, quality, type Screen } from './ui/Menu'
 const SNAP = location.search.includes('snap')
+const SHOW_FPS = location.search.includes('fps') // a dev readout, not for players
 ;(window as any).game = { shop: useShop, line: cafeLine } // handy for testing in the console
 ;(window as any).__cake = useCake
 
@@ -113,6 +115,7 @@ function startLoop(s: { advance: (t: number) => void }) {
 export default function App() {
   const mode = useGame((s) => s.mode)
   const setMode = useGame((s) => s.setMode)
+  const navDone = useNavTut((t) => t.done)
   const [shownFps, setShownFps] = useState(0)
   const [screen, setScreen] = useState<Screen>(SNAP ? 'playing' : 'title')
   const playing = SNAP || screen === 'playing'
@@ -140,6 +143,7 @@ export default function App() {
       {playing && !SNAP && <TakeOrder />}
       {playing && <ServeReturn />}
       {playing && <WindDown />}
+      {playing && !SNAP && <NavTutorial />}
       {playing && !SNAP && <Interact />}
       {playing && mode === 'pov' && <HoldRing />}
       {playing && (mode === 'walk' || mode === 'fp') && <StreetShop />}
@@ -147,7 +151,7 @@ export default function App() {
       {/* the old ShopHud (order card + 'back behind the bar') is retired: Take order replaces it */}
       {playing && <CakeHud />}
       {SNAP && <Credits />}
-      {playing && (TOUCH ? onFoot(mode) && <Joystick /> : mode !== 'pov' && <LookHint mode={mode} />)}
+      {playing && (TOUCH ? null /* phones: tap to walk, like a life sim (no joystick) */ : mode !== 'pov' && navDone && <LookHint mode={mode} />)}
       {playing && mode === 'fp' && <div className="crosshair" />}
       {playing && !SNAP && <ViewBar />}
       {!SNAP && <MusicButton />}
@@ -155,7 +159,7 @@ export default function App() {
       {!SNAP && <FullscreenButton />}
       {!SNAP && <Landscape />}
       {!SNAP && <Menu screen={screen} setScreen={setScreen} />}
-      <div className="fps">{shownFps} fps</div>
+      {SHOW_FPS && <div className="fps">{shownFps} fps</div>}
     </>
   )
 }

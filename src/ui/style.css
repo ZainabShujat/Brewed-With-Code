@@ -738,3 +738,16 @@ body.station-cursor, body.station-cursor canvas { cursor: url("data:image/svg+xm
   .phone .stmat:not(.on) { opacity: .45; }
 }
 .wd-how { font-size: 10px; font-weight: 600; opacity: .65; margin-left: 18px; line-height: 1.3; }
+
+/* controls chip (folded) */
+.lookchip { position: fixed; left: 14px; bottom: 14px; z-index: 20; width: 40px; height: 40px; border: 0; border-radius: 50%; background: rgba(42,24,48,.72); color: #fff; font-size: 18px; cursor: pointer; }
+.lookhint small { display: block; opacity: .5; margin-top: 4px; font-size: 10px; }
+.phone .lookchip { display: none; }
+/* the view Kozie wants you to try */
+.viewbar button.spot { background: #ffd166; color: #3d1f40; animation: spotpulse 1s ease-in-out infinite; }
+@keyframes spotpulse { 50% { box-shadow: 0 0 0 4px rgba(255,209,102,.45); } }
+/* the tour sits top-left under the chips, so the floor and the door stay clear */
+.navtut { bottom: auto; top: 64px; }
+.phone .navtut { top: 50px; }
+/* fullscreen on a PC: bottom-right, out of the way (F11 works too) */
+html:not(.phone) .fullscreenbtn { left: auto; right: 14px; top: auto; bottom: 14px; }
