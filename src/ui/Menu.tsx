@@ -4,9 +4,11 @@ import { useShop } from '../systems/shop'
 import { useClock } from '../systems/clock'
 import { view, setSens } from '../systems/CameraRig'
 import { CREDITS } from '../data/credits'
+import { useAvatar } from '../systems/avatar'
+import { Creator } from './Creator'
 
 // ── The game's front end: title screen → main menu → play, with a pause menu (Esc) ──────────
-export type Screen = 'title' | 'main' | 'howto' | 'settings' | 'credits' | 'playing' | 'paused'
+export type Screen = 'title' | 'main' | 'howto' | 'settings' | 'credits' | 'playing' | 'paused' | 'creator'
 
 const load = (k: string, d: string) => { try { return localStorage.getItem(k) ?? d } catch { return d } }
 const save = (k: string, v: string) => { try { localStorage.setItem(k, v) } catch { /* private mode */ } }
@@ -16,7 +18,7 @@ export const quality = { high: load('quality', 'high') === 'high' }
 const PLAY: { id: CamMode; title: string; sub: string; shop?: boolean }[] = [
   { id: 'pov', title: 'Open the Café', sub: 'Stand behind the bar and make drinks for customers', shop: true },
   { id: 'cake', title: 'Bake Cakes', sub: 'Bake, fill, frost and decorate cakes to order', shop: true },
-  { id: 'walk', title: 'Explore', sub: 'Walk around the café in first person' },
+  { id: 'walk', title: 'Explore', sub: 'Walk around the café and the street as yourself' },
   { id: 'dollhouse', title: 'Café View', sub: 'See the whole café from above, spin it round' },
 ]
 
@@ -25,6 +27,7 @@ export function Menu({ screen, setScreen }: { screen: Screen; setScreen: (s: Scr
   const [sens, set] = useState(view.sens)
   const [hq, setHq] = useState(quality.high)
   const realTime = useClock((st) => st.real)
+  const [pending, setPending] = useState<typeof PLAY[number] | null>(null)
 
   // title screen: the camera slowly circles the café; any key / click continues
   useEffect(() => {
@@ -46,7 +49,10 @@ export function Menu({ screen, setScreen }: { screen: Screen; setScreen: (s: Scr
     window.addEventListener('keydown', k); return () => window.removeEventListener('keydown', k)
   })
 
-  const start = (p: typeof PLAY[number]) => { setMode(p.id); if (p.shop && !useShop.getState().open) useShop.getState().openShop(true); setScreen('playing') } // the day starts from the 'Open the café' button
+  const start = (p: typeof PLAY[number]) => { if (!useAvatar.getState().made) { setPending(p); setScreen('creator'); return } // first time: make your character
+    setMode(p.id); if (p.shop && !useShop.getState().open) useShop.getState().openShop(true); setScreen('playing') } // the day starts from the 'Open the café' button
+
+  if (screen === 'creator') return <Creator onDone={() => { const p = pending; setPending(null); if (p) start(p); else setScreen(mode === 'exterior' ? 'main' : 'paused') }} />
 
   if (screen === 'playing') return (
     <button className="menubtn" onClick={() => setScreen('paused')}>☰ Menu <span>Esc</span></button>
@@ -69,6 +75,7 @@ export function Menu({ screen, setScreen }: { screen: Screen; setScreen: (s: Scr
             <button key={p.id} className="big" onClick={() => start(p)}><b>{p.title}</b><span>{p.sub}</span></button>
           ))}
           <div className="row">
+            <button onClick={() => setScreen('creator')}>Your character</button>
             <button onClick={() => setScreen('howto')}>How to play</button>
             <button onClick={() => setScreen('settings')}>Settings</button>
             <button onClick={() => setScreen('credits')}>Credits</button>
@@ -83,6 +90,7 @@ export function Menu({ screen, setScreen }: { screen: Screen; setScreen: (s: Scr
           <button className="big" onClick={() => setScreen('playing')}><b>Resume</b><span>back to where you were</span></button>
           <div className="row">{PLAY.map((p) => <button key={p.id} className={p.id === mode ? 'on' : ''} onClick={() => start(p)}>{p.title}</button>)}</div>
           <div className="row">
+            <button onClick={() => setScreen('creator')}>Your character</button>
             <button onClick={() => setScreen('howto')}>How to play</button>
             <button onClick={() => setScreen('settings')}>Settings</button>
             <button onClick={() => { useShop.getState().openShop(false); setScreen('main') }}>Main menu</button>

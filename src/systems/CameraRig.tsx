@@ -1,3 +1,4 @@
+import { RR } from '../world/layout'
 import { BAR_VIEW } from '../world/barLayout'
 import { useEffect } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
@@ -121,7 +122,7 @@ function applyLook(mode: string, dt: number) {
     if (mode === 'dollhouse') _sph.radius *= 2.4
     wantPos.copy(wantLook).add(_off.setFromSpherical(_sph))
     if (mode === 'dollhouse') { wantLook.x += view.panX; wantLook.z += view.panZ; wantPos.x += view.panX; wantPos.z += view.panZ }
-  } else {
+  } else if (mode !== 'walk') { // (Explore's third-person camera is placed directly from yaw / pitch / zoom)
     // turn the head: swing the look point round the eye; the wheel leans closer / back
     _off.copy(wantLook).sub(wantPos); _sph.setFromVector3(_off)
     _sph.theta += view.yaw; _sph.phi = Math.max(0.2, Math.min(2.9, _sph.phi - view.pitch))
@@ -171,10 +172,13 @@ export function CameraRig() {
     const asp = (camera as THREE.PerspectiveCamera).aspect
     setFov(camera as THREE.PerspectiveCamera, mode === 'cake' && asp < 1 ? 58 : (mode === 'pov' ? 50 : mode === 'dollhouse' ? 19 : 45) * (asp < 1 ? Math.min(1.7, 1 / asp * 0.95) : 1)) // portrait phone = wider lens // barista view: a slightly wider, human field of view
     if (mode === 'walk') {
-      // first person at eye height (~1.65 m): the mouse turns you, W walks where you look
+      // Explore = third person, from above at a slight slant: the camera follows you (Kozie or your own character).
+      // Drag / Q E / arrows circle it round you, the wheel zooms, W walks away from the camera.
       step(player, dt, view.mode === 'walk' ? view.yaw : 0)
-      wantPos.set(player.x, 1.65, player.z) // steady eyes: no walk bob (it read as camera shake)
-      wantLook.set(player.x, 1.65, player.z - 1)
+      const indoors = Math.hypot(player.x, player.z) < RR - 0.5
+      const dist = (indoors ? 8 : 10) * view.zoom, elev = Math.max(0.4, Math.min(1.3, 0.82 + view.pitch))
+      wantLook.set(player.x, 1.0, player.z)
+      wantPos.set(player.x + Math.sin(view.yaw) * Math.cos(elev) * dist, 1.0 + Math.sin(elev) * dist, player.z + Math.cos(view.yaw) * Math.cos(elev) * dist)
     } else if (mode === 'pov') {
       // POV = the barista standing behind the counter
       player.x = 0.3; player.z = -8.4; player.facing = 0
@@ -195,7 +199,7 @@ export function CameraRig() {
     wantPos.multiplyScalar(WORLD); wantLook.multiplyScalar(WORLD)
     if (mode !== 'pov') applyLook(mode, dt); else if (view.mode !== mode) { view.mode = mode; view.yaw = 0; view.pitch = 0; view.zoom = 1 }
     // ?snap = jump straight to the shot (used for footage capture and tests)
-    const k = SNAP || cut || mode === 'walk' ? 1 : 1 - Math.exp(-dt * (mode === 'outro' ? 1.4 : view.looking ? 30 : 4)) // Walk: the camera IS your eyes // mouse look = instant, like a game
+    const k = SNAP || cut ? 1 : 1 - Math.exp(-dt * (mode === 'walk' ? 7 : mode === 'outro' ? 1.4 : view.looking ? 30 : 4)) // Explore: a smooth follow cam // mouse look = instant, like a game
     camera.position.lerp(wantPos, k)
     look.lerp(wantLook, k)
     camera.lookAt(look)

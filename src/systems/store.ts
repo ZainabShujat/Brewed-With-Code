@@ -24,10 +24,10 @@ export const useGame = create<State>((set) => ({
   mode: 'exterior',
   setMode: (mode) => set((s) => {
     // entering walk from the barista view: step out onto the café floor
-    if (mode === 'walk' && s.mode === 'pov') Object.assign(s.player, { x: 0.4, z: 2.4, facing: Math.PI })
+    if (mode === 'walk' && s.mode === 'pov') Object.assign(s.player, { x: 0.4, z: 2.4, facing: 0 })
     return { mode }
   }),
-  player: { x: 0.4, z: 2.4, facing: Math.PI },
+  player: { x: 0.4, z: 2.4, facing: 0 }, // facing the camera when you arrive (third-person Explore)
   barista: { skin: '#f6cdb4', hair: '#5a3166', apron: '#ef9fc3', shirt: '#fff6ee', cap: '#9d6fd0' },
   setBarista: (p) => set((s) => ({ barista: { ...s.barista, ...p } })),
   revealed: null,

@@ -7,6 +7,8 @@ import { Exterior } from './world/Exterior'
 import { Interior } from './world/Interior'
 import { Hotspots } from './world/Hotspots'
 import { Barista } from './world/Barista'
+import { PlayerAvatar } from './world/PlayerAvatar'
+import { RR as ROOM_R } from './world/layout'
 import { Reveal } from './world/Reveal'
 import { Lighting } from './world/Lighting'
 import { Kozie } from './world/Kozie'
@@ -53,17 +55,22 @@ export function World() {
   const inside = mode !== 'exterior'
   const outro = mode === 'outro'
   const kozie = useGame((s) => s.kozie)
+  // Explore is third person: inside the café the roof cuts away (you look in from above); outside the pot shows
+  const [indoors, setIndoors] = useState(true)
+  useFrame(() => { const p = useGame.getState().player, i = Math.hypot(p.x, p.z) < ROOM_R - 0.5; if (i !== indoors) setIndoors(i) })
+  const walkIn = mode === 'walk' && indoors
   return (
     <>
       <Lighting />
       <group scale={WORLD}>
       {/* zone culling (like occlusion culling): rooms you can't see from this view aren't drawn at all.
           Behind the bar or at the cake machine you face a wall, so the whole outdoors is skipped. */}
-      <group visible={REEL || (mode !== 'pov' && mode !== 'cake')}><Exterior showPot={!inside || outro || mode === 'walk'} fadeIn={outro} />{!outro && <><Street /><Neighbours /></>}</group>
+      <group visible={REEL || (mode !== 'pov' && mode !== 'cake')}><Exterior showPot={!inside || outro || (mode === 'walk' && !indoors)} fadeIn={outro} />{!outro && <><Street /><Neighbours /></>}</group>
       {inside && SHOW_FOLK && <FolkLineup />}
       {SHOW_FOLK && <FolkGallery />}
-      {inside && <Interior cutaway={mode === 'dollhouse' || outro} pov={mode === 'pov'} only={REEL ? '' : mode === 'pov' ? 'bar' : mode === 'cake' ? 'kitchen' : ''} />}
-      {inside && mode !== 'pov' && mode !== 'vlog' && mode !== 'walk' && <Reveal id="barista" at={[0.4, 0, 2.4]}><Barista /></Reveal>}
+      {inside && <Interior cutaway={mode === 'dollhouse' || outro || walkIn} pov={mode === 'pov'} only={REEL ? '' : mode === 'pov' ? 'bar' : mode === 'cake' ? 'kitchen' : ''} />}
+      {REEL && inside && mode !== 'pov' && mode !== 'vlog' && mode !== 'walk' && <Reveal id="barista" at={[0.4, 0, 2.4]}><Barista /></Reveal>}
+      {!REEL && (mode === 'walk' || mode === 'dollhouse') && <PlayerAvatar />}
       {inside && <Customers />}
       {inside && <Hotspots />}
       {kozie && <Kozie />}
