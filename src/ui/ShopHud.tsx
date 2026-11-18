@@ -46,7 +46,7 @@ export function ShopHud() {
     <>
       <div className="cake-card">
         <div className="tk-h">order</div>
-        {order ? <><div className="cc-name">{order.label}</div><div className="tk-note">{order.recipe.note}</div></>
+        {order ? <><div className="cc-name">{order.label}</div><div className="tk-note">{order.recipe?.note}</div></>
                : <div className="tk-note">{cafe.line.size ? 'customer walking up…' : 'waiting for customers…'}</div>}
         <div className="tk-h" style={{ marginTop: 8 }}>your cup</div>
         <div className="tk-cup">{shop.cup ? describe(d) : '—'}</div>

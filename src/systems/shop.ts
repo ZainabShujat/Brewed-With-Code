@@ -110,7 +110,7 @@ export const useShop = create<Shop>((set, get) => ({
     // right order = full price; craft (shot volume, fill level, no spills) and speed earn the tip
     const cr = craftScore(s.ml, s.drink.size, order.want.shots, s.spilled, order.want.milk !== 'none' || order.want.water)
     const tip = r.pct === 100 ? 1 + Math.round(front.patience * 2 + cr * 3) : r.pct >= 75 ? Math.round(front.patience * 2 + cr) : 0
-    const coins = Math.round(order.recipe.price * r.pct / 100) + tip
+    const coins = Math.round((order.recipe?.price ?? 5) * r.pct / 100) + tip
     const D = useDay.getState(); D.record('served'); D.record('coins', coins - tip); D.record('tips', tip); if (r.pct === 100) D.record('perfect')
     const mood = r.pct === 100 ? '😍' : r.pct >= 75 ? '🙂' : r.pct >= 50 ? '😐' : '😤'
     const orders = { ...s.orders }; delete orders[front.id]
