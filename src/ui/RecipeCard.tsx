@@ -61,7 +61,9 @@ export function RecipeCard() {
       <div className={'brew-next' + (ready ? ' ready' : '')}>{next}</div>
       {fresh && s.last && (
         <div className="brewpop" key={s.last.t}>
-          {s.last.mood} {s.last.pct}% right{s.last.craft !== undefined ? ` · craft ${'★'.repeat(Math.round(s.last.craft * 3))}${'☆'.repeat(3 - Math.round(s.last.craft * 3))}` : ''} · +{s.last.coins}💰
+          {s.last.mood} {s.last.pct}% right · +{s.last.coins}💰
+          {s.last.stations && <div className="stars">{(['brew', 'milk', 'finish', 'service'] as const).map((k) => { const v = s.last!.stations![k]; return v === null ? null :
+            <span key={k}><small>{k}</small>{'★'.repeat(v)}{'☆'.repeat(3 - v)}</span> })}</div>}
         </div>
       )}
       {cheering && s.cheer && <div className={'cheer' + (s.cheer.good ? '' : ' off')} key={s.cheer.t}>{s.cheer.text}</div>}

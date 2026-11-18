@@ -46,10 +46,4 @@ export function judgeFill() {
   else if (f >= FILL_ZONE[0] && f <= FILL_ZONE[1]) cheer('perfect fill ✨')
 }
 
-/** how evenly the topping covers the drink: the share of an 8x8 grid (inside the surface circle) that got a grain */
-export function coverage(grains: [number, number][]) {
-  const R = 0.15, N = 8, cell = (2 * R) / N, hit = new Set<number>(); let total = 0
-  for (let i = 0; i < N; i++) for (let j = 0; j < N; j++) { const cx = -R + (i + 0.5) * cell, cz = -R + (j + 0.5) * cell; if (Math.hypot(cx, cz) <= R) total++ }
-  for (const [x, z] of grains) { const i = Math.floor((x + R) / cell), j = Math.floor((z + R) / cell); if (i >= 0 && j >= 0 && i < N && j < N) hit.add(i * N + j) }
-  return total ? hit.size / total : 0
-}
+export { coverage } from '../data/recipes'

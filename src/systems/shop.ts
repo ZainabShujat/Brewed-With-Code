@@ -1,11 +1,11 @@
 import { create } from 'zustand'
-import { EMPTY, randomOrder, score, craft as craftScore, CAP, SHOT_ML, NO_CONTENTS, filled, type Contents, type Drink, type MilkType, type Order, type Topping } from '../data/recipes'
+import { stationStars, EMPTY, randomOrder, score, craft as craftScore, CAP, SHOT_ML, NO_CONTENTS, filled, type Contents, type Drink, type MilkType, type Order, type Topping } from '../data/recipes'
 import { cafe } from '../world/Customers'
 import { useDay } from './day'
 
 // The café's gameplay state: who ordered what, what's in the cup right now, coins, and the last result.
 export type Pour = { kind: 'shot' | 'water' | 'choc' | 'milk' | 'sprinkle' | 'whip'; t0: number; color: string; tag?: string; dur?: number } // dur: how long the pour lasts (hold-to-pour); default per kind
-export type Result = { pct: number; misses: string[]; coins: number; mood: string; t: number; craft?: number; tip?: number }
+export type Result = { pct: number; misses: string[]; coins: number; mood: string; t: number; craft?: number; tip?: number; stations?: import('../data/recipes').Stations }
 export type Texture = Exclude<Drink['milk'], 'none'>
 // the milk pitcher (made by hand): what's in it, where it sits, and how long it's been steamed
 export type Pitcher = { milk: number; foam: number; type: MilkType; at: 'home' | 'wand'; stretch: number }
@@ -116,7 +116,7 @@ export const useShop = create<Shop>((set, get) => ({
     const orders = { ...s.orders }; delete orders[front.id]
     glass++; pending = 0
     cafe.serve() // dequeue: the front of the line leaves first
-    set({ cup: false, drink: { ...EMPTY }, ...fresh(), hint: '', coins: s.coins + coins, served: s.served + 1, orders, last: { ...r, coins, mood, t: now(), craft: cr, tip } })
+    set({ cup: false, drink: { ...EMPTY }, ...fresh(), hint: '', coins: s.coins + coins, served: s.served + 1, orders, last: { ...r, coins, mood, t: now(), craft: cr, tip, stations: stationStars(s.drink, order.want, s.ml, s.grains, front.patience) } })
   },
   // ── made by hand ──
   shakeTick: (t, dt) => { const s = get(); if (!s.cup) return; const shake = s.shake + dt

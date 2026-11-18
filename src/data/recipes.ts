@@ -82,3 +82,23 @@ export function craft(c: Contents, size: CupSize, wantShots: number, spilled: bo
   const fillErr = topUp && fill < 0.75 ? Math.min(1, (0.75 - fill) / 0.5) : 0 // a plain espresso isn't 'underfilled'
   return Math.max(0, 1 - shotErr * 0.6 - fillErr * 0.5 - (spilled ? 0.25 : 0))
 }
+
+/** how evenly the topping covers the drink: the share of an 8x8 grid (inside the surface circle) that got a grain */
+export function coverage(grains: [number, number][]) {
+  const R = 0.15, N = 8, cell = (2 * R) / N, hit = new Set<number>(); let total = 0
+  for (let i = 0; i < N; i++) for (let j = 0; j < N; j++) { const cx = -R + (i + 0.5) * cell, cz = -R + (j + 0.5) * cell; if (Math.hypot(cx, cz) <= R) total++ }
+  for (const [x, z] of grains) { const i = Math.floor((x + R) / cell), j = Math.floor((z + R) / cell); if (i >= 0 && j >= 0 && i < N && j < N) hit.add(i * N + j) }
+  return total ? hit.size / total : 0
+}
+
+/** per-station stars (1–3): how each part of the drink went. null = that station wasn't part of the order. */
+export type Stations = { brew: number; milk: number | null; finish: number | null; service: number }
+export function stationStars(made: Drink, want: Drink, c: Contents, grains: [number, number][], patience: number): Stations {
+  const off = Math.abs(c.espresso - want.shots * SHOT_ML)
+  const brew = !want.shots ? 3 : made.shots !== want.shots && off > 15 ? 1 : off <= 6 ? 3 : off <= 15 ? 2 : 1
+  const milk = want.milk === 'none' ? null : made.milk === want.milk ? (made.milkType === want.milkType ? 3 : 2) : made.milk === 'none' ? 1 : 2
+  const finish = want.topping === 'none' ? null : made.topping !== want.topping ? 1
+    : want.topping === 'whipped' || !grains.length ? 3 : coverage(grains) >= 0.45 ? 3 : 2
+  const service = patience > 0.6 ? 3 : patience > 0.3 ? 2 : 1
+  return { brew, milk, finish, service }
+}

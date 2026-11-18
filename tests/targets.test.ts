@@ -35,3 +35,15 @@ test('fill: a full glass cheers, and pouring on never overflows it', () => {
   hold(S().pourMilkTick, 2.6); judgeFill(); assert.equal(S().cheer?.good, true, `fill ${JSON.stringify(S().ml)}`)
   useShop.setState({ cheer: null }); hold(S().pourMilkTick, 3); judgeFill(); assert.equal(S().cheer?.good, true); assert.equal(S().spilled, false)
 })
+
+test('station stars: each part of the drink is judged on its own', async () => {
+  const { stationStars, EMPTY: E } = await import('../src/data/recipes')
+  const want = { ...E, size: 'medium' as const, shots: 2, milk: 'micro' as const, milkType: 'oat' as const, topping: 'cocoa' as const }
+  const even: [number, number][] = []; for (let x = -0.14; x <= 0.14; x += 0.035) for (let z = -0.14; z <= 0.14; z += 0.035) if (Math.hypot(x, z) < 0.15) even.push([x, z])
+  const great = stationStars(want, want, { espresso: 60, choc: 0, water: 0, milk: 200, foam: 40 }, even, 0.9)
+  assert.deepEqual(great, { brew: 3, milk: 3, finish: 3, service: 3 })
+  const meh = stationStars({ ...want, milk: 'foamy', topping: 'cinnamon' }, want, { espresso: 85, choc: 0, water: 0, milk: 200, foam: 40 }, [[0, 0]], 0.2)
+  assert.deepEqual(meh, { brew: 1, milk: 2, finish: 1, service: 1 })
+  const espresso = stationStars({ ...E, shots: 1 }, { ...E, shots: 1 }, { espresso: 30, choc: 0, water: 0, milk: 0, foam: 0 }, [], 0.5)
+  assert.equal(espresso.milk, null); assert.equal(espresso.finish, null); assert.equal(espresso.service, 2)
+})
