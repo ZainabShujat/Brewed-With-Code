@@ -344,7 +344,7 @@ export function Bar() {
         {[-0.47, 0.47].map((x) => <RBox key={x} size={[0.04, 0.54, 0.34]} pos={[x, 0.25, 0]} color={C.wood} r={0.012} />)}
       </group>
       {(['small', 'medium', 'large'] as const).map((sz, i) => (
-        <Grab key={sz} id={`cups-${sz}`} tip={`${sz} glass: click to pick up, then click the coaster`} pos={[BAR.shelf.stacks[i], TOP + 0.02, RZ + 0.08]} size={[0.26, 0.46, 0.26]} onClick={() => s().takeCup(sz)} drops={{ cup: () => s().takeCup(sz) }}>
+        <Grab key={sz} id={`cups-${sz}`} tip={`${sz} glass: click to pick up, then click the coaster`} pos={[BAR.shelf.stacks[i], TOP + 0.02, RZ + 0.08]} size={[0.2, 0.46, 0.26]} onClick={() => s().takeCup(sz)} drops={{ cup: () => s().takeCup(sz) }}>
           {[0, 1, 2].map((k) => <mesh key={k} geometry={GLASS_GEO} material={GLASS_STACK} position={[0, 0.2 * SIZE_K[sz] + k * 0.055, 0]} rotation={[Math.PI, 0, 0]} scale={[0.5 * SIZE_K[sz], 0.62 * SIZE_K[sz], 0.5 * SIZE_K[sz]]} />)}
           <Html position={[0, -0.04, 0.16]} center zIndexRange={[4, 0]} style={{ pointerEvents: 'none' }}><div className="sizetag">{sz[0].toUpperCase()}</div></Html>
         </Grab>

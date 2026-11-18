@@ -474,12 +474,12 @@ body.station-cursor, body.station-cursor canvas { cursor: url("data:image/svg+xm
 .rot-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #c4528a; }
 
 /* ── mobile landscape & touch optimization ─────────────────── */
-@media (max-height: 550px), (pointer: coarse) {
+@media (pointer: coarse) { /* phones only: a short laptop window keeps the laptop layout */
   .lookhint { display: none !important; }
   .creditsbtn { display: none !important; }
 }
 
-@media (max-height: 520px), (pointer: coarse) and (max-width: 950px) {
+@media (pointer: coarse) and (max-height: 520px), (pointer: coarse) and (max-width: 950px) { /* phones only */
   /* Top Bar */
   .menubtn { top: 8px; left: 8px; padding: 5px 10px; font-size: 12px; border-radius: 10px; }
   .menubtn span { display: none; }
@@ -717,3 +717,23 @@ body.station-cursor, body.station-cursor canvas { cursor: url("data:image/svg+xm
 }
 
 
+
+/* floating joystick (phones): the lower-left of the screen is the thumb zone */
+.phone .stickzone { position: fixed; left: 0; bottom: 0; width: 42vw; height: 62vh; z-index: 18; touch-action: none; }
+.phone .stickzone .stick { position: absolute; width: 120px; height: 120px; border-radius: 50%; background: rgba(42,24,58,.28); border: 2px solid rgba(255,246,238,.55); }
+.phone .stickzone .stick.idle { left: 28px; bottom: 34px; opacity: .55; pointer-events: none; }
+.phone .stickzone .stick.live { opacity: 1; }
+.phone .stickzone .knob { position: absolute; left: 50%; top: 50%; width: 54px; height: 54px; margin: -27px 0 0 -27px; border-radius: 50%; background: #ff8fc0; box-shadow: 0 3px 10px rgba(0,0,0,.3); }
+
+/* phones in landscape at the coffee bar: room for the counter */
+@media (max-height: 520px) {
+  .phone .tut { left: 8px; bottom: 8px; max-width: 300px; }
+  .phone .tut-kozie { display: none; }
+  .phone .tut-bubble { margin-bottom: 0; padding: 5px 9px 6px; border-width: 2px; }
+  .phone .tut-bubble::before { display: none; }
+  .phone .tut-text { font-size: 12px; } .phone .tut-name { font-size: 10px; } .phone .tut-skip { font-size: 10px; margin-top: 2px; }
+  .phone .brew-next { font-size: 12px !important; padding: 5px 12px !important; bottom: 6px !important; max-width: 46vw !important; }
+  .phone .brew-tip { display: none; }
+  .phone .stmat { font-size: 8px; padding: 0 5px 0 1px; } .phone .stmat b { width: 12px; height: 12px; font-size: 8px; }
+  .phone .stmat:not(.on) { opacity: .45; }
+}

@@ -5,7 +5,10 @@ import { useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
 import { useGame, type CamMode } from './store'
 import { step, stick, keys } from './movement'
-export const TOUCH = typeof window !== 'undefined' && (matchMedia('(pointer: coarse)').matches || 'ontouchstart' in window || (navigator.maxTouchPoints && navigator.maxTouchPoints > 0))
+// PHONE / TABLET = the main pointer is a finger. A laptop with a touchscreen still has a mouse/trackpad as its main
+// pointer, so it stays a laptop: phone controls and phone layout never leak onto it.
+export const TOUCH = typeof window !== 'undefined' && (matchMedia('(pointer: coarse)').matches || (navigator.maxTouchPoints > 0 && !matchMedia('(any-pointer: fine)').matches))
+if (typeof document !== 'undefined') document.documentElement.classList.toggle('phone', TOUCH) // all phone-only CSS lives under .phone
 import { anim, stepTweens, frozen } from './anim'
 import { WORLD } from '../world/layout'
 import { machine } from '../world/CakeMachine'
@@ -46,11 +49,14 @@ export function useMouseLook() {
     const pts = new Map<number, [number, number]>(); let pinch = 0
     const span = () => { const [a, b] = [...pts.values()]; return Math.hypot(a[0] - b[0], a[1] - b[1]) }
     el.style.touchAction = 'none'
+    let mid: [number, number] | null = null
+    const midOf = (): [number, number] => { const [a, b] = [...pts.values()]; return [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2] }
     const pd = (e: PointerEvent) => {
-      pts.set(e.pointerId, [e.clientX, e.clientY]); if (pts.size === 2) { pinch = span(); down = -1; return }
+      pts.set(e.pointerId, [e.clientX, e.clientY]); if (pts.size === 2) { pinch = span(); mid = midOf(); down = -1; return }
       down = e.button; lx = e.clientX; ly = e.clientY
       // MOUSE LOOK, like any first-person game: hold the RIGHT button and move the mouse to turn your head.
       // In Walk view a left click on the scene locks the mouse for full look (Esc to let go).
+      if (e.pointerType === 'touch') { grabbed = document.body.style.cursor === 'pointer'; return } // fingers: no pointer lock, just drag to look
       if (view.mode !== 'dollhouse' && view.mode !== 'exterior' && (e.button === 2 || ((view.mode === 'walk' || view.mode === 'fp') && e.button === 0)) && (view.mode !== 'pov' || e.button === 2)) {
         el.requestPointerLock?.(); view.looking = true; return
       }
@@ -58,7 +64,13 @@ export function useMouseLook() {
     }
     const pm = (e: PointerEvent) => {
       if (pts.has(e.pointerId)) pts.set(e.pointerId, [e.clientX, e.clientY])
-      if (pts.size === 2 && pinch) { const d = span(); zoomBy(pinch / d); pinch = d; return }
+      if (pts.size === 2 && pinch) {
+        const d = span(); zoomBy(pinch / d); pinch = d
+        // two fingers dragging together pan the dollhouse
+        const m = midOf(); if (mid && view.mode === 'dollhouse') { const a = view.yaw + view.spin, k = 0.03 * view.zoom, dx = m[0] - mid[0], dy = m[1] - mid[1]
+          view.panX = Math.max(-72, Math.min(72, view.panX - (Math.cos(a) * dx + Math.sin(a) * dy) * k)); view.panZ = Math.max(-30, Math.min(56, view.panZ - (-Math.sin(a) * dx + Math.cos(a) * dy) * k)) }
+        mid = m; return
+      }
       if (document.pointerLockElement === el) {
         const k = 0.0022 * view.sens
         view.yaw -= e.movementX * k; view.pitch -= e.movementY * k
@@ -67,7 +79,14 @@ export function useMouseLook() {
         if (view.mode === 'pov') { view.yaw = Math.max(-0.6, Math.min(0.6, view.yaw)); view.pitch = Math.max(-0.15, Math.min(0.6, view.pitch)) } // the bar: a glance, not a spin
         return
       }
-      if (down < 0 || TOUCH) return
+      if (down < 0) return
+      if (e.pointerType === 'touch') { // one finger: turn the camera (on foot and in the dollhouse); stations keep their drags
+        if (grabbed || !(view.mode === 'walk' || view.mode === 'fp' || view.mode === 'dollhouse')) return
+        const dx = e.clientX - lx, dy = e.clientY - ly; lx = e.clientX; ly = e.clientY
+        view.yaw -= dx * 0.008 * view.sens
+        if (view.mode !== 'dollhouse') view.pitch = Math.max(-1.1, Math.min(1.0, view.pitch - dy * 0.006 * view.sens))
+        return
+      }
       const orbit = view.mode === 'dollhouse'
       if (down === 0 && grabbed) return                   // dragging an item, not the view
       const dx = e.clientX - lx, dy = e.clientY - ly; lx = e.clientX; ly = e.clientY
@@ -89,7 +108,7 @@ export function useMouseLook() {
     const pu = (e: PointerEvent) => {
       if (e.button === 2 && document.pointerLockElement === el) document.exitPointerLock()
       if (document.pointerLockElement !== el) view.looking = false
-      pts.delete(e.pointerId); if (pts.size < 2) pinch = 0; down = -1 }
+      pts.delete(e.pointerId); if (pts.size < 2) { pinch = 0; mid = null } down = -1 }
     window.addEventListener('pointercancel', pu)
     const zoomBy = (f: number) => { view.zoom = Math.max(view.mode === 'dollhouse' ? 0.35 : view.mode === 'pov' ? 0.45 : 0.6, Math.min(view.mode === 'dollhouse' ? 3.4 : view.mode === 'pov' ? 1.2 : 1.3, view.zoom * f)) } // dollhouse: zoom far enough out to see the whole street
     const wh = (e: WheelEvent) => { e.preventDefault(); zoomBy(e.deltaY > 0 ? 1.1 : 0.9) }

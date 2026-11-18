@@ -8,11 +8,12 @@ export function Landscape() {
     const isTouch = matchMedia('(pointer: coarse)').matches || 'ontouchstart' in window
     if (!isTouch) return
 
+    // only the FIRST tap asks for fullscreen + landscape. Asking on every tap resized the screen in the middle of
+    // a drag at the coffee bar (the touch targets slid out from under your finger). The ⛶ button does it after that.
     const tryFs = () => {
+      window.removeEventListener('click', tryFs); window.removeEventListener('touchend', tryFs)
       const doc = document as any
-      if (!doc.fullscreenElement && !doc.webkitFullscreenElement) {
-        enterFullscreen()
-      }
+      if (!doc.fullscreenElement && !doc.webkitFullscreenElement) enterFullscreen()
     }
 
     window.addEventListener('click', tryFs)
