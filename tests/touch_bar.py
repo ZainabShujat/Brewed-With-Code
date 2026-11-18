@@ -46,6 +46,12 @@ with sync_playwright() as p:
     S("window.__game.getState().setMode('walk')"); pg.wait_for_timeout(1500)
     y0 = S("window.__view.yaw"); tdrag([600, 200], [450, 200]); y1 = S("window.__view.yaw")
     check(abs(y1 - y0) > 0.3, f'one-finger drag turns the camera (yaw {y0:.2f} → {y1:.2f})')
+    # tap-to-walk: a quick tap on the floor walks you there
+    S("(() => { const p = window.__game.getState().player; p.x = 0; p.z = 4 })()"); pg.wait_for_timeout(800)
+    p0 = S("[window.__game.getState().player.x, window.__game.getState().player.z]")
+    touch('touchStart', 520, 300); pg.wait_for_timeout(60); touch('touchEnd', 520, 300); pg.wait_for_timeout(2500)
+    p1 = S("[window.__game.getState().player.x, window.__game.getState().player.z]")
+    check(((p1[0] - p0[0]) ** 2 + (p1[1] - p0[1]) ** 2) ** 0.5 > 0.8, f'tapping the floor walks you there ({p0} → {[round(v, 1) for v in p1]})')
     check(not errs, 'no page errors' + ('' if not errs else f': {errs[:3]}'))
     br.close()
 print('\n'.join(notes + fails)); print(f'\n{len(notes)} passed, {len(fails)} failed'); sys.exit(1 if fails else 0)

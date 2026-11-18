@@ -4,7 +4,7 @@ import { useEffect } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
 import { useGame, type CamMode } from './store'
-import { step, stick, keys } from './movement'
+import { step, stick, keys, goTo } from './movement'
 // PHONE / TABLET = the main pointer is a finger. A laptop with a touchscreen still has a mouse/trackpad as its main
 // pointer, so it stays a laptop: phone controls and phone layout never leak onto it.
 export const TOUCH = typeof window !== 'undefined' && (matchMedia('(pointer: coarse)').matches || (navigator.maxTouchPoints > 0 && !matchMedia('(any-pointer: fine)').matches))
@@ -40,6 +40,7 @@ const loadSens = () => { try { return Number(localStorage.getItem('sens')) || 1 
 export const view = { yaw: 0, pitch: 0, zoom: 1, mode: '' as string, sens: loadSens(), looking: false, panX: 0, panZ: 0, spin: 0 }
 export const setSens = (v: number) => { view.sens = v; try { localStorage.setItem('sens', String(v)) } catch { /* private mode */ } }
 const _off = new THREE.Vector3(), _sph = new THREE.Spherical()
+const tapAt = { x: 0, y: 0, on: false }, _floor = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), _rc = new THREE.Raycaster(), _hit = new THREE.Vector3(), _ndc = new THREE.Vector2()
 export function useMouseLook() {
   const { gl } = useThree()
   useEffect(() => {
@@ -49,14 +50,14 @@ export function useMouseLook() {
     const pts = new Map<number, [number, number]>(); let pinch = 0
     const span = () => { const [a, b] = [...pts.values()]; return Math.hypot(a[0] - b[0], a[1] - b[1]) }
     el.style.touchAction = 'none'
-    let mid: [number, number] | null = null
+    let mid: [number, number] | null = null, tap0 = { t: 0, x: 0, y: 0 }
     const midOf = (): [number, number] => { const [a, b] = [...pts.values()]; return [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2] }
     const pd = (e: PointerEvent) => {
       pts.set(e.pointerId, [e.clientX, e.clientY]); if (pts.size === 2) { pinch = span(); mid = midOf(); down = -1; return }
       down = e.button; lx = e.clientX; ly = e.clientY
       // MOUSE LOOK, like any first-person game: hold the RIGHT button and move the mouse to turn your head.
       // In Walk view a left click on the scene locks the mouse for full look (Esc to let go).
-      if (e.pointerType === 'touch') { grabbed = document.body.style.cursor === 'pointer'; return } // fingers: no pointer lock, just drag to look
+      if (e.pointerType === 'touch') { grabbed = document.body.style.cursor === 'pointer'; tap0 = { t: performance.now(), x: e.clientX, y: e.clientY }; return } // fingers: no pointer lock, just drag to look
       if (view.mode !== 'dollhouse' && view.mode !== 'exterior' && (e.button === 2 || ((view.mode === 'walk' || view.mode === 'fp') && e.button === 0)) && (view.mode !== 'pov' || e.button === 2)) {
         el.requestPointerLock?.(); view.looking = true; return
       }
@@ -106,6 +107,9 @@ export function useMouseLook() {
       if (!orbit) view.yaw = Math.max(-1.4, Math.min(1.4, view.yaw))
     }
     const pu = (e: PointerEvent) => {
+      // a quick tap (not a drag) on the floor while on foot: walk there
+      if (e.pointerType === 'touch' && pts.size === 1 && (view.mode === 'walk' || view.mode === 'fp') && performance.now() - tap0.t < 320 && Math.hypot(e.clientX - tap0.x, e.clientY - tap0.y) < 14) {
+        const r = el.getBoundingClientRect(); tapAt.x = ((e.clientX - r.left) / r.width) * 2 - 1; tapAt.y = -((e.clientY - r.top) / r.height) * 2 + 1; tapAt.on = true }
       if (e.button === 2 && document.pointerLockElement === el) document.exitPointerLock()
       if (document.pointerLockElement !== el) view.looking = false
       pts.delete(e.pointerId); if (pts.size < 2) { pinch = 0; mid = null } down = -1 }
@@ -200,6 +204,7 @@ export function CameraRig() {
     if (mode === 'walk') {
       // Explore = third person, from above at a slight slant: the camera follows you (Kozie or your own character).
       // Drag / Q E / arrows circle it round you, the wheel zooms, W walks away from the camera.
+      if (tapAt.on) { tapAt.on = false; _rc.setFromCamera(_ndc.set(tapAt.x, tapAt.y), camera); if (_rc.ray.intersectPlane(_floor, _hit)) Object.assign(goTo, { x: _hit.x / WORLD, z: _hit.z / WORLD, on: true }) }
       step(player, dt, view.mode === 'walk' ? view.yaw : 0)
       const indoors = Math.hypot(player.x, player.z) < RR - 0.5
       const dist = (indoors ? 8 : 10) * view.zoom, elev = Math.max(0.4, Math.min(1.3, 0.82 + view.pitch))
@@ -207,6 +212,7 @@ export function CameraRig() {
       wantPos.set(player.x + Math.sin(view.yaw) * Math.cos(elev) * dist, 1.0 + Math.sin(elev) * dist, player.z + Math.cos(view.yaw) * Math.cos(elev) * dist)
     } else if (mode === 'fp') {
       // first person: you ARE the character; the camera is your eyes, W walks where you look
+      if (tapAt.on) { tapAt.on = false; _rc.setFromCamera(_ndc.set(tapAt.x, tapAt.y), camera); if (_rc.ray.intersectPlane(_floor, _hit)) Object.assign(goTo, { x: _hit.x / WORLD, z: _hit.z / WORLD, on: true }) }
       step(player, dt, view.mode === 'fp' ? view.yaw : 0)
       const pitch = Math.max(-1.0, Math.min(0.9, view.pitch))
       wantPos.set(player.x, EYE, player.z)

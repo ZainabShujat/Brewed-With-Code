@@ -7,7 +7,7 @@ import { Exterior } from './world/Exterior'
 import { Interior } from './world/Interior'
 // import { Hotspots } from './world/Hotspots' (retired: stations come from Take order, views from the view bar)
 import { Barista } from './world/Barista'
-import { PlayerAvatar } from './world/PlayerAvatar'
+import { TapMarker, PlayerAvatar } from './world/PlayerAvatar'
 import { StreetLife } from './world/StreetLife'
 import { Keepers } from './world/Keepers'
 import { RR as ROOM_R } from './world/layout'
@@ -81,6 +81,7 @@ export function World() {
       {inside && <Interior cutaway={mode === 'dollhouse' || outro || walkIn} pov={mode === 'pov'} only={REEL ? '' : mode === 'pov' ? 'bar' : mode === 'cake' ? 'kitchen' : ''} />}
       {REEL && inside && mode !== 'pov' && mode !== 'vlog' && mode !== 'walk' && <Reveal id="barista" at={[0.4, 0, 2.4]}><Barista /></Reveal>}
       {!REEL && (mode === 'walk' || mode === 'dollhouse') && <PlayerAvatar />}
+      {!REEL && (mode === 'walk' || mode === 'fp') && <TapMarker />}
       {inside && <Customers />}
       {/* station hotspots retired */}
       {kozie && <Kozie />}

@@ -11,6 +11,8 @@ if (typeof window !== 'undefined') {
 
 // on-screen joystick (phones): x/y in -1..1
 export const stick = { x: 0, y: 0 }
+// tap-to-walk (phones, like a life sim): tap the floor and you walk there; any stick / key input takes over
+export const goTo = { x: 0, z: 0, on: false }
 
 const R = 0.35 // barista radius
 // Where you can stand. Inside: the round room (flat back wall) minus counters and tables. The front door is a short
@@ -51,12 +53,16 @@ export function step(p: { x: number; z: number; facing: number; moving?: boolean
     if (keys.has('d') || keys.has('arrowright')) dx += 1
     if (stick.x || stick.y) { dx = stick.x; dz = stick.y }
   }
+  if (dx || dz) goTo.on = false // you're steering yourself
+  else if (goTo.on) { const ex = goTo.x - p.x, ez = goTo.z - p.z; if (Math.hypot(ex, ez) < 0.3) goTo.on = false; else { dx = ex; dz = ez } }
   p.moving = dx !== 0 || dz !== 0
   if (!p.moving) return
   const len = Math.hypot(dx, dz), speed = 3.2 * (keys.has('shift') ? 1.8 : 1) * dt * Math.min(1, len) // Shift = sprint
   const nx = p.x + (dx / len) * speed, nz = p.z + (dz / len) * speed
+  const ox = p.x, oz = p.z
   if (!blocked(nx, p.z)) p.x = nx
   if (!blocked(p.x, nz)) p.z = nz
+  if (goTo.on && p.x === ox && p.z === oz) goTo.on = false // walked into a wall/table: stop there
   const target = Math.atan2(dx, dz)
   let d = target - p.facing
   d = Math.atan2(Math.sin(d), Math.cos(d))

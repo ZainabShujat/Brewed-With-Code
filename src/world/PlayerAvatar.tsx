@@ -47,3 +47,11 @@ export function PlayerAvatar() {
     </group>
   )
 }
+
+// where you tapped to walk (phones): a soft pulsing ring on the floor
+import { goTo } from '../systems/movement'
+export function TapMarker() {
+  const r = useRef<THREE.Mesh>(null)
+  useFrame(({ clock }) => { const m = r.current; if (!m) return; m.visible = goTo.on; if (goTo.on) { m.position.set(goTo.x, 0.05, goTo.z); m.scale.setScalar(1 + Math.sin(clock.elapsedTime * 6) * 0.12) } })
+  return <mesh ref={r} rotation={[-Math.PI / 2, 0, 0]} visible={false}><ringGeometry args={[0.35, 0.5, 28]} /><meshBasicMaterial color="#ffd166" transparent opacity={0.85} depthWrite={false} /></mesh>
+}
