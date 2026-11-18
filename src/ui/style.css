@@ -1,4 +1,14 @@
-html, body, #root { margin: 0; height: 100%; overflow: hidden; background: #ecdcf7; }
+html, body, #root {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  background: #ecdcf7;
+  touch-action: none;
+  overscroll-behavior: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
 body { font-family: 'Trebuchet MS', system-ui, sans-serif; }
 .hud { position: fixed; top: 14px; left: 14px; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
 .title { font-size: 22px; font-weight: 800; color: #6e3f78; letter-spacing: 0.5px; text-shadow: 0 2px 0 #fff1f6; }
@@ -428,7 +438,47 @@ body.station-cursor, body.station-cursor canvas { cursor: url("data:image/svg+xm
 @media (max-width: 900px) and (min-height: 551px) { .viewbar { top: 60px; } }
 .not-cake .headtag { display: none !important; }
 
+/* ── fullscreen toggle button ──────────────────────────────── */
+.fullscreenbtn {
+  position: fixed;
+  top: 12px;
+  left: 236px;
+  z-index: 26;
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(42,24,48,.72);
+  color: #fbeee4;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0,0,0,.2);
+  transition: transform .12s;
+}
+.fullscreenbtn:active { transform: scale(.92); }
+
+.rot-btn {
+  margin-top: 14px;
+  border: 0;
+  border-radius: 14px;
+  padding: 10px 22px;
+  font: 900 15px 'Trebuchet MS', sans-serif;
+  background: #ff7fb6;
+  color: #fff;
+  box-shadow: 0 4px 0 #c4528a;
+  cursor: pointer;
+}
+.rot-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #c4528a; }
+
 /* ── mobile landscape & touch optimization ─────────────────── */
+@media (max-height: 550px), (pointer: coarse) {
+  .lookhint { display: none !important; }
+  .creditsbtn { display: none !important; }
+}
+
 @media (max-height: 520px), (pointer: coarse) and (max-width: 950px) {
   /* Top Bar */
   .menubtn { top: 8px; left: 8px; padding: 5px 10px; font-size: 12px; border-radius: 10px; }
@@ -436,10 +486,30 @@ body.station-cursor, body.station-cursor canvas { cursor: url("data:image/svg+xm
   .musicbtn { top: 8px; left: 74px; width: 34px; height: 34px; font-size: 16px; }
   .musicpanel { top: 48px; left: 8px; max-width: 240px; }
   .clockchip { left: 114px; top: 8px; height: 34px; line-height: 34px; font-size: 12px; padding: 0 10px; }
+  .fullscreenbtn { left: 202px; top: 8px; width: 34px; height: 34px; font-size: 15px; }
   .viewbar { top: 8px !important; right: 8px !important; padding: 3px; gap: 3px; border-radius: 12px; }
   .viewbar button { padding: 4px 8px; font-size: 11px; gap: 4px; border-radius: 8px; }
   .viewbar kbd { display: none; }
   .fps { display: none; }
+
+  /* Title Screen & Menu Panel */
+  .title-wrap { transform: scale(0.85); }
+  .logo { font-size: 42px; line-height: 1; }
+  .tagline { font-size: 13px; margin-top: 6px; }
+  .press { margin-top: 14px; font-size: 12px; }
+  .gmenu .panel {
+    margin: 0 auto !important;
+    width: min(500px, calc(100vw - 20px)) !important;
+    max-height: 94vh !important;
+    padding: 8px 12px !important;
+    gap: 5px !important;
+  }
+  .gmenu .logo.small { font-size: 18px; margin-bottom: 2px; }
+  .gmenu button.big { padding: 6px 12px; }
+  .gmenu button.big b { font-size: 14px; }
+  .gmenu button.big span { font-size: 10px; margin-top: 1px; }
+  .gmenu .row { gap: 5px; }
+  .gmenu .row button { padding: 5px 8px; font-size: 11px; border-radius: 8px; }
 
   /* Day HUD - sleek bottom dock instead of blocking the 3D center */
   .dayopen {
@@ -549,6 +619,101 @@ body.station-cursor, body.station-cursor canvas { cursor: url("data:image/svg+xm
   .brew-title { font-size: 12px; }
   .brew-hold { width: 64px; height: 64px; font-size: 13px; }
   .brew-go { padding: 9px 16px; font-size: 14px; }
-  .cake-card { top: 46px; left: 8px; right: 8px; padding: 6px 8px; }
+
+  /* Cake Machine Station */
+  .cake-card {
+    top: 46px;
+    right: 8px;
+    left: auto !important;
+    width: 200px !important;
+    max-width: 200px !important;
+    padding: 6px 8px;
+    font-size: 11px;
+  }
+  .cake-card .cc-pic svg { max-height: 56px; }
+  .beltnav {
+    bottom: 6px;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 16px;
+  }
+  .navbtn {
+    width: 42px;
+    height: 42px;
+    font-size: 18px;
+  }
+  .navstop {
+    min-width: 130px;
+    font-size: 12px;
+  }
+
+  /* Tutorial Bubble */
+  .tut {
+    left: 8px;
+    bottom: 8px;
+    max-width: min(320px, 48vw);
+    gap: 0;
+  }
+  .tut-kozie { width: 44px; height: 50px; }
+  .tut-bubble {
+    padding: 5px 8px;
+    border-radius: 12px;
+    margin-bottom: 0;
+    border-width: 2px;
+  }
+  .tut-name { font-size: 10px; }
+  .tut-text { font-size: 11px; line-height: 1.2; }
+
+  /* Character Creator */
+  .creator { padding: 6px; }
+  .cr-panel {
+    padding: 10px 14px 8px !important;
+    max-height: 98vh !important;
+    border-radius: 18px !important;
+    width: min(680px, 98vw) !important;
+  }
+  .cr-h { font-size: 17px !important; margin-bottom: 3px !important; }
+  .cr-grid { grid-template-columns: 150px 1fr !important; gap: 10px !important; }
+  .cr-preview { height: 150px !important; border-radius: 12px !important; }
+  .cr-name-show { font-size: 11px !important; padding: 2px 6px !important; bottom: 4px !important; }
+  .cr-label { margin: 2px 0 1px !important; font-size: 9px !important; }
+  .cr-input { font-size: 12px !important; padding: 3px 6px !important; border-width: 2px !important; }
+  .cr-kinds { gap: 4px !important; }
+  .cr-kinds button { padding: 3px 5px !important; border-radius: 8px !important; }
+  .cr-kinds button b { font-size: 11px !important; }
+  .cr-kinds button span { font-size: 8px !important; }
+  .cr-chips { gap: 3px !important; }
+  .cr-chips button { padding: 3px 6px !important; font-size: 10px !important; border-radius: 6px !important; }
+  .cr-swatches { gap: 5px !important; }
+  .cr-swatches button { width: 22px !important; height: 22px !important; border-width: 2px !important; }
+  .cr-roll { margin-top: 4px !important; padding: 4px 8px !important; font-size: 11px !important; }
+  .cr-foot { margin-top: 4px !important; }
+  .cr-skip { font-size: 11px !important; }
+  .cr-go { padding: 5px 14px !important; font-size: 12px !important; border-radius: 8px !important; }
+
+  /* Street Shops & Dialogue */
+  .shop-counter {
+    width: min(580px, 96vw) !important;
+    max-height: 94vh !important;
+    border-radius: 16px !important;
+  }
+  .sc-head { padding: 6px 10px !important; font-size: 13px !important; }
+  .sc-icon { font-size: 18px !important; }
+  .sc-bank { font-size: 11px !important; }
+  .sc-x { width: 22px !important; height: 22px !important; font-size: 11px !important; }
+  .sc-list { padding: 4px 8px !important; }
+  .sc-row { padding: 4px 0 !important; gap: 4px !important; }
+  .sc-name { font-size: 11px !important; }
+  .sc-name span { font-size: 15px !important; }
+  .sc-name small { font-size: 9px !important; }
+  .sc-pack button { padding: 3px 6px !important; font-size: 10px !important; border-radius: 6px !important; }
+  .talkbox {
+    bottom: 48px !important;
+    padding: 6px 10px !important;
+    font-size: 11px !important;
+    border-radius: 10px !important;
+    max-width: min(440px, 88vw) !important;
+  }
 }
+
 

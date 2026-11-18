@@ -6,6 +6,7 @@ import { view, setSens } from '../systems/CameraRig'
 import { CREDITS } from '../data/credits'
 import { useAvatar } from '../systems/avatar'
 import { Creator } from './Creator'
+import { enterFullscreen } from './FullscreenButton'
 
 // ── The game's front end: title screen → main menu → play, with a pause menu (Esc) ──────────
 export type Screen = 'title' | 'main' | 'howto' | 'settings' | 'credits' | 'playing' | 'paused' | 'creator'
@@ -49,7 +50,9 @@ export function Menu({ screen, setScreen }: { screen: Screen; setScreen: (s: Scr
     window.addEventListener('keydown', k); return () => window.removeEventListener('keydown', k)
   })
 
-  const start = (p: typeof PLAY[number]) => { if (!useAvatar.getState().made) { setPending(p); setScreen('creator'); return } // first time: make your character
+  const start = (p: typeof PLAY[number]) => {
+    enterFullscreen()
+    if (!useAvatar.getState().made) { setPending(p); setScreen('creator'); return } // first time: make your character
     setMode(p.id); if (p.shop && !useShop.getState().open) useShop.getState().openShop(true); setScreen('playing') } // the day starts from the 'Open the café' button
 
   if (screen === 'creator') return <Creator onDone={() => { const p = pending; setPending(null); if (p) start(p); else setScreen(mode === 'exterior' ? 'main' : 'paused') }} />
@@ -59,12 +62,12 @@ export function Menu({ screen, setScreen }: { screen: Screen; setScreen: (s: Scr
   )
 
   return (
-    <div className={`gmenu ${screen === 'title' ? 'title-screen' : ''}`} onClick={() => screen === 'title' && setScreen('main')}>
+    <div className={`gmenu ${screen === 'title' ? 'title-screen' : ''}`} onClick={() => { if (screen === 'title') { enterFullscreen(); setScreen('main') } }}>
       {screen === 'title' && (
         <div className="title-wrap">
           <div className="logo">Brewed<br />With Code</div>
           <div className="tagline">a cosy café you run yourself</div>
-          <div className="press">click or press any key</div>
+          <div className="press">tap or press any key</div>
         </div>
       )}
 

@@ -1,16 +1,42 @@
 import { useEffect } from 'react'
+import { enterFullscreen } from './FullscreenButton'
 
-// Phones play sideways, like any mobile game: on the first tap we go fullscreen and lock to landscape
+// Phones play sideways, like any mobile game: on tap we go fullscreen and lock to landscape
 // (Android Chrome allows this; iPhone Safari doesn't, so a portrait phone gets a "turn your phone" card).
 export function Landscape() {
   useEffect(() => {
-    if (!matchMedia('(pointer: coarse)').matches) return
-    const go = async () => {
-      try { if (!document.fullscreenElement) await document.documentElement.requestFullscreen?.({ navigationUI: 'hide' }) } catch { /* not allowed */ }
-      try { await (screen.orientation as unknown as { lock: (o: string) => Promise<void> }).lock('landscape') } catch { /* iOS: the card below asks instead */ }
+    const isTouch = matchMedia('(pointer: coarse)').matches || 'ontouchstart' in window
+    if (!isTouch) return
+
+    const tryFs = () => {
+      const doc = document as any
+      if (!doc.fullscreenElement && !doc.webkitFullscreenElement) {
+        enterFullscreen()
+      }
     }
-    window.addEventListener('pointerdown', go, { once: true })
-    return () => window.removeEventListener('pointerdown', go)
+
+    window.addEventListener('click', tryFs)
+    window.addEventListener('touchend', tryFs)
+    return () => {
+      window.removeEventListener('click', tryFs)
+      window.removeEventListener('touchend', tryFs)
+    }
   }, [])
-  return <div className="rotate"><div className="rot-phone">📱</div><b>Turn your phone sideways</b><span>Brewed With Code plays in landscape</span></div>
+
+  return (
+    <div className="rotate" onClick={enterFullscreen}>
+      <div className="rot-phone">📱</div>
+      <b>Turn your phone sideways</b>
+      <span>Brewed With Code plays in landscape</span>
+      <button
+        className="rot-btn"
+        onClick={(e) => {
+          e.stopPropagation()
+          enterFullscreen()
+        }}
+      >
+        Play Fullscreen ⛶
+      </button>
+    </div>
+  )
 }

@@ -34,6 +34,7 @@ import { Landscape } from './ui/Landscape'
 import { Street } from './world/Street'
 import { Neighbours } from './world/Neighbours'
 import { ClockChip } from './ui/ClockChip'
+import { FullscreenButton } from './ui/FullscreenButton'
 import { Credits } from './ui/Credits'
 import { TOUCH } from './systems/CameraRig'
 import { LookHint } from './ui/LookHint'
@@ -150,6 +151,7 @@ export default function App() {
       {playing && !SNAP && <ViewBar />}
       {!SNAP && <MusicButton />}
       {(!SNAP || location.pathname.includes('play')) && <ClockChip />}
+      {!SNAP && <FullscreenButton />}
       {!SNAP && <Landscape />}
       {!SNAP && <Menu screen={screen} setScreen={setScreen} />}
       <div className="fps">{shownFps} fps</div>

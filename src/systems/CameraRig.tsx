@@ -5,7 +5,7 @@ import { useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
 import { useGame, type CamMode } from './store'
 import { step, stick, keys } from './movement'
-export const TOUCH = typeof window !== 'undefined' && matchMedia('(pointer: coarse)').matches
+export const TOUCH = typeof window !== 'undefined' && (matchMedia('(pointer: coarse)').matches || 'ontouchstart' in window || (navigator.maxTouchPoints && navigator.maxTouchPoints > 0))
 import { anim, stepTweens, frozen } from './anim'
 import { WORLD } from '../world/layout'
 import { machine } from '../world/CakeMachine'
