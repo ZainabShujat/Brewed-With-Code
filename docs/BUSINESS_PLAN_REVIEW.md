@@ -113,9 +113,9 @@ stages.ts (unlocks[]) ─► which zones/floors exist ─► furniture placement
    need checking.
 3. **The round room** (the inside of the pot) makes rectangular expansion odd. Expansion = opening zones (patio
    outside the door, the kitchen corner, a window nook) and the lid floor, not making the room bigger.
-4. **Bakery: next door or upstairs?** The earlier plan put a bakery in the "For Lease" unit next door. The lid floor
-   is the better fit for this plan (one building, stairs, the two departments connected); next door can become a
-   later shop.
+4. **Bakery: DECIDED 18 Nov: upstairs in the teapot lid.** (The earlier plan had it next door in the "For Lease"
+   unit; that unit becomes a later, unrelated shop.) To avoid running upstairs for every slice: bake upstairs, sell from a
+   display case downstairs; only custom cakes need the trip.
 5. **Cake orders**: the cake station has its own order generator; routing customer orders to it changes its HUD
    flow (small).
 6. **Several orders at once** (also flagged in the coffee study): the bar assumes one glass at a time.
