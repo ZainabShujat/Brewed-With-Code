@@ -48,7 +48,7 @@ The 17 Nov glass crash (a blank screen the moment you placed a glass) went unnot
 | 4 | Fri 20 | **Cake machine v2 + real orders** ("The Pass"): several pans on one belt, boxed cakes as objects, the pass, customers collect and pay | #05 "my cake station was just a mini-game" |
 | 5 | Sat 21 | **Coffee on the same system:** pour by holding the tool, drinks scored from what's in the glass, one ticket for cake + drink | #06 "no more menus" |
 | 6 | Sun 22 | **Customers who act like people:** rigged CC0 characters (walk, queue, sit, sip, wave) + carrying orders to tables | #07 "they finally sit like people" |
-| 7 | Mon 23 | **Real surfaces + polish:** textures inside, lamp light, steam particles, performance pass | #08 "flat → real" (the week's before/after) |
+| 7 | Mon 23 | **Real surfaces + polish:** textures inside, lamp light, steam particles, performance pass (measured 18 Nov: bar view 440 draw calls / 654k triangles from the detailed espresso machine + grinder models; outside overview 756 calls from many small shop-window props → slim the models, merge/instance the props) | #08 "flat → real" (the week's before/after) |
 
 ## Launch run-up
 | Date | Build | Reel |

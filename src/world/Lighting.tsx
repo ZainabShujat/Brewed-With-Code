@@ -16,6 +16,8 @@ const glowTex = (() => { if (typeof document === 'undefined') return null
   const c = document.createElement('canvas'); c.width = c.height = 128; const x = c.getContext('2d')!
   const g = x.createRadialGradient(64, 64, 0, 64, 64, 64); g.addColorStop(0, 'rgba(255,214,150,1)'); g.addColorStop(0.45, 'rgba(255,190,120,.45)'); g.addColorStop(1, 'rgba(255,170,110,0)')
   x.fillStyle = g; x.fillRect(0, 0, 128, 128); return new THREE.CanvasTexture(c) })()
+// shop windows: a warm lit-glass look that brightens after dark (the clock drives it)
+export const shopGlass = new THREE.MeshStandardMaterial({ color: '#f3dfc0', emissive: '#ffcf8a', emissiveIntensity: 0.2, roughness: 0.15 })
 export const nightGlow = new THREE.MeshBasicMaterial({ map: glowTex, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false })
 const starMat = new THREE.PointsMaterial({ color: '#fff3d6', size: 2.2, sizeAttenuation: false, transparent: true, opacity: 0, depthWrite: false })
 const starGeo = (() => { const g = new THREE.BufferGeometry(), n = 420, p = new Float32Array(n * 3)
@@ -58,6 +60,7 @@ export function Lighting() {
     // after dark the bulbs, string lights and the window glow brighter; the arched windows show the sky outside
     const night = 1 - k.day
     starMat.opacity = Math.max(0, night * 1.2 - 0.2); nightGlow.opacity = night * 0.85
+    shopGlass.emissiveIntensity = 0.2 + 1.3 * night
     glow().emissiveIntensity = glow('#ffc4dd').emissiveIntensity = 1 + 1.8 * night
     const win = mat(C.sky, { emissive: '#f4e6ff' }) as THREE.MeshStandardMaterial
     win.emissive.copy(_w.copy(k.sky).lerp(_n, night * 0.35)); win.color.copy(k.sky)

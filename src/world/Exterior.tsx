@@ -127,23 +127,6 @@ function Awning() {
 
 
 
-// Locked conservatory wings: ghost glass + ⊕ lot. Unlocked later by levelling.
-function LockedWings() {
-  return (
-    <group>
-      <group position={[-9.2, 0, 0]}>
-        <RBox size={[5, 3.2, 6]} pos={[0, 1.6, 0]} material={glass()} r={0.3} shadow={false} />
-        <PlusSpot position={[0, 0.1, 0]} size={1.2} />
-      </group>
-      <group position={[9.2, 0, 0]}>
-        <mesh rotation={[Math.PI / 2, 0, Math.PI / 2]} material={glass()}>
-          <cylinderGeometry args={[2.9, 2.9, 6, 32, 1, false, 0, Math.PI]} />
-        </mesh>
-        <PlusSpot position={[0, 0.1, 0]} size={1.2} />
-      </group>
-    </group>
-  )
-}
 
 function Tree({ x, z, s = 1, c = C.leaf }: { x: number; z: number; s?: number; c?: string }) {
   return (
@@ -179,12 +162,9 @@ export function Exterior({ showPot, fadeIn = false }: { showPot: boolean; fadeIn
       <group scale={OUT_SCALE}>
       {showPot && (fadeIn ? <FadeIn><CoffeePot /></FadeIn> : <CoffeePot />)}
       {showPot && <Reveal id="flowers"><Flowers /></Reveal>}
-      {showPot && <Reveal id="wings"><LockedWings /></Reveal>}
       <Reveal id="trees">
         <Tree x={-19} z={-5} s={2.6} />
-        <Tree x={-17} z={5} s={2.2} c={C.leafDark} />
         <Tree x={19} z={-6} s={2.8} c={C.leafDark} />
-        <Tree x={18} z={4} s={2.3} />
         <Tree x={-8} z={-14} s={2.9} c="#f2a9c9" />
         <Tree x={9} z={-14} s={3.1} c="#d7b4ef" />
       </Reveal>

@@ -19,6 +19,7 @@ import { CakeHud } from './ui/CakeHud'
 import { Joystick } from './ui/Joystick'
 import { Landscape } from './ui/Landscape'
 import { Street } from './world/Street'
+import { Neighbours } from './world/Neighbours'
 import { ClockChip } from './ui/ClockChip'
 import { Credits } from './ui/Credits'
 import { TOUCH } from './systems/CameraRig'
@@ -54,7 +55,7 @@ export function World() {
       <group scale={WORLD}>
       {/* zone culling (like occlusion culling): rooms you can't see from this view aren't drawn at all.
           Behind the bar or at the cake machine you face a wall, so the whole outdoors is skipped. */}
-      <group visible={REEL || (mode !== 'pov' && mode !== 'cake')}><Exterior showPot={!inside || outro || mode === 'walk'} fadeIn={outro} />{!outro && <Street />}</group>
+      <group visible={REEL || (mode !== 'pov' && mode !== 'cake')}><Exterior showPot={!inside || outro || mode === 'walk'} fadeIn={outro} />{!outro && <><Street /><Neighbours /></>}</group>
       {inside && <Interior cutaway={mode === 'dollhouse' || outro} pov={mode === 'pov'} only={REEL ? '' : mode === 'pov' ? 'bar' : mode === 'cake' ? 'kitchen' : ''} />}
       {inside && mode !== 'pov' && mode !== 'vlog' && mode !== 'walk' && <Reveal id="barista" at={[0.4, 0, 2.4]}><Barista /></Reveal>}
       {inside && <Customers />}
