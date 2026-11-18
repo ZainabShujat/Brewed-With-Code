@@ -2,32 +2,49 @@ import { useEffect, useState } from 'react'
 import { useGame } from '../systems/store'
 import { usePantry } from '../systems/pantry'
 import { useDay } from '../systems/day'
-import { SHOPS, shopDoor, type Shop } from '../world/streetLayout'
+import { SHOPS, type Shop } from '../world/streetLayout'
+import { KEEPERS } from '../data/shopkeepers'
+import { keeperPos, KEEPER_SHOPS } from '../world/Keepers'
 import { INGREDIENTS, PACKS, packAmount, packPrice, fmt, type IngredientId, type PackKind } from '../data/ingredients'
 
 // Walk up to an ingredient shop's door on the street: a prompt appears; press F (or tap it) to go in.
 // Inside: what this shop sells, how much you have, and the packs you can buy with coins from your bank.
 // Bigger packs (bulk, wholesale) are cheaper per gram and unlock as the café levels up.
-const STORES = SHOPS.filter((s) => s.store)
-const near = (p: { x: number; z: number }) => STORES.find((s) => { const [x, z] = shopDoor(s); return Math.hypot(p.x - x, p.z - z) < 3.6 })
+void SHOPS
+// who's close enough to talk to: a shopkeeper within reach (across the counter, or by their door)
+const near = (p: { x: number; z: number }) => KEEPER_SHOPS.find((s) => { const [x, z] = keeperPos(s); return Math.hypot(p.x - x, p.z - z) < 3.1 })
 
 export function StreetShop() {
   const [at, setAt] = useState<Shop | undefined>()
   const [open, setOpen] = useState<Shop | null>(null)
+  const [talk, setTalk] = useState<{ shop: Shop; i: number } | null>(null)
   useEffect(() => {
-    const id = setInterval(() => { const s = near(useGame.getState().player); setAt(s); if (!s) setOpen(null) }, 200)
+    const id = setInterval(() => { const s = near(useGame.getState().player); setAt(s); if (!s) { setOpen(null); setTalk(null) } }, 200)
     return () => clearInterval(id)
   }, [])
   useEffect(() => {
     const k = (e: KeyboardEvent) => {
-      if (e.key === 'f' || e.key === 'F') { const s = near(useGame.getState().player); if (s) setOpen((o) => (o ? null : s)) }
-      if (e.key === 'Escape') setOpen(null)
+      const s = near(useGame.getState().player)
+      if ((e.key === 'f' || e.key === 'F') && s?.store) { setTalk(null); setOpen((o) => (o ? null : s)) }
+      if ((e.key === 't' || e.key === 'T') && s) { setOpen(null); setTalk((t) => ({ shop: s, i: t && t.shop === s ? t.i + 1 : 0 })) }
+      if (e.key === 'Escape') { setOpen(null); setTalk(null) }
     }
     window.addEventListener('keydown', k); return () => window.removeEventListener('keydown', k)
   }, [])
   if (open) return <ShopCounter shop={open} close={() => setOpen(null)} />
   if (!at) return null
-  return <button className="shop-prompt" onPointerDown={(e) => e.stopPropagation()} onClick={() => setOpen(at)}>{at.icon} shop at <b>{at.name}</b> <kbd>F</kbd></button>
+  const k = KEEPERS[at.kind]!
+  return (
+    <>
+      {talk && <div className="talkbox" onPointerDown={(e) => e.stopPropagation()}>
+        <b>{at.icon} {k.name}</b><span>{k.lines[talk.i % k.lines.length]}</span><small>T: more · Esc: bye</small>
+      </div>}
+      <div className="shop-prompt" onPointerDown={(e) => e.stopPropagation()}>
+        <button onClick={() => setTalk((t) => ({ shop: at, i: t ? t.i + 1 : 0 }))}>💬 talk to <b>{k.name}</b> <kbd>T</kbd></button>
+        {at.store && <button onClick={() => setOpen(at)}>🛒 buy <kbd>F</kbd></button>}
+      </div>
+    </>
+  )
 }
 
 function ShopCounter({ shop, close }: { shop: Shop; close: () => void }) {
@@ -38,7 +55,7 @@ function ShopCounter({ shop, close }: { shop: Shop; close: () => void }) {
   return (
     <div className="shop-counter" onPointerDown={(e) => e.stopPropagation()}>
       <div className="sc-head">
-        <div><span className="sc-icon">{shop.icon}</span><b>{shop.name}</b></div>
+        <div><span className="sc-icon">{shop.icon}</span><b>{shop.name}</b><small className="sc-keeper"> · {KEEPERS[shop.kind]?.name} at the counter</small></div>
         <div className="sc-bank">🏦 {Math.floor(bank)} coins · café level {level}</div>
         <button className="sc-x" onClick={close} title="leave the shop (Esc)">✕</button>
       </div>
