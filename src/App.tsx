@@ -12,7 +12,7 @@ import { Lighting } from './world/Lighting'
 import { Kozie } from './world/Kozie'
 import { Customers, cafe as cafeLine } from './world/Customers'
 import { ShopHud } from './ui/ShopHud'
-import { BrewHud } from './ui/BrewHud'
+import { RecipeCard } from './ui/RecipeCard' // made by hand (the old meter HUD, ui/BrewHud.tsx, is kept for reference)
 import { DayHud } from './ui/DayHud'
 import { MusicButton } from './ui/MusicButton'
 import { CakeHud } from './ui/CakeHud'
@@ -110,7 +110,7 @@ export default function App() {
         {MODES.map((m) => <button key={m.id} className={m.id === mode ? 'on' : ''} onClick={() => setMode(m.id)}><span>{m.key}</span>{m.label}</button>)}
       </div></div>}
       {playing && !SNAP && (mode === 'pov' || mode === 'cake' || mode === 'dollhouse' || mode === 'walk') && <DayHud />}
-      {playing && mode === 'pov' && <BrewHud />}
+      {playing && mode === 'pov' && <RecipeCard />}
       {playing && mode !== 'cake' && mode !== 'pov' && <ShopHud />}
       {playing && <CakeHud />}
       {SNAP && <Credits />}

@@ -65,3 +65,20 @@ export function score(made: Drink, want: Drink) {
 }
 
 export const EMPTY: Drink = { size: 'medium', shots: 0, water: false, chocolate: false, milk: 'none', milkType: 'whole', topping: 'none' }
+
+// ── made by hand: real amounts (ml) ──
+// What's actually in the glass. The Drink fields above (shots, milk, …) are derived from these, so scoring and the
+// old one-click actions keep working while the hand-made path fills glasses for real.
+export type Contents = { espresso: number; choc: number; water: number; milk: number; foam: number }
+export const NO_CONTENTS: Contents = { espresso: 0, choc: 0, water: 0, milk: 0, foam: 0 }
+export const CAP: Record<CupSize, number> = { small: 240, medium: 330, large: 450 } // glass capacity, ml
+export const SHOT_ML = 30
+export const filled = (c: Contents) => c.espresso + c.choc + c.water + c.milk + c.foam
+// craft: how well it was made (0..1), separate from whether it was the right order.
+// shots close to 30 ml each, and the glass filled to 75–100% without spilling.
+export function craft(c: Contents, size: CupSize, wantShots: number, spilled: boolean) {
+  const shotErr = wantShots ? Math.min(1, Math.abs(c.espresso - wantShots * SHOT_ML) / (wantShots * SHOT_ML)) : 0
+  const fill = filled(c) / CAP[size]
+  const fillErr = fill < 0.75 ? Math.min(1, (0.75 - fill) / 0.5) : 0
+  return Math.max(0, 1 - shotErr * 0.6 - fillErr * 0.5 - (spilled ? 0.25 : 0))
+}

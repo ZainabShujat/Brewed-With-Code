@@ -60,9 +60,9 @@ if (typeof window !== 'undefined') {
   }, true)
 }
 
-export function Grab({ id, pos, size, children, tip, onClick, drops }: {
+export function Grab({ id, pos, size, children, tip, onClick, drops, disabled = false }: {
   id: string; pos: [number, number, number]; size: [number, number, number]; children?: ReactNode; tip?: string
-  onClick?: () => void; drops?: Record<string, () => void>
+  onClick?: () => void; drops?: Record<string, () => void>; disabled?: boolean
 }) {
   const [hover, setHover] = useState(false)
   const outer = useRef<THREE.Group>(null), inner = useRef<THREE.Group>(null)
@@ -91,12 +91,40 @@ export function Grab({ id, pos, size, children, tip, onClick, drops }: {
   return (
     <group ref={outer} position={pos}>
       <group ref={inner}>{children}</group>
-      <mesh name={`station:${id}`} visible={false} onPointerDown={down}
+      {!disabled && <mesh name={`station:${id}`} visible={false} onPointerDown={down}
+        onPointerOver={(e) => { e.stopPropagation(); setHover(true); if (!held.id) document.body.style.cursor = 'pointer' }}
+        onPointerOut={() => { setHover(false); if (!held.id) document.body.style.cursor = '' }}>
+        <boxGeometry args={size} />
+      </mesh>}
+      {hover && !holding && !held.id && tip && !disabled && <Html position={[0, size[1] / 2 + 0.08, 0]} center className="tag tool">{tip}</Html>}
+    </group>
+  )
+}
+
+// Press and HOLD on something to keep doing it (pull a shot, fill the pitcher, steam): `onHold(dt)` runs every
+// frame while the button is down. Ignored while you're carrying a tool (that click belongs to the tool).
+export function Hold({ id, pos, size, tip, onHold, onStart, onEnd, children }: {
+  id: string; pos: [number, number, number]; size: [number, number, number]; tip?: string
+  onHold: (dt: number) => void; onStart?: () => void; onEnd?: () => void; children?: ReactNode
+}) {
+  const [hover, setHover] = useState(false)
+  const down = useRef(false)
+  useFrame((_, dt) => { if (down.current) onHold(Math.min(dt, 0.1)) })
+  const start = (e: ThreeEvent<PointerEvent>) => {
+    if (e.button !== 0 || held.id) return
+    e.stopPropagation(); down.current = true; onStart?.()
+    const up = () => { down.current = false; onEnd?.(); window.removeEventListener('pointerup', up) }
+    window.addEventListener('pointerup', up)
+  }
+  return (
+    <group position={pos}>
+      {children}
+      <mesh name={`hold:${id}`} visible={false} onPointerDown={start}
         onPointerOver={(e) => { e.stopPropagation(); setHover(true); if (!held.id) document.body.style.cursor = 'pointer' }}
         onPointerOut={() => { setHover(false); if (!held.id) document.body.style.cursor = '' }}>
         <boxGeometry args={size} />
       </mesh>
-      {hover && !holding && !held.id && tip && <Html position={[0, size[1] / 2 + 0.08, 0]} center className="tag tool">{tip}</Html>}
+      {hover && !held.id && tip && <Html position={[0, size[1] / 2 + 0.08, 0]} center className="tag tool">{tip}</Html>}
     </group>
   )
 }

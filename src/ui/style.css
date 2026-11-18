@@ -160,7 +160,9 @@ html, body { overscroll-behavior: none; }
 
 /* ── phones: coffee flow, cake machine, menus ─────────────── */
 @media (max-width: 700px) {
-  .ticket { width: auto; left: 8px; right: 8px; top: 52px; transform: none; padding: 8px 10px; }
+  .ticket { width: 210px; left: auto; right: 8px; top: 52px; transform: none; padding: 8px 10px; } /* a compact card in the corner, the bar stays visible */
+  .ticket .cc-pic svg { width: 84px; height: auto; } .ticket .cc-name { font-size: 13px; } .rc-row { font-size: 11px; line-height: 1.4; }
+  .brew-next { font-size: 13px; bottom: 10px; padding: 8px 12px; }
   .tk-steps { font-size: 10px; }
   .brew { bottom: 8px; padding: 10px; gap: 8px; }
   .brew-title { font-size: 13px; }
@@ -231,7 +233,7 @@ html, body { overscroll-behavior: none; }
 .cutfade.on { opacity: 1; transition: none; }
 
 /* the café clock chip (time of day) */
-.clockchip { position: fixed; left: 184px; top: 12px; z-index: 26; height: 40px; padding: 0 14px; border: 0; border-radius: 999px; background: rgba(42,24,48,.72); color: #fbeee4; font: 700 15px/40px inherit; font-family: inherit; cursor: pointer; white-space: nowrap; }
+.clockchip { position: fixed; left: 184px; top: 12px; z-index: 26; height: 40px; padding: 0 14px; border: 0; border-radius: 999px; background: rgba(42,24,48,.72); color: #fbeee4; font-weight: 700; font-size: 15px; line-height: 40px; font-family: inherit; cursor: pointer; white-space: nowrap; }
 .clockchip i { font-style: normal; opacity: .7; font-size: 12px; }
 @media (max-width: 700px) { .clockchip { left: 148px; top: 6px; height: 36px; line-height: 36px; font-size: 13px; } }
 .clockchip.corner { top: auto; bottom: 62px; left: 14px; } /* capture/dev builds: the view tabs own the top-left */
@@ -245,3 +247,19 @@ html, body { overscroll-behavior: none; }
 
 .headtag.icon { background: none; padding: 0; box-shadow: none; font: inherit; color: inherit; } /* bulb icons: same hide rule as the labels */
 .headtag.screen { background: none; padding: 0; box-shadow: none; font: inherit; color: inherit; white-space: normal; }
+
+/* made-by-hand recipe card: ticks itself off as you work; a hint for the next step */
+.ticket { z-index: 30; }
+.recipe { margin-top: 8px; border-top: 1px dashed rgba(94,42,117,.25); padding-top: 6px; }
+.rc-row { font-weight: 700; font-size: 13px; line-height: 1.5; font-family: inherit; color: #5e2a75; opacity: .75; }
+.rc-row i { font-style: normal; display: inline-block; width: 18px; color: #c4528a; }
+.rc-row.ok { opacity: 1; } .rc-row.ok i { color: #2f9e6e; }
+.rc-row em { font-style: normal; opacity: .6; font-size: 12px; }
+.rc-fill { position: relative; margin-top: 6px; height: 16px; border-radius: 8px; background: rgba(94,42,117,.12); overflow: hidden; }
+.rc-fill b { position: absolute; left: 0; top: 0; bottom: 0; background: #d8b48c; border-radius: 8px; transition: width .2s; }
+.rc-fill b.good { background: #8ee0a0; } .rc-fill b.over { background: #ff8a9a; }
+.rc-fill span { position: relative; font-weight: 700; font-size: 11px; line-height: 16px; font-family: inherit; padding-left: 8px; color: #3d2547; }
+.brew-next { position: fixed; left: 50%; bottom: 22px; transform: translateX(-50%); z-index: 20; max-width: min(720px, 92vw); text-align: center;
+  font-weight: 700; font-size: 16px; line-height: 1.35; font-family: inherit; color: #fbeee4; background: rgba(42,24,48,.86); padding: 10px 18px; border-radius: 14px; }
+.brew-next.ready { background: #2f9e6e; }
+.brew-bin { position: fixed; right: 16px; bottom: 22px; z-index: 20; border: 0; border-radius: 12px; padding: 8px 12px; background: rgba(42,24,48,.75); color: #fbeee4; font-weight: 700; font-size: 13px; font-family: inherit; cursor: pointer; }

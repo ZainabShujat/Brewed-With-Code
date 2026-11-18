@@ -7,7 +7,7 @@ import { resolve } from 'path'
 export default defineConfig({
   plugins: [react()],
   base: './',
-  server: { port: 5180 },
+  server: { port: 5180, watch: { usePolling: true, interval: 300 } }, // polling: Windows was missing some file saves
   build: {
     outDir: process.env.OUT_DIR || 'dist',
     emptyOutDir: true,
