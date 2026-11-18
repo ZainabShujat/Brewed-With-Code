@@ -116,7 +116,7 @@ export default function App() {
 
   return (
     <>
-      <Canvas frameloop={SNAP ? 'always' : 'never'} onCreated={(s) => { (window as any).__r3f = s; if (!SNAP) startLoop(s) }} flat shadows={quality.high} dpr={quality.high ? 1 : 0.75} camera={{ fov: 45, position: [15, 9, 25] }} gl={{ antialias: quality.high, powerPreference: 'high-performance' }}>
+      <Canvas frameloop={SNAP ? 'always' : 'never'} onCreated={(s) => { (window as any).__r3f = s; if (!SNAP) startLoop(s) }} flat shadows={quality.high} dpr={quality.high ? [1, 1.5] : 0.75} camera={{ fov: 45, position: [15, 9, 25] }} gl={{ antialias: quality.high, powerPreference: 'high-performance' }}>
         <color attach="background" args={['#dfccf6']} />
         <World />
       </Canvas>
