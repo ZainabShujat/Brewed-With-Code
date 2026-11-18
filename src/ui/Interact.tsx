@@ -32,6 +32,7 @@ export function Interact() {
   useEffect(() => {
     const k = (e: KeyboardEvent) => {
       if (e.key !== 'e' && e.key !== 'E') return
+      if ((e.target as HTMLElement)?.tagName === 'INPUT' || (e.target as HTMLElement)?.tagName === 'TEXTAREA') return // typing a name, not doing things
       const a = currentAct(); if (a) { a.run(); return }
       if (onFoot(useGame.getState().mode) && frontOrder()) takeOrder()
     }

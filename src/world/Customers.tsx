@@ -235,3 +235,4 @@ function DoorSign() {
     </group>
   )
 }
+if (typeof window !== 'undefined') (window as unknown as { __dirty: typeof dirty }).__dirty = dirty // tests

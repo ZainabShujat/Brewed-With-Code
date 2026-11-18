@@ -119,7 +119,7 @@ function CafeLights() {
   return (
     <group>
       {ring.map(([x, z]) => (
-        <group key={`${x.toFixed(1)}`} position={[x, 0, z]} scale={1.6}>
+        <group key={`${x.toFixed(1)},${z.toFixed(1)}`} position={[x, 0, z]} scale={1.6}>
           <mesh position={[0, 0.35, 0]} material={ironMat}><cylinderGeometry args={[0.08, 0.1, 0.7, 8]} /></mesh>
           <mesh position={[0, 0.8, 0]} material={glow()}><sphereGeometry args={[0.2, 14, 10]} /></mesh>
           <mesh position={[0, 1.0, 0]} material={ironMat}><coneGeometry args={[0.24, 0.18, 8]} /></mesh>

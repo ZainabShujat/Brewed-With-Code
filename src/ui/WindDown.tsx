@@ -36,6 +36,7 @@ export function WindDown() {
   useEffect(() => {
     const k = (e: KeyboardEvent) => {
       if (e.key !== 'e' && e.key !== 'E') return
+      if ((e.target as HTMLElement)?.tagName === 'INPUT' || (e.target as HTMLElement)?.tagName === 'TEXTAREA') return // typing a name, not doing things
       const st = useWind.getState(); if (!st.on) return
       const pl = useGame.getState().player, c = CHORES.find((c) => !st.done.includes(c.id) && c.near(pl.x, pl.z)); if (!c) return
       sfx.tap()
