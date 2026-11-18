@@ -13,7 +13,6 @@ import { sfx } from '../systems/sound'
 // "Start Day N+1" (or Next day) ends it.
 type Chore = { id: string; label: string; how: string; done: string; near: (x: number, z: number) => boolean }
 const CHORES: Chore[] = [
-  { id: 'sign', label: 'flip the sign', how: 'flip the door sign to Closed', done: 'Closed for tonight. 🌙', near: (x, z) => Math.hypot(x, z - 12.4) < 2.4 },
   { id: 'wipe', label: 'wipe a table', how: 'wipe this table', done: 'Sparkly clean ✨', near: (x, z) => TABLES.some(([tx, tz]) => Math.hypot(x - tx, z - tz) < 2.6) },
   { id: 'bye', label: 'say goodnight to a guest', how: 'say goodnight', done: 'They waved back. 👋', near: (x, z) => cafe.pool.some((c) => c.phase === 'sit' && Math.hypot(c.pos.x - x, c.pos.z - z) < 2.6) },
   { id: 'air', label: 'step outside', how: 'take a breath of night air', done: 'The lid lights look lovely from out here.', near: (_x, z) => z > 16 },

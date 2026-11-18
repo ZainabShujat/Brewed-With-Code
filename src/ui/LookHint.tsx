@@ -5,7 +5,7 @@ import { view, setSens } from '../systems/CameraRig'
 export function LookHint({ mode }: { mode: string }) {
   const [sens, set] = useState(view.sens)
   const how = mode === 'dollhouse' ? 'drag to move around · right-drag or Q / E to turn · scroll to zoom · click a station to work there'
-    : mode === 'walk' ? 'drag (or Q / E, ← →) to look around · WASD to walk · Shift to run · walk into a shop: T to chat, F to buy'
+    : mode === 'walk' || mode === 'fp' ? 'drag or ← → to look around · WASD to walk · Shift to run · E to do things · in a shop: T to chat, F to buy'
     : mode === 'pov' ? 'scroll to zoom in / out · hold ↑ (or right-drag) to look up at customers · drag tools onto your glass'
     : mode === 'cake' ? 'hold right-click + move mouse to look' : 'scroll to zoom'
   return (

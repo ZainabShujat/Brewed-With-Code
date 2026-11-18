@@ -7,7 +7,8 @@ import { anim } from '../systems/anim'
 import { mat } from './mats'
 import { useShop } from '../systems/shop'
 import { TABLES, TABLE_SCALE } from './layout'
-import { useDay } from '../systems/day'
+import { useDay, DAY_LEN } from '../systems/day'
+import { useTutorial } from '../systems/tutorial'
 import { useGame } from '../systems/store'
 import { WipeFx } from '../ui/WindDown'
 import { Townsperson, seatHip, type Pose } from './folk/Townsperson'
@@ -20,7 +21,9 @@ const EMBED = typeof location !== 'undefined' && location.search.includes('embed
 // the café table set has four chairs, two on each side of the table (measured from the model: ±0.74 across, ±0.38 along),
 // each facing the table. `face` = which way the sitter faces (towards the table).
 const K_T = TABLE_SCALE / 1.6 // the chair spots were measured on a 1.6x table set
-const SEATS = TABLES.flatMap(([x, z]) => ([[-0.74, -0.38], [-0.74, 0.38], [0.74, -0.38], [0.74, 0.38]] as const).map(([dx, dz]) => ({ x: x + dx * K_T, z: z + dz * K_T, face: dx < 0 ? Math.PI / 2 : -Math.PI / 2 })))
+const SEATS = TABLES.flatMap(([x, z]) => ([[-0.74, -0.38], [-0.74, 0.38], [0.74, -0.38], [0.74, 0.38]] as const).map(([dx, dz]) => ({ x: x + dx * K_T, z: z + dz * K_T, face: dx < 0 ? Math.PI / 2 : -Math.PI / 2, cx: x + dx * K_T * 0.45, cz: z + dz * K_T * 0.8 })))
+/** cups guests left on the tables (pick them up for a little tip) */
+export const dirty: { x: number; z: number }[] = []
 // a step back from the chair (away from the table), as [x, z]
 const away = (st: { x: number; z: number; face: number }, d: number): [number, number] => [st.x - Math.sin(st.face) * d, st.z - Math.cos(st.face) * d]
 const taken = new Set<number>()
@@ -35,7 +38,7 @@ export const SLOTS: [number, number][] = Array.from({ length: 6 }, (_, i) => [1.
 
 type Phase = 'off' | 'in' | 'line' | 'out' | 'seat' | 'sit'
 const SIT_SAY = ['mmm ☕', 'so cozy here', 'best latte in town', '📖 one more chapter…', 'this foam! ✨', 'ahh, warm', 'did you hear about the bakery?', '😌', 'refill later?', 'love this place']
-export type Cust = { byeT?: number; stay: number; id: number; phase: Phase; pos: THREE.Vector3; path: THREE.Vector3[]; look: number; served: number; hurry: boolean; seat: number; sitT: number; patience: number; spec: FolkSpec; side: number; ver: number }
+export type Cust = { refill?: 'no' | 'later' | 'ask' | 'done'; thankT?: number; byeT?: number; stay: number; id: number; phase: Phase; pos: THREE.Vector3; path: THREE.Vector3[]; look: number; served: number; hurry: boolean; seat: number; sitT: number; patience: number; spec: FolkSpec; side: number; ver: number }
 
 export const LOOKS = [
   { shirt: '#6fe0c4', hair: '#3b2a22', skin: '#f6cdb4' }, { shirt: '#ffcf5c', hair: '#1d1838', skin: '#c98a62' },
@@ -146,11 +149,14 @@ function Body({ c }: { c: Cust }) {
       // seated: hips on the chair seat, thighs forward; a slight lean in towards the table
       const [sx, sz] = c.spec.kind === 'mallow' ? away(st, 0.22) : [st.x, st.z]; g.position.set(sx, 0, sz); g.rotation.set(0, st.face, 0) // marshmallows are wide: a bit further back
       if (seatLift.current) seatLift.current.position.y = SEAT_TOP - seatHip(c.spec) * FOLK_SCALE // hips on the chair's seat
-      if (c.sitT > c.stay) { taken.delete(c.seat); c.seat = -1; c.phase = 'out'; c.path = [V(...away(st, 0.9)), V(OUT_LANE, away(st, 0.9)[1]), V(OUT_LANE, 11.4), ...(EMBED ? [V(...DOOR)] : homePath(c.side))] }
+      if (c.refill === undefined) c.refill = Math.random() < 0.3 ? 'later' : 'no'
+      if (c.refill === 'later' && c.sitT > c.stay * 0.35) c.refill = 'ask'
+      if (c.sitT > c.stay && (c.refill !== 'ask' || c.sitT > c.stay * 1.8)) { if (!EMBED && dirty.length < 12) dirty.push({ x: st.cx, z: st.cz }); c.refill = undefined; taken.delete(c.seat); c.seat = -1; c.phase = 'out'; c.path = [V(...away(st, 0.9)), V(OUT_LANE, away(st, 0.9)[1]), V(OUT_LANE, 11.4), ...(EMBED ? [V(...DOOR)] : homePath(c.side))] }
       if (tag.current) tag.current.style.opacity = '0'
       // a sip now and then, a little chat with whoever's at the table
       if (c.byeT && c.byeT > 0) c.byeT -= dt
-      if (bubble.current) { const k = (c.sitT + c.id * 3.1) % 14, txt = c.byeT && c.byeT > 0 ? 'Night! See you tomorrow 🌙' : k < 2.2 ? SIT_SAY[(c.id + Math.floor(c.sitT / 14)) % SIT_SAY.length] : ''; if (bubble.current.textContent !== txt) { bubble.current.textContent = txt; bubble.current.innerHTML = txt } }
+      if (c.thankT && c.thankT > 0) c.thankT -= dt
+      if (bubble.current) { const k = (c.sitT + c.id * 3.1) % 14, txt = c.byeT && c.byeT > 0 ? 'Night! See you tomorrow 🌙' : c.refill === 'ask' ? '☕ a refill, please?' : c.thankT && c.thankT > 0 ? 'thank you! 💛' : k < 2.2 ? SIT_SAY[(c.id + Math.floor(c.sitT / 14)) % SIT_SAY.length] : ''; if (bubble.current.textContent !== txt) { bubble.current.textContent = txt; bubble.current.innerHTML = txt } }
       return
     }
     if (seatLift.current) seatLift.current.position.y = 0
@@ -183,6 +189,13 @@ function Body({ c }: { c: Cust }) {
   )
 }
 
+// how long until the next guest: usually a quiet spell of ~35-85 s (time to wander, wipe, chat), sometimes a
+// friend right behind (5-9 s); the first hour of the day is a little busier (the morning rush)
+function nextGap() {
+  if (useTutorial.getState().lesson < 2) return 8
+  const d = useDay.getState(), rush = d.left > DAY_LEN * 0.75 ? 0.6 : 1
+  return Math.random() < 0.25 ? 5 + Math.random() * 4 : (35 + Math.random() * 50) * rush
+}
 export function Customers() {
   const pool = useMemo(() => cafe.pool, [])
   useFrame((_, dtRaw) => {
@@ -191,9 +204,34 @@ export function Customers() {
     if (!cafe.auto || (!EMBED && day.phase !== 'open')) return  // customers only arrive while the café is open
     const dt = Math.min(dtRaw, 0.05)
     cafe._spawnT += dt; cafe._serveT += dt
-    if (cafe._spawnT > cafe.spawnEvery) { cafe._spawnT = 0; cafe.spawn() }
+    if (cafe._spawnT > cafe.spawnEvery) { cafe._spawnT = 0; cafe.spawn(); if (!EMBED) cafe.spawnEvery = nextGap() }
     const front = cafe.line.peek()
     if (front && front.phase === 'line' && cafe._serveT > cafe.serveEvery) { cafe._serveT = 0; cafe.serve() }
   })
-  return <group>{pool.map((c) => <Body key={c.id} c={c} />)}<WipeFx /></group>
+  return <group>{pool.map((c) => <Body key={c.id} c={c} />)}<WipeFx /><DirtyCups /><DoorSign /></group>
+}
+
+// the cups guests left behind, on the tables
+function DirtyCups() {
+  const [n, setN] = useState(0)
+  useFrame(() => { if (dirty.length !== n) setN(dirty.length) })
+  return <group>{dirty.slice(0, n).map((d, i) => (
+    <group key={i} position={[d.x, 1.13, d.z]}>
+      <mesh position={[0, 0.07, 0]} material={mat('#fffaf2')}><cylinderGeometry args={[0.08, 0.06, 0.14, 14]} /></mesh>
+      <mesh position={[0, 0.005, 0]} material={mat('#f0e2d0')}><cylinderGeometry args={[0.13, 0.13, 0.012, 16]} /></mesh>
+      <mesh position={[0.085, 0.08, 0]} rotation={[0, 0, Math.PI / 2]} material={mat('#fffaf2')}><torusGeometry args={[0.035, 0.01, 6, 10]} /></mesh>
+    </group>))}</group>
+}
+// the hanging sign just inside the door: CLOSED until you flip it in the morning, and again at closing time
+function DoorSign() {
+  const phase = useDay((d) => d.phase), open = phase === 'open' || phase === 'closing'
+  const label = phase === 'closing' ? 'CLOSING' : open ? 'OPEN' : 'CLOSED'
+  return (
+    <group position={[1.7, 2.5, 11.7]}>
+      <mesh position={[0, 0.55, 0]} material={mat('#3b2a1e')}><cylinderGeometry args={[0.01, 0.01, 0.6, 4]} /></mesh>
+      <mesh material={mat(open ? '#7fd6a0' : '#e98fa6')}><boxGeometry args={[1.2, 0.5, 0.05]} /></mesh>
+      <Html transform position={[0, 0, -0.03]} rotation={[0, Math.PI, 0]} distanceFactor={4} zIndexRange={[5, 0]} style={{ pointerEvents: 'none' }}><div className={'doorsign' + (open ? ' open' : '')}>{label}</div></Html>
+      <Html transform position={[0, 0, 0.03]} distanceFactor={4} zIndexRange={[5, 0]} style={{ pointerEvents: 'none' }}><div className={'doorsign' + (open ? ' open' : '')}>{label}</div></Html>
+    </group>
+  )
 }

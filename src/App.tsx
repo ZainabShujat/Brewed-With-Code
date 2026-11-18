@@ -20,8 +20,10 @@ import { HoldRing } from './ui/HoldRing'
 import { FolkLineup, FolkGallery, SHOW_FOLK } from './world/Folk'
 import { StreetShop, PantryNote } from './ui/StreetShop'
 import { ModeFade } from './ui/ModeFade'
+import { ViewBar } from './ui/ViewBar'
 import { TakeOrder, ServeReturn } from './ui/TakeOrder'
 import { WindDown } from './ui/WindDown'
+import { Interact } from './ui/Interact'
 import { TutorialBubble } from './ui/TutorialBubble'
 import { RecipeCard } from './ui/RecipeCard' // made by hand (the old meter HUD, ui/BrewHud.tsx, is kept for reference)
 import { DayHud } from './ui/DayHud'
@@ -56,7 +58,7 @@ const MODES: { id: CamMode; label: string; key: string }[] = [
 
 export function World() {
   const mode = useGame((s) => s.mode)
-  useEffect(() => { if (!REEL) document.body.classList.toggle('notags', mode === 'walk') }, [mode])
+  useEffect(() => { if (!REEL) document.body.classList.toggle('notags', mode === 'walk' || mode === 'fp') }, [mode])
   useEffect(() => { document.body.classList.toggle('station-cursor', mode === 'pov' || mode === 'cake') }, [mode]) // the game's own arrow cursor at the stations
   const inside = mode !== 'exterior'
   const outro = mode === 'outro'
@@ -64,14 +66,14 @@ export function World() {
   // Explore is third person: inside the café the roof cuts away (you look in from above); outside the pot shows
   const [indoors, setIndoors] = useState(true)
   useFrame(() => { const p = useGame.getState().player, i = Math.hypot(p.x, p.z) < ROOM_R - 0.5; if (i !== indoors) setIndoors(i) })
-  const walkIn = mode === 'walk' && indoors
+  const walkIn = mode === 'walk' && indoors // (first person keeps the roof on: you're inside)
   return (
     <>
       <Lighting />
       <group scale={WORLD}>
       {/* zone culling (like occlusion culling): rooms you can't see from this view aren't drawn at all.
           Behind the bar or at the cake machine you face a wall, so the whole outdoors is skipped. */}
-      <group visible={REEL || (mode !== 'pov' && mode !== 'cake')}><Exterior showPot={!inside || outro || (mode === 'walk' && !indoors)} fadeIn={outro} />{!outro && <><Street /><Neighbours /><StreetLife /><Keepers /></>}</group>
+      <group visible={REEL || (mode !== 'pov' && mode !== 'cake')}><Exterior showPot={!inside || outro || ((mode === 'walk' || mode === 'fp') && !indoors)} fadeIn={outro} />{!outro && <><Street /><Neighbours /><StreetLife /><Keepers /></>}</group>
       {inside && SHOW_FOLK && <FolkLineup />}
       {SHOW_FOLK && <FolkGallery />}
       {inside && <Interior cutaway={mode === 'dollhouse' || outro || walkIn} pov={mode === 'pov'} only={REEL ? '' : mode === 'pov' ? 'bar' : mode === 'cake' ? 'kitchen' : ''} />}
@@ -128,21 +130,23 @@ export default function App() {
       {SNAP && <div className="hud"><div className="modes">
         {MODES.map((m) => <button key={m.id} className={m.id === mode ? 'on' : ''} onClick={() => setMode(m.id)}><span>{m.key}</span>{m.label}</button>)}
       </div></div>}
-      {playing && !SNAP && (mode === 'pov' || mode === 'cake' || mode === 'dollhouse' || mode === 'walk') && <DayHud />}
+      {playing && !SNAP && (mode === 'pov' || mode === 'cake' || mode === 'dollhouse' || mode === 'walk' || mode === 'fp') && <DayHud />}
       {playing && mode === 'pov' && <RecipeCard />}
       {playing && mode === 'pov' && <TutorialBubble />}
       {playing && !SNAP && <ModeFade />}
       {playing && !SNAP && <TakeOrder />}
       {playing && <ServeReturn />}
       {playing && <WindDown />}
+      {playing && !SNAP && <Interact />}
       {playing && mode === 'pov' && <HoldRing />}
-      {playing && mode === 'walk' && <StreetShop />}
+      {playing && (mode === 'walk' || mode === 'fp') && <StreetShop />}
       {playing && <PantryNote />}
       {/* the old ShopHud (order card + 'back behind the bar') is retired: Take order replaces it */}
       {playing && <CakeHud />}
       {SNAP && <Credits />}
       {playing && (TOUCH ? mode !== 'cake' && mode !== 'pov' && <Joystick /> : mode !== 'pov' && <LookHint mode={mode} />)}
-      {playing && mode === 'walk' && <div className="crosshair" />}
+      {playing && mode === 'fp' && <div className="crosshair" />}
+      {playing && !SNAP && <ViewBar />}
       {!SNAP && <MusicButton />}
       {(!SNAP || location.pathname.includes('play')) && <ClockChip />}
       {!SNAP && <Landscape />}

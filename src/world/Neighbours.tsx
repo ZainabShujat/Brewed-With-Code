@@ -204,7 +204,7 @@ function Shop({ shop }: { shop: Shop }) {
   const w = shop.x1 - shop.x0, h = shop.h, D = SHOP_DEPTH, lease = shop.kind === 'lease'
   // inside an ingredient shop (in Explore): the roof and front lift away, Sims-style, so the camera can see in
   const [inside, setInside] = useState(false)
-  useFrame(() => { if (!shop.store) return; const g = useGame.getState(), i = g.mode === 'walk' && inShop(shop, g.player.x, g.player.z); if (i !== inside) setInside(i) })
+  useFrame(() => { if (!shop.store) return; const g = useGame.getState(), i = (g.mode === 'walk' || g.mode === 'fp') && inShop(shop, g.player.x, g.player.z); if (i !== inside) setInside(i) })
   const sign = useMemo(() => new THREE.MeshStandardMaterial({ map: signTex(shop.name, lease ? '#c4527e' : shop.trim), roughness: 0.6 }), [shop.name, shop.trim, lease])
   const awning = useMemo(() => new THREE.MeshStandardMaterial({ map: stripeTex(shop.awning[0], shop.awning[1], Math.round(w * 2)), roughness: 0.8, side: THREE.DoubleSide }), [shop.awning, w])
   const win = w * 0.56, winX = -w * 0.14, doorX = w * 0.32, ups = Math.max(2, Math.floor(w / 4.5))

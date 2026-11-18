@@ -51,7 +51,7 @@ export function Lighting() {
     if (scene.background instanceof THREE.Color) scene.background.copy(k.sky)
     if (sun.current) { const a = ((h - 6) / 12) * Math.PI; sun.current.position.set(Math.cos(a) * 22, Math.max(2, Math.sin(a) * 22), 9); sun.current.color.copy(k.sun); sun.current.intensity = 2.3 * k.day + 0.25 }
     // indoors after dark the lamps are on: warm, cosy fill. Outdoors stays moonlit (walking out on the street = outdoors).
-    const g = useGame.getState(), inside = g.mode !== 'exterior' && !(g.mode === 'walk' && Math.hypot(g.player.x, g.player.z) > 14.5), dark = 1 - k.day
+    const g = useGame.getState(), inside = g.mode !== 'exterior' && !((g.mode === 'walk' || g.mode === 'fp') && Math.hypot(g.player.x, g.player.z) > 14.5), dark = 1 - k.day
     if (hemi.current) { hemi.current.intensity = 0.55 + 0.7 * k.day + (inside ? 0.35 * dark : 0); hemi.current.color.copy(k.fill) }
     if (amb.current) {
       if (inside) { amb.current.intensity = 0.2 + 0.15 * k.day + 0.75 * dark; amb.current.color.copy(_a.set('#ffe9f0').lerp(_warm, dark)) }

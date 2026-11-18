@@ -5,6 +5,8 @@ import { useDay } from '../systems/day'
 import { useGame } from '../systems/store'
 import { useTutorial } from '../systems/tutorial'
 import { sfx } from '../systems/sound'
+import { lastFoot } from './ViewBar'
+import { currentAct } from './Interact'
 
 // A real café: while it's open you're free to walk around. When someone reaches the counter a bell rings and a
 // "Take order" button comes up (or press E); taking it walks you to the right station (bar or cake bench).
@@ -32,11 +34,7 @@ export function TakeOrder() {
   const f = front(), o = frontOrder(), atStation = mode === 'pov' || mode === 'cake'
   // the bell, once per customer
   useEffect(() => { if (f && o && rang.current !== f.id) { rang.current = f.id; if (!atStation) sfx.bell() } })
-  useEffect(() => {
-    const k = (e: KeyboardEvent) => { if ((e.key === 'e' || e.key === 'E') && !atStation && frontOrder()) takeOrder() }
-    window.addEventListener('keydown', k); return () => window.removeEventListener('keydown', k)
-  }, [atStation])
-  if (atStation || !o || (phase !== 'open' && phase !== 'closing')) return null
+  if (atStation || !o || (phase !== 'open' && phase !== 'closing') || currentAct()) return null
   return (
     <button className="takeorder" onClick={takeOrder}>
       <span className="to-bell">🔔</span>
@@ -53,7 +51,7 @@ export function ServeReturn() {
     if (first.current) { first.current = false; return }
     const t = setTimeout(() => {
       const g = useGame.getState()
-      if ((g.mode === 'pov' || g.mode === 'cake') && !frontOrder() && useTutorial.getState().lesson >= 2 && useDay.getState().phase !== 'idle') g.setMode('walk')
+      if ((g.mode === 'pov' || g.mode === 'cake') && !frontOrder() && useTutorial.getState().lesson >= 2 && useDay.getState().phase !== 'idle') g.setMode(lastFoot)
     }, 2200)
     return () => clearTimeout(t)
   }, [served, cakes])

@@ -11,7 +11,7 @@ import { WORLD } from '../world/layout'
 import { machine } from '../world/CakeMachine'
 
 // Fixed shots per mode. Walk mode follows the barista instead.
-const SHOTS: Record<Exclude<CamMode, 'walk' | 'vlog'>, { pos: THREE.Vector3; look: THREE.Vector3 }> = {
+const SHOTS: Record<Exclude<CamMode, 'walk' | 'fp' | 'vlog'>, { pos: THREE.Vector3; look: THREE.Vector3 }> = {
   // straight on to the front door (square, level, symmetrical); slid left so the pot sits right of the menu panel
   exterior: { pos: new THREE.Vector3(-13, 13, 78), look: new THREE.Vector3(-13, 8.5, 0) },
   // outro: pull back from the dollhouse to the full exterior while the pot walls fade in
@@ -22,6 +22,9 @@ const SHOTS: Record<Exclude<CamMode, 'walk' | 'vlog'>, { pos: THREE.Vector3; loo
   pov: { pos: new THREE.Vector3(0.1, 3.9, -14.3), look: new THREE.Vector3(0.1, 0.95, -6.7) } // looking down at the workspace: every tool readable,
 }
 
+const GLIDE = new Set(['walk', 'fp', 'dollhouse'])
+let glideT = 0
+const EYE = 2.3 // eye height on foot (the townsfolk are ~2-2.5 m tall at this scale)
 const SNAP = typeof location !== 'undefined' && location.search.includes('snap')
 const look = new THREE.Vector3()
 const setFov = (cam: THREE.PerspectiveCamera, f: number) => { if (Math.abs(cam.fov - f) > 0.01) { cam.fov = f; cam.updateProjectionMatrix() } }
@@ -48,7 +51,7 @@ export function useMouseLook() {
       down = e.button; lx = e.clientX; ly = e.clientY
       // MOUSE LOOK, like any first-person game: hold the RIGHT button and move the mouse to turn your head.
       // In Walk view a left click on the scene locks the mouse for full look (Esc to let go).
-      if (view.mode !== 'dollhouse' && view.mode !== 'exterior' && (e.button === 2 || (view.mode === 'walk' && e.button === 0)) && (view.mode !== 'pov' || e.button === 2)) {
+      if (view.mode !== 'dollhouse' && view.mode !== 'exterior' && (e.button === 2 || ((view.mode === 'walk' || view.mode === 'fp') && e.button === 0)) && (view.mode !== 'pov' || e.button === 2)) {
         el.requestPointerLock?.(); view.looking = true; return
       }
       grabbed = document.body.style.cursor === 'grab' || document.body.style.cursor === 'grabbing' || document.body.style.cursor === 'pointer'
@@ -68,7 +71,7 @@ export function useMouseLook() {
       const orbit = view.mode === 'dollhouse'
       if (down === 0 && grabbed) return                   // dragging an item, not the view
       const dx = e.clientX - lx, dy = e.clientY - ly; lx = e.clientX; ly = e.clientY
-      if (view.mode === 'walk') { // drag to look around in Walk: turn all the way round, like any first-person game
+      if (view.mode === 'walk' || view.mode === 'fp') { // drag to look around in Walk / first person: turn all the way round, like any first-person game
         view.yaw -= dx * 0.005 * view.sens; view.pitch = Math.max(-1.1, Math.min(1.0, view.pitch - dy * 0.004 * view.sens)); return }
       if (!orbit) return                                  // only the dollhouse is dragged round; elsewhere you turn your head with Q / E
       if (down === 0) {
@@ -101,17 +104,17 @@ export const brewCam = { x: null as number | null } // set by the coffee flow: w
 function applyLook(mode: string, dt: number) {
   // Q / E (or ← → in barista view) turn your head like a person would; it eases back when you let go
   if (mode !== 'dollhouse' && mode !== 'exterior') {
-    const walk = mode === 'walk'
-    const turn = (keys.has('q') || (walk && keys.has('arrowleft')) ? 1 : 0) - (keys.has('e') || (walk && keys.has('arrowright')) ? 1 : 0)
+    const walk = mode === 'walk' || mode === 'fp'
+    const turn = walk ? (keys.has('arrowleft') ? 1 : 0) - (keys.has('arrowright') ? 1 : 0) : (keys.has('q') ? 1 : 0) - (keys.has('e') ? 1 : 0) // on foot, E is for doing things (it used to spin you round)
     if (turn) view.yaw = walk ? view.yaw + turn * dt * 2.2 : Math.max(-1.3, Math.min(1.3, view.yaw + turn * dt * 1.6)) // Walk: turn all the way round
   }
-  if (mode !== 'walk' && (stick.x || stick.y)) {
+  if (mode !== 'walk' && mode !== 'fp' && (stick.x || stick.y)) {
     const orbit = mode === 'dollhouse' || mode === 'exterior'
     view.yaw -= stick.x * dt * (orbit ? 1.2 : 0.8); view.pitch += stick.y * dt * (orbit ? 0.6 : 0.6)
     view.pitch = orbit ? Math.max(-0.6, Math.min(0.5, view.pitch)) : Math.max(-0.7, Math.min(0.7, view.pitch))
     if (!orbit) view.yaw = Math.max(-1.4, Math.min(1.4, view.yaw))
   }
-  if (view.mode !== mode) { view.mode = mode; view.yaw = 0; view.pitch = 0; view.zoom = 1; view.panX = 0; view.panZ = 0; view.spin = 0 } // each view starts fresh
+  if (view.mode !== mode) { const keep = (view.mode === 'walk' || view.mode === 'fp') && (mode === 'walk' || mode === 'fp'); view.mode = mode; if (!keep) view.yaw = 0; view.pitch = 0; view.zoom = 1; view.panX = 0; view.panZ = 0; view.spin = 0; spinTo = 0; keys.clear() } // each view starts fresh (and no key stays 'held' across the switch)
   if (mode === 'dollhouse') {
     if (keys.has('q') && !qe) { qe = true; spinTo += Math.PI / 2 } else if (keys.has('e') && !qe) { qe = true; spinTo -= Math.PI / 2 } else if (!keys.has('q') && !keys.has('e')) qe = false
     view.spin += (spinTo - view.spin) * Math.min(1, dt * 5)
@@ -123,7 +126,7 @@ function applyLook(mode: string, dt: number) {
     if (mode === 'dollhouse') _sph.radius *= 2.4
     wantPos.copy(wantLook).add(_off.setFromSpherical(_sph))
     if (mode === 'dollhouse') { wantLook.x += view.panX; wantLook.z += view.panZ; wantPos.x += view.panX; wantPos.z += view.panZ }
-  } else if (mode !== 'walk') { // (Explore's third-person camera is placed directly from yaw / pitch / zoom)
+  } else if (mode !== 'walk' && mode !== 'fp') { // (Explore's third-person camera is placed directly from yaw / pitch / zoom)
     // turn the head: swing the look point round the eye; the wheel leans closer / back
     _off.copy(wantLook).sub(wantPos); _sph.setFromVector3(_off)
     _sph.theta += view.yaw; _sph.phi = Math.max(0.2, Math.min(2.9, _sph.phi - view.pitch))
@@ -169,7 +172,10 @@ export function CameraRig() {
     }
     // switching area: fade to plum, jump the camera straight there, fade back (no slow, tilted fly-through)
     let cut = false
-    if (lastMode !== mode) { cut = lastMode !== ''; lastMode = mode; if (cut) fadeCut() }
+    // switching between Explore / first person / Dollhouse GLIDES (no cut); going to a station cuts with a fade
+    let glide = false
+    if (lastMode !== mode) { glide = GLIDE.has(lastMode) && GLIDE.has(mode); cut = lastMode !== '' && !glide; if (glide) glideT = 1.2; lastMode = mode; if (cut) fadeCut() }
+    if (glideT > 0) glideT -= dt
     const asp = (camera as THREE.PerspectiveCamera).aspect
     setFov(camera as THREE.PerspectiveCamera, mode === 'cake' && asp < 1 ? 58 : (mode === 'pov' ? 50 : mode === 'dollhouse' ? 19 : 45) * (asp < 1 ? Math.min(1.7, 1 / asp * 0.95) : 1)) // portrait phone = wider lens // barista view: a slightly wider, human field of view
     if (mode === 'walk') {
@@ -180,6 +186,12 @@ export function CameraRig() {
       const dist = (indoors ? 8 : 10) * view.zoom, elev = Math.max(0.4, Math.min(1.3, 0.82 + view.pitch))
       wantLook.set(player.x, 1.0, player.z)
       wantPos.set(player.x + Math.sin(view.yaw) * Math.cos(elev) * dist, 1.0 + Math.sin(elev) * dist, player.z + Math.cos(view.yaw) * Math.cos(elev) * dist)
+    } else if (mode === 'fp') {
+      // first person: you ARE the character; the camera is your eyes, W walks where you look
+      step(player, dt, view.mode === 'fp' ? view.yaw : 0)
+      const pitch = Math.max(-1.0, Math.min(0.9, view.pitch))
+      wantPos.set(player.x, EYE, player.z)
+      wantLook.set(player.x - Math.sin(view.yaw) * Math.cos(pitch) * 4, EYE - Math.sin(pitch) * 4, player.z - Math.cos(view.yaw) * Math.cos(pitch) * 4)
     } else if (mode === 'pov') {
       // POV = the barista standing behind the counter
       player.x = 0.3; player.z = -8.4; player.facing = 0
@@ -212,7 +224,7 @@ export function CameraRig() {
     wantPos.multiplyScalar(WORLD); wantLook.multiplyScalar(WORLD)
     if (mode !== 'pov') applyLook(mode, dt); else if (view.mode !== mode) { view.mode = mode; view.yaw = 0; view.pitch = 0; view.zoom = 1 } // (pov keeps its zoom while you work)
     // ?snap = jump straight to the shot (used for footage capture and tests)
-    const k = SNAP || cut ? 1 : 1 - Math.exp(-dt * (mode === 'walk' ? 7 : mode === 'outro' ? 1.4 : view.looking ? 30 : 4)) // Explore: a smooth follow cam // mouse look = instant, like a game
+    const k = SNAP || cut ? 1 : glideT > 0 ? 1 - Math.exp(-dt * 3.2) : 1 - Math.exp(-dt * (mode === 'fp' ? 18 : mode === 'walk' ? 7 : mode === 'outro' ? 1.4 : view.looking ? 30 : 4)) // Explore: a smooth follow cam // mouse look = instant, like a game
     camera.position.lerp(wantPos, k)
     look.lerp(wantLook, k)
     camera.lookAt(look)

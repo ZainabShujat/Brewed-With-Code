@@ -3,7 +3,7 @@ import { useDay, DAY_LEN } from '../systems/day'
 import { useShop } from '../systems/shop'
 import { sfx } from '../systems/sound'
 import { cafe } from '../world/Customers'
-import { useGame } from '../systems/store'
+import { useGame, onFoot } from '../systems/store'
 import { useTutorial } from '../systems/tutorial'
 import { windDown, useWind } from './WindDown'
 
@@ -14,12 +14,13 @@ export function DayHud() {
   useEffect(() => { const id = setInterval(() => tick((n) => n + 1), 250); return () => clearInterval(id) }, [])
   useEffect(() => { if (d.phase === 'results') sfx.perfect() }, [d.phase])
 
-  const winding = useWind((w) => w.on)
+  const winding = useWind((w) => w.on), mode = useGame((s) => s.mode)
   if (winding) return null
   if (d.phase === 'idle') return (
     <div className="dayopen">
       <div className="dayno">Day {d.day}</div>
-      <button className="brew-go" onClick={() => { useShop.getState().openShop(true); d.start(); sfx.bell(); cafe.seed(3); if (useTutorial.getState().lesson >= 2) useGame.getState().setMode('walk') }}>☕ Open the café</button>
+      <div className="dayhint">🪧 the café is closed · walk to the door and press <b>E</b> to flip the sign to OPEN</div>
+      {!onFoot(mode) && <button className="brew-go" onClick={() => { const g = useGame.getState(); g.setMode('walk'); Object.assign(g.player, { x: 0, z: 10.4, facing: 0 }) }}>🚪 go to the door</button>}
       <div className="daybank">💰 {d.bank} saved · ⭐ {d.stars}</div>
     </div>
   )
@@ -51,7 +52,7 @@ export function DayHud() {
   const m = Math.floor(d.left / 60), s = Math.floor(d.left % 60)
   return (
     <div className={'dayclock' + (d.phase === 'closing' ? ' closing' : d.left < 20 ? ' late' : '')}>
-      <b>Day {d.day}</b> · {d.phase === 'closing' ? 'closing up… serve the last customers' : `${m}:${String(s).padStart(2, '0')}`}
+      <b>Day {d.day}</b> · {d.phase === 'closing' ? (cafe.line.size ? 'closing time · serve the last guests' : 'closing time · flip the door sign to CLOSED (E)') : `${m}:${String(s).padStart(2, '0')}`}
       <i style={{ width: `${(d.left / DAY_LEN) * 100}%` }} />
     </div>
   )

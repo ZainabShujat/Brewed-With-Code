@@ -175,9 +175,9 @@ export function Street() {
   // doors open as you walk up to them (inside or out), and ease shut behind you
   useFrame((_, dt) => {
     const { mode, player } = useGame.getState()
-    const near = mode === 'walk' && Math.abs(player.x) < 3 && player.z > S.passage[0] - 4 && player.z < S.passage[1] + 4
+    const near = (mode === 'walk' || mode === 'fp') && Math.abs(player.x) < 3 && player.z > S.passage[0] - 4 && player.z < S.passage[1] + 4
     const k = Math.min(1, dt * 5)
-    if (mode === 'walk') { anim.doorIn += ((near ? 1 : 0) - anim.doorIn) * k; anim.doorOut += ((near ? 1 : 0) - anim.doorOut) * k }
+    if (mode === 'walk' || mode === 'fp') { anim.doorIn += ((near ? 1 : 0) - anim.doorIn) * k; anim.doorOut += ((near ? 1 : 0) - anim.doorOut) * k }
   })
   return (
     <group>
