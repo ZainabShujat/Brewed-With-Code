@@ -5,7 +5,7 @@ A cozy, low-poly 3D café game that runs entirely in the browser — built in pu
 Run your own coffee-pot-shaped café: take orders, craft real drinks behind the bar, bake layered cakes, serve customers, and explore a candy-coloured street with shops and townsfolk.
 
 <p align="center">
-  <img src="devlog/s05-before-after.png" alt="Brewed With Code — Barista view and Walk mode" width="800" />
+  <img src="screenshots/1-title.png" alt="Brewed With Code — title screen showing the coffee-pot café and street" width="800" />
 </p>
 
 ## ✨ Features
@@ -18,6 +18,28 @@ Run your own coffee-pot-shaped café: take orders, craft real drinks behind the 
 - **Day/night cycle** — the sun moves, stars come out, and the café glows warm at night.
 - **Create your character** — name your barista, pick a shape (Kozie, notebook, or marshmallow), and customise colours and face.
 - **Multiple camera modes** — Outside, Dollhouse, Walk, and Barista POV with smooth cinematic transitions.
+
+## 📸 Screenshots
+
+<p align="center">
+  <img src="screenshots/4-dollhouse.png" alt="Dollhouse view — full café interior from above with customers chatting" width="800" />
+</p>
+<p align="center"><em>Dollhouse view — peek inside the café from above. Customers chat, sit, and browse.</em></p>
+
+<p align="center">
+  <img src="screenshots/6-coffee-bar.png" alt="Barista view — behind the counter with the espresso machine and an order" width="800" />
+</p>
+<p align="center"><em>Behind the bar — pick a glass, pull espresso shots, steam milk, and serve.</em></p>
+
+<p align="center">
+  <img src="screenshots/2-explore-cafe.png" alt="Explore mode — Kozie walking inside the café" width="800" />
+</p>
+<p align="center"><em>Explore mode — walk around as Kozie and discover every corner of the café.</em></p>
+
+<p align="center">
+  <img src="screenshots/7-night-exterior.png" alt="Night time — the café glowing under the stars with streetlamps lit" width="800" />
+</p>
+<p align="center"><em>Night falls — the café glows warm under the stars, streetlamps light up the road.</em></p>
 
 ## 🎮 How to Play
 
@@ -87,7 +109,7 @@ brewed-with-code/
 │   ├── App.tsx        # Root component
 │   └── main.tsx       # Entry point
 ├── public/
-│   └── assets/        # 3D models, textures, music (gitignored — see above)
+│   └── assets/        # 3D models, textures, music (gitignored — see below)
 ├── tests/             # Unit tests + automated Playwright play-throughs
 ├── devlog/            # Build session logs
 ├── docs/              # Design docs, roadmap, gameplay studies
