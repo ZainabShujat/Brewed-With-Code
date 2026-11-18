@@ -6,7 +6,7 @@ import { PriorityQueue } from '../systems/queue'
 import { anim } from '../systems/anim'
 import { mat } from './mats'
 import { useShop } from '../systems/shop'
-import { TABLES } from './layout'
+import { TABLES, TABLE_SCALE } from './layout'
 import { useDay } from '../systems/day'
 import { Townsperson, seatHip, type Pose } from './folk/Townsperson'
 import { folk, type FolkSpec } from './folk/specs'
@@ -15,8 +15,12 @@ import { folk, type FolkSpec } from './folk/specs'
 const EMBED = typeof location !== 'undefined' && location.search.includes('embed') && location.pathname.includes('reel')
 // two stools per table (FURN 1.3 scale): where a seated customer's body goes, and which way they face
 // the café table set has four chairs, two on each long side, facing the table (FURN 1.6 scale)
-const SEATS = TABLES.flatMap(([x, z]) => [-0.56, 0.56].flatMap((dx) => [{ x: x + dx, z: z - 0.68, face: 0 }, { x: x + dx, z: z + 0.68, face: Math.PI }]))
-const away = (st: { z: number; face: number }, d: number) => st.z + (st.face === 0 ? -d : d) // a step back from the chair
+// the café table set has four chairs, two on each side of the table (measured from the model: ±0.74 across, ±0.38 along),
+// each facing the table. `face` = which way the sitter faces (towards the table).
+const K_T = TABLE_SCALE / 1.6 // the chair spots were measured on a 1.6x table set
+const SEATS = TABLES.flatMap(([x, z]) => ([[-0.74, -0.38], [-0.74, 0.38], [0.74, -0.38], [0.74, 0.38]] as const).map(([dx, dz]) => ({ x: x + dx * K_T, z: z + dz * K_T, face: dx < 0 ? Math.PI / 2 : -Math.PI / 2 })))
+// a step back from the chair (away from the table), as [x, z]
+const away = (st: { x: number; z: number; face: number }, d: number): [number, number] => [st.x - Math.sin(st.face) * d, st.z - Math.cos(st.face) * d]
 const taken = new Set<number>()
 
 // Customers walk in the front door, join the line at the counter (a FIFO queue), get served
@@ -43,7 +47,7 @@ export const MAX_LINE = 3, CALM_DAYS = 2
 
 // Townsfolk: marshmallows live to the LEFT of the market (west, -x), notebooks to the RIGHT (east, +x). Each customer
 // walks in along the pavement from their own side, comes in through the door, and goes back home the same way.
-const STREET_Z = 19.6, FROM = 30, FOLK_SCALE = 1.7, SEAT_TOP = 0.672
+const STREET_Z = 19.6, FROM = 30, FOLK_SCALE = 1.5, SEAT_TOP = 0.672 * TABLE_SCALE / 1.6 // the chair seat's height
 const inPath = (side: number) => [V(side * 2, STREET_Z), V(0, 18.4), V(0, 13.3), V(IN_LANE, 11.4), V(IN_LANE, 1.2)]
 const homePath = (side: number) => [V(0, 13.3), V(0, 18.4), V(side * 2, STREET_Z), V(side * FROM, STREET_Z)]
 
@@ -75,7 +79,7 @@ export const cafe = {
     if (!EMBED && !c.hurry && free.length && Math.random() < 0.75) {
       const i = free[Math.floor(Math.random() * free.length)], st = SEATS[i]; taken.add(i)
       c.phase = 'seat'; c.seat = i
-      c.path = [V(OUT_LANE, c.pos.z), V(OUT_LANE, away(st, 0.9)), V(st.x, away(st, 0.9)), V(st.x, st.z)]
+      const [ax, az] = away(st, 0.9); c.path = [V(OUT_LANE, c.pos.z), V(OUT_LANE, az), V(ax, az), V(st.x, st.z)]
     } else { c.phase = 'out'; c.path = [V(OUT_LANE, c.pos.z), V(OUT_LANE, 11.4), ...(EMBED ? [V(...DOOR)] : homePath(c.side))] }
     return true
   },
@@ -128,9 +132,9 @@ function Body({ c }: { c: Cust }) {
       c.sitT += dt
       const st = SEATS[c.seat]
       // seated: hips on the chair seat, thighs forward; a slight lean in towards the table
-      g.position.set(st.x, 0, st.z); g.rotation.set(0, st.face, 0)
+      const [sx, sz] = c.spec.kind === 'mallow' ? away(st, 0.22) : [st.x, st.z]; g.position.set(sx, 0, sz); g.rotation.set(0, st.face, 0) // marshmallows are wide: a bit further back
       if (seatLift.current) seatLift.current.position.y = SEAT_TOP - seatHip(c.spec) * FOLK_SCALE // hips on the chair's seat
-      if (c.sitT > 22 + (c.id % 4) * 3) { taken.delete(c.seat); c.seat = -1; c.phase = 'out'; c.path = [V(st.x, away(st, 0.9)), V(OUT_LANE, away(st, 0.9)), V(OUT_LANE, 11.4), ...(EMBED ? [V(...DOOR)] : homePath(c.side))] }
+      if (c.sitT > 22 + (c.id % 4) * 3) { taken.delete(c.seat); c.seat = -1; c.phase = 'out'; c.path = [V(...away(st, 0.9)), V(OUT_LANE, away(st, 0.9)[1]), V(OUT_LANE, 11.4), ...(EMBED ? [V(...DOOR)] : homePath(c.side))] }
       if (tag.current) tag.current.style.opacity = '0'
       if (bubble.current && bubble.current.textContent) bubble.current.textContent = ''
       return

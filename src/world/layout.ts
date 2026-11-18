@@ -27,8 +27,11 @@ export const BLOCKERS: Box[] = [
 ]
 // Tables (x, z); each gets two stools. ~5 m apart so you can walk between them.
 // window seats follow the curve under the three windows; a centre cluster; a group corner on the right
-export const TABLES: [number, number][] = [[-10.4, -1.7], [-10.4, 1.7], [-9.3, 5.0], [-4.2, 0.6], [-3.4, 6.4], [8.4, -2.2], [8.4, 3.4]]
-for (const [x, z] of TABLES) BLOCKERS.push([x - 1.4, z - 1.0, x + 1.4, z + 1.0]) // 1.3x furniture + stools
+// 18 Nov: bigger table sets (TABLE_SCALE) in two calm clusters: by the windows on the left, and on the right,
+// with the middle aisle (door to counter, where the queue walks) kept clear and ~1.2 m walkways between tables
+export const TABLE_SCALE = 1.9
+export const TABLES: [number, number][] = [[-10.6, -1.6], [-11.0, 3.4], [-6.2, -0.6], [-6.0, 5.2], [8.6, -2.0], [10.6, 2.8], [6.4, 4.8]]
+for (const [x, z] of TABLES) BLOCKERS.push([x - 1.6, z - 1.1, x + 1.6, z + 1.1]) // a table + its four chairs (chairs on the x sides)
 export const PLUS_SPOTS: [number, number][] = [[8, 8], [-8, 8.2], [0.4, 8.6], [8.6, 0.8]]
 export const COUNTER = { x0: -2.6, x1: 3.0, z: -3.2, depth: 1.2, top: 1.05 } // in back-zone local space
 

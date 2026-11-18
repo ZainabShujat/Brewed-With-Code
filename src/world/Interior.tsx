@@ -15,7 +15,7 @@ import { useGame } from '../systems/store'
 import { Model } from './Models'
 import { Steam } from './Props'
 import { ArchWindow, Chalkboard, Clock, PendantLamp, Plant, RoundTable, Rug, Shelf, Stool, StringLights } from './Props'
-import { BACK_DZ, COUNTER, FRIDGE_DX, FRIDGE_DZ, H, KITCHEN_DX, KITCHEN_DZ, PLUS_SPOTS, ROOM, RR, TABLES, WALL_H } from './layout'
+import { BACK_DZ, COUNTER, FRIDGE_DX, FRIDGE_DZ, H, KITCHEN_DX, KITCHEN_DZ, PLUS_SPOTS, ROOM, RR, TABLES, TABLE_SCALE, WALL_H } from './layout'
 
 const T = 0.3 // wall thickness
 
@@ -265,9 +265,9 @@ function Decor({ hideBack }: { hideBack: boolean }) {
       <Plant pos={[-9.2, 0, 9.2]} s={1.1} pot={C.counter} />
       <Plant pos={[9.2, 0, -4.2]} s={1.2} pot={C.lilac} />
       <Plant pos={[9.2, 0, 9.2]} s={0.9} pot={C.mint} />
-      <Rug pos={[-4.2, 0.1, 0.6]} r={2.3} />
-      <Rug pos={[-3.4, 0.1, 6.4]} r={2.3} color={C.counter} />
-      <Rug pos={[8.4, 0.1, 0.6]} r={3.0} color={C.mint} />
+      <Rug pos={[-6.1, 0.1, 2.3]} r={3.6} />
+      <Rug pos={[-10.8, 0.1, 0.9]} r={3.2} color={C.counter} />
+      <Rug pos={[8.6, 0.1, 1.9]} r={3.9} color={C.mint} />
       {/* window bench: a long cushioned seat under the arched windows, with cushions and a plant at each end */}
       {Array.from({ length: 9 }, (_, i) => { const th = -2.0 + i * 0.13, x = Math.sin(th) * (RR - 0.65), z = Math.cos(th) * (RR - 0.65); return (
         <group key={i} position={[x, 0, z]} rotation={[0, th, 0]}>
@@ -302,7 +302,7 @@ export function Interior({ cutaway, pov, only = '' }: { cutaway: boolean; pov: b
       {TABLES.map(([x, z], i) => (
         <Reveal key={`${x},${z}`} id="tables" at={[x, 0, z]}>
           {/* FURN: tables + stools sized for ~2 m characters (table ~1.05 m, seat ~0.8 m) */}
-          <group position={[x, 0, z]} scale={FURN}>
+          <group position={[x, 0, z]} scale={TABLE_SCALE}>
             <RoundTable pos={[0, 0, 0]} top={i ? C.cream : C.counterTop} />
           </group>
         </Reveal>

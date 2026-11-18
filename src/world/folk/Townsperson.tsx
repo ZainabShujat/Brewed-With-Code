@@ -25,7 +25,9 @@ const speckles = (bg: string, fg: string) => canvasTex(`sp${bg}`, (x) => { x.fil
 const stripes = (a: string, b: string) => canvasTex(`st${a}`, (x) => { x.fillStyle = a; x.fillRect(0, 0, 128, 128); x.fillStyle = b
   for (let i = -4; i < 8; i++) { x.beginPath(); x.moveTo(i * 32, 0); x.lineTo(i * 32 + 16, 0); x.lineTo(i * 32 + 16 + 128, 128); x.lineTo(i * 32 + 128, 128); x.fill() } })
 
-type Limbs = { legs: React.MutableRefObject<THREE.Group[]>; arms: React.MutableRefObject<THREE.Group[]> }
+type Limbs = { legs: React.MutableRefObject<THREE.Group[]>; arms: React.MutableRefObject<THREE.Group[]>; lap?: React.MutableRefObject<THREE.Group | null> }
+const FOLDS = (m: string) => m !== 'open' && m !== 'sticky' // these notebooks sit by folding into an L
+const LAP = 0.3 // where they fold: 30% up from the bottom (a tall back, a short lap)
 const setRef = (arr: React.MutableRefObject<THREE.Group[]>, i: number) => (g: THREE.Group | null) => { if (g) arr.current[i] = g }
 
 // ── paper folk ──
@@ -37,9 +39,15 @@ const LEG = 0.36
 function Paper({ s, limbs }: { s: Extract<FolkSpec, { kind: 'paper' }>; limbs: Limbs }) {
   const col = PAPER_COLOURS[s.colour], [w, h, d] = PAPER_DIMS[s.model], m = s.model
   const cover = useMemo(() => m === 'composition' ? new THREE.MeshStandardMaterial({ map: speckles(col.cover, col.spine), roughness: 0.8 }) : mat(col.cover, { rough: 0.7 }), [m, col])
-  const body = useMemo(() => rbox(w, h, d, m === 'journal' || m === 'pocket' ? 0.07 : 0.04), [w, h, d, m])
-  const pages = useMemo(() => rbox(w - 0.04, h - 0.04, d * 0.8, 0.02), [w, h, d])
-  const cy = LEG + h / 2, labelW = Math.min(0.42, w * 0.72), labelH = Math.min(0.34, h * 0.42)
+  const body = useMemo(() => rbox(w, h, d, m === 'journal' || m === 'pocket' ? 0.07 : 0.04), [w, h, d, m]) // (sticky pad)
+  const r0 = m === 'journal' || m === 'pocket' ? 0.06 : 0.035, uh = h * (1 - LAP), lh = h * LAP, hinge = -h / 2 + lh // fold line, from the body's centre
+  const upper = useMemo(() => rbox(w, uh, d, r0), [w, uh, d, r0]), lower = useMemo(() => rbox(w, lh, d, Math.min(r0, lh / 3)), [w, lh, d, r0])
+  const upperPages = useMemo(() => rbox(w - 0.04, uh - 0.03, d * 0.8, 0.02), [w, uh, d]), lowerPages = useMemo(() => rbox(w - 0.04, lh - 0.03, d * 0.8, 0.015), [w, lh, d])
+  const cy = LEG + h / 2, labelW = Math.min(0.42, w * 0.72), labelH = Math.min(0.32, h * 0.4), fy = hinge + uh * 0.58 // face on the upper part
+  const legs = (y: number) => [-1, 1].map((sd, i) => <group key={sd} position={[sd * Math.min(0.13, w * 0.24), y, 0]} ref={setRef(limbs.legs, i)}>
+    <mesh position={[0, -LEG / 2, 0]} material={ink}><cylinderGeometry args={[0.02, 0.02, LEG, 6]} /></mesh>
+    <mesh position={[0, -LEG + 0.02, 0.04]} scale={[1, 0.6, 1.4]} material={mat(col.feet, { rough: 0.6 })}><sphereGeometry args={[0.06, 10, 8]} /></mesh>
+  </group>)
   return (
     <group>
       <group position={[0, cy, 0]}>
@@ -64,12 +72,21 @@ function Paper({ s, limbs }: { s: Extract<FolkSpec, { kind: 'paper' }>; limbs: L
           </group>
         ) : (
           <group>
-            <mesh geometry={body} material={cover} castShadow />
-            <mesh geometry={pages} position={[0.025, 0, 0]} material={cream} />
-            <mesh position={[-w / 2 + 0.02, 0, 0]} material={mat(col.spine)}><boxGeometry args={[0.05, h + 0.02, d + 0.01]} /></mesh>
-            <mesh position={[0, 0.05, d / 2 + 0.002]} material={mat('#fffaf0', { rough: 0.9 })}><planeGeometry args={[labelW, labelH]} /></mesh>
-            <Face f={s.face} z={d / 2 + 0.006} y={0.05} s={Math.min(1.1, labelW / 0.38)} />
-            {m === 'journal' && <mesh position={[w * 0.3, 0, 0]} material={mat(col.feet)}><boxGeometry args={[0.035, h + 0.01, d + 0.02]} /></mesh>}
+            {/* the upper part (the face lives here) */}
+            <mesh geometry={upper} position={[0, hinge + uh / 2, 0]} material={cover} castShadow />
+            <mesh geometry={upperPages} position={[0.025, hinge + uh / 2, 0]} material={cream} />
+            <mesh position={[-w / 2 + 0.02, hinge + uh / 2, 0]} material={mat(col.spine)}><boxGeometry args={[0.05, uh + 0.01, d + 0.01]} /></mesh>
+            <mesh position={[0, fy, d / 2 + 0.002]} material={mat('#fffaf0', { rough: 0.9 })}><planeGeometry args={[labelW, labelH]} /></mesh>
+            <Face f={s.face} z={d / 2 + 0.006} y={fy} s={Math.min(1.05, labelW / 0.4, labelH / 0.3)} />
+            {m === 'journal' && <mesh position={[w * 0.3, hinge + uh / 2, 0]} material={mat(col.feet)}><boxGeometry args={[0.035, uh + 0.01, d + 0.02]} /></mesh>}
+            {/* the short lap: hinged low down, it folds forward over the seat when sitting (legs come with it) */}
+            <group position={[0, hinge, 0]} ref={(g) => { if (g && limbs.lap) limbs.lap.current = g }}>
+              <mesh geometry={lower} position={[0, -lh / 2, 0]} material={cover} castShadow />
+              <mesh geometry={lowerPages} position={[0.025, -lh / 2, 0]} material={cream} />
+              <mesh position={[-w / 2 + 0.02, -lh / 2, 0]} material={mat(col.spine)}><boxGeometry args={[0.05, lh + 0.01, d + 0.01]} /></mesh>
+              {m === 'journal' && <mesh position={[w * 0.3, -lh / 2, 0]} material={mat(col.feet)}><boxGeometry args={[0.035, lh + 0.01, d + 0.02]} /></mesh>}
+              {legs(-lh)}
+            </group>
             {m === 'spiral' && Array.from({ length: 7 }, (_, k) => <mesh key={k} position={[-w / 2 + 0.08 + k * (w - 0.16) / 6, h / 2 + 0.01, 0]} rotation={[0, Math.PI / 2, 0]} material={steel}><torusGeometry args={[0.045, 0.01, 6, 14]} /></mesh>)}
             {m === 'riffled' && Array.from({ length: 9 }, (_, k) => <mesh key={k} position={[-w / 2 + 0.06 + k * (w - 0.12) / 8, h / 2 + 0.05 + (k % 2) * 0.03, -0.02 + (k % 3) * 0.02]} rotation={[0, 0, (k - 4) * 0.12]} material={k % 3 ? cream : mat(col.spine)}><coneGeometry args={[0.055, 0.16, 4]} /></mesh>)}
             {m === 'pocket' && <mesh position={[w / 2 + 0.02, 0.12, 0.03]} material={mat(col.feet)}><capsuleGeometry args={[0.018, 0.3, 4, 8]} /></mesh>}
@@ -87,10 +104,7 @@ function Paper({ s, limbs }: { s: Extract<FolkSpec, { kind: 'paper' }>; limbs: L
           <mesh position={[sd * 0.155, -0.245, 0]} scale={[1, 1.1, 0.9]} material={mat('#fff6e6', { rough: 0.8 })}><sphereGeometry args={[0.048, 12, 10]} /></mesh>
         </group>)}
       </group>
-      {[-1, 1].map((sd, i) => <group key={sd} position={[sd * Math.min(0.13, w * 0.24), LEG, 0]} ref={setRef(limbs.legs, i)}>
-        <mesh position={[0, -LEG / 2, 0]} material={ink}><cylinderGeometry args={[0.02, 0.02, LEG, 6]} /></mesh>
-        <mesh position={[0, -LEG + 0.02, 0.04]} scale={[1, 0.6, 1.4]} material={mat(col.feet, { rough: 0.6 })}><sphereGeometry args={[0.06, 10, 8]} /></mesh>
-      </group>)}
+      {!FOLDS(m) && legs(LEG)}
     </group>
   )
 }
@@ -138,14 +152,16 @@ function Mallow({ s, limbs }: { s: Extract<FolkSpec, { kind: 'mallow' }>; limbs:
 }
 
 /** hip height when seated (so chairs can place them) */
-export const seatHip = (s: FolkSpec) => s.kind === 'paper' ? LEG : BASE
+export const seatHip = (s: FolkSpec) => s.kind === 'paper' ? (FOLDS(s.model) ? LEG + PAPER_DIMS[s.model][1] * LAP : LEG) : BASE
 
 export function Townsperson({ spec, pose = 'wait', phase = 0, getPose }: { spec: FolkSpec; pose?: Pose; phase?: number; getPose?: () => Pose }) {
-  const inner = useRef<THREE.Group>(null), limbs: Limbs = { legs: useRef<THREE.Group[]>([]), arms: useRef<THREE.Group[]>([]) }
+  const inner = useRef<THREE.Group>(null), limbs: Limbs = { legs: useRef<THREE.Group[]>([]), arms: useRef<THREE.Group[]>([]), lap: useRef<THREE.Group | null>(null) }
   useFrame(({ clock }) => {
     const t = clock.elapsedTime + phase, g = inner.current; if (!g) return
     const p = getPose ? getPose() : pose, walk = p === 'walk', sit = p === 'sit', sw = walk ? Math.sin(t * 7) : 0
-    limbs.legs.current.forEach((l, k) => { if (l) l.rotation.x = sit ? -1.4 : sw * 0.6 * (k ? 1 : -1) })
+    const lap = limbs.lap?.current, folds = !!lap
+    if (lap) lap.rotation.x += ((sit ? -Math.PI / 2 : 0) - lap.rotation.x) * 0.25 // fold at the belly into an L
+    limbs.legs.current.forEach((l, k) => { if (l) l.rotation.x = sit ? (folds ? Math.PI / 2 - 0.15 : -1.4) : sw * 0.6 * (k ? 1 : -1) })
     limbs.arms.current.forEach((a, k) => { if (a) a.rotation.x = sit ? -0.4 : walk ? -sw * 0.5 * (k ? 1 : -1) : Math.sin(t * 1.3 + k) * 0.06 })
     g.position.y = 0; g.rotation.z = 0; g.scale.set(1, 1, 1)
     if (spec.kind === 'mallow') { const b = walk ? Math.abs(Math.sin(t * 7)) : p === 'wait' ? (Math.sin(t * 2) + 1) * 0.15 : 0, q = 0.08 * spec.squish
