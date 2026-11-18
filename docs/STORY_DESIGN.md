@@ -297,3 +297,10 @@ neighbours. The creator approves voice and tone for each companion before more i
   it early to build trust; Juno says paperwork is "a vibe killer" but will happily spend it on an event.
 - **Where:** a narrow bank between Petal Post and the café on the café's side (x −27…−19), with columns, a clock
   and a brass sign. It sits in the visual-upgrade backlog and comes with Story Mode.
+
+### More decisions (18 Nov, later)
+- **A furniture & equipment shop** on the street for Story Mode: tables, chairs, sofas, lamps, decor, and coffee/cake
+  equipment upgrades (pro espresso machine, second grinder, faster oven). Prices feed the decision cards ("buy the pro
+  machine or save?"). In Zen Mode the same items unlock for free as you play.
+- **Customer interaction** is its own workstream (see ROADMAP): customers you can talk to, regulars with names and
+  favourite orders, reactions to your drinks, small requests, and table service.

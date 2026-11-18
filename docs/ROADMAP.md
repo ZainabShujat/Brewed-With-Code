@@ -84,3 +84,16 @@ Deliberately later (after 12 Dec, or never): physics props, decorate mode, clean
 **1 Dec ships Zen Mode only:** the café, coffee, cakes, the street and shops, no money pressure or failure. **Story Mode**
 (companions Mira / Theo / Juno, weekly ledger, decision cards, bank + loans, Foamfeed with the meta twist) follows as
 a big December update; see `STORY_DESIGN.md`.
+
+## Visual upgrade decisions (18 Nov)
+- **Keep the current palette** for the café. All other buildings use **pastel shades**, with **more distinct shapes**.
+- **Beyond the border wall:** a visible **residential backdrop** (houses, flats, rooftops) so the shop street reads as
+  a little shopping arcade inside a town.
+- **Free assets are OK** (public-domain sources), and every download is listed with its size for approval first.
+- **Smoothness first:** heavy effects only on high quality; phones stay smooth.
+- **Order:** café interior benchmark, then the creator's verdict, then **ask before** doing the outside.
+
+## Workstreams added (18 Nov)
+- **Customer interaction:** talk to customers, regulars with names and favourite orders, reactions to your drinks,
+  small requests, table service. To be designed with the creator.
+- **Story Mode furniture & equipment shop** (see STORY_DESIGN.md).
