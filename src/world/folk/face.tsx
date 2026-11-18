@@ -1,3 +1,5 @@
+import { useRef } from 'react'
+import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { mat } from '../mats'
 
@@ -54,11 +56,14 @@ function Brow({ f, side }: { f: FaceSpec; side: number }) {
 }
 
 export function Face({ f, s = 1, z = 0, y = 0, x = 0 }: { f: FaceSpec; s?: number; z?: number; y?: number; x?: number }) {
+  const eyes = useRef<THREE.Group[]>([])
+  const every = 2.6 + (f.gap * 97 % 1) * 2.4, off = f.eyeR * 211 % every // each face blinks on its own rhythm
+  useFrame(({ clock }) => { const t = (clock.elapsedTime + off) % every, k = t < 0.12 ? 0.12 : 1; eyes.current.forEach((e) => { if (e && f.eye !== 'happy' && f.eye !== 'sleepy') e.scale.y = k }) })
   return (
     <group position={[x, y, z]} scale={s}>
-      {[-1, 1].map((side) => (
+      {[-1, 1].map((side, i) => (
         <group key={side}>
-          <group position={[side * f.gap, f.eyeY, 0]}><Eye f={f} side={side} /></group>
+          <group position={[side * f.gap, f.eyeY, 0]} ref={(g) => { if (g) eyes.current[i] = g }}><Eye f={f} side={side} /></group>
           <group position={[side * f.gap, f.eyeY + f.browY, 0.002]}><Brow f={f} side={side} /></group>
           {f.blush > 0 && <mesh position={[side * (f.gap + f.eyeR * 1.6), f.eyeY - f.eyeR * 1.9, -0.004]} scale={[1, 0.6, 0.3]} material={blushM}><sphereGeometry args={[0.03 * f.blush, 10, 8]} /></mesh>}
           {f.freckles && [0, 1, 2].map((k) => <mesh key={k} position={[side * (f.gap + f.eyeR * (1.0 + k * 0.5)), f.eyeY - f.eyeR * (1.6 + (k % 2) * 0.4), 0.001]} material={mat('#c98a5a')}><circleGeometry args={[0.0065, 6]} /></mesh>)}

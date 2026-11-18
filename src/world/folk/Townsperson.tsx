@@ -5,13 +5,14 @@ import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeom
 import { mat } from '../mats'
 import { Face } from './face'
 import { PAPER_COLOURS, MALLOW_COLOURS, type FolkSpec } from './specs'
+import { PaperAccessory, MallowAccessory } from './accessories'
 
 // One townsperson, built from their spec: a notebook of one of 10 kinds, or a marshmallow of one of 10 kinds,
 // in one of 5 colourways, with their own face. Walks (paper waddles, marshmallows bounce), waits (looks around),
 // or sits (hips on the seat). `seatHip` tells a chair how high this body's hips are.
 
 export type Pose = 'walk' | 'wait' | 'sit'
-const ink = mat('#2a1830', { rough: 0.6 }), cream = mat('#f6ecd6', { rough: 0.9 }), gold = mat('#c9a24a', { rough: 0.3 }), steel = mat('#b8b8c4', { rough: 0.25 })
+const ink = mat('#2a1830', { rough: 0.6 }), cream = mat('#f6ecd6', { rough: 0.9 }), steel = mat('#b8b8c4', { rough: 0.25 })
 const rbox = (w: number, h: number, d: number, r: number) => new RoundedBoxGeometry(w, h, d, 3, r)
 const texCache = new Map<string, THREE.Texture>()
 function canvasTex(key: string, draw: (x: CanvasRenderingContext2D) => void) {
@@ -73,18 +74,17 @@ function Paper({ s, limbs }: { s: Extract<FolkSpec, { kind: 'paper' }>; limbs: L
             {m === 'riffled' && Array.from({ length: 9 }, (_, k) => <mesh key={k} position={[-w / 2 + 0.06 + k * (w - 0.12) / 8, h / 2 + 0.05 + (k % 2) * 0.03, -0.02 + (k % 3) * 0.02]} rotation={[0, 0, (k - 4) * 0.12]} material={k % 3 ? cream : mat(col.spine)}><coneGeometry args={[0.055, 0.16, 4]} /></mesh>)}
             {m === 'pocket' && <mesh position={[w / 2 + 0.02, 0.12, 0.03]} material={mat(col.feet)}><capsuleGeometry args={[0.018, 0.3, 4, 8]} /></mesh>}
             {m === 'diary' && <group>
-              <mesh position={[w / 2, -0.05, 0]} material={mat(col.spine)}><boxGeometry args={[0.1, 0.09, d + 0.03]} /></mesh>
-              <mesh position={[w / 2 + 0.03, -0.05, d / 2 + 0.01]} material={gold}><boxGeometry args={[0.06, 0.07, 0.02]} /></mesh>
               {[-1, 1].map((sd) => <mesh key={sd} position={[sd * 0.07, h / 2 + 0.06, 0]} rotation={[0, 0, sd * 0.6]} material={mat('#e98fa6')}><sphereGeometry args={[0.06, 10, 8]} /></mesh>)}
             </group>}
             {s.ribbon && m !== 'diary' && <mesh position={[w * 0.25, -h / 2 - 0.08, 0]} rotation={[0, 0, 0.12]} material={mat(['#e98fa6', '#f2c66a', '#8ed1b8'][s.seed % 3])}><boxGeometry args={[0.035, 0.18, 0.01]} /></mesh>}
             {s.sticker && <mesh position={[w * 0.28, -h * 0.32, d / 2 + 0.004]} material={mat(['#f2c66a', '#ffffff', '#ff9db5'][s.seed % 3])}><circleGeometry args={[0.05, 5]} /></mesh>}
           </group>
         )}
-        {/* stick arms */}
+        <PaperAccessory model={m} w={w} h={h} d={d} cover={col.cover} spine={col.spine} />
+        {/* stick arms with soft mitten hands (like Kozie's) */}
         {[-1, 1].map((sd, i) => <group key={sd} position={[sd * (w / 2 + 0.01), 0.02, 0]} ref={setRef(limbs.arms, i)}>
           <mesh position={[sd * 0.08, -0.12, 0]} rotation={[0, 0, sd * 0.5]} material={ink}><cylinderGeometry args={[0.018, 0.018, 0.26, 6]} /></mesh>
-          <mesh position={[sd * 0.15, -0.24, 0]} material={ink}><sphereGeometry args={[0.034, 8, 6]} /></mesh>
+          <mesh position={[sd * 0.155, -0.245, 0]} scale={[1, 1.1, 0.9]} material={mat('#fff6e6', { rough: 0.8 })}><sphereGeometry args={[0.048, 12, 10]} /></mesh>
         </group>)}
       </group>
       {[-1, 1].map((sd, i) => <group key={sd} position={[sd * Math.min(0.13, w * 0.24), LEG, 0]} ref={setRef(limbs.legs, i)}>
@@ -125,6 +125,7 @@ function Mallow({ s, limbs }: { s: Extract<FolkSpec, { kind: 'mallow' }>; limbs:
         {m === 'swirl' && <group position={[0, H, 0]}>{[0, 1, 2].map((k) => <mesh key={k} position={[0, 0.04 + k * 0.07, 0]} rotation={[Math.PI / 2, 0, 0]} material={mat('#ffffff', { rough: 0.6 })}><torusGeometry args={[0.2 - k * 0.06, 0.05, 8, 24]} /></mesh>)}<mesh position={[0, 0.25, 0]} material={mat('#ffffff', { rough: 0.6 })}><coneGeometry args={[0.05, 0.1, 10]} /></mesh></group>}
         {m === 'cube' && <mesh position={[0, H + 0.001, 0]} rotation={[-Math.PI / 2, 0, 0]} material={mat('#e8b880', { rough: 0.9 })}><planeGeometry args={[R * 1.5, R * 1.5]} /></mesh>}
         <Face f={s.face} z={fz} y={faceY} s={m === 'mini' || m === 'puck' ? 1.0 : 1.15} />
+        <MallowAccessory model={m} R={R} H={H} accent={col.accent} />
         {[-1, 1].map((sd, i) => <group key={sd} position={[sd * (R + 0.01), H * 0.45, 0]} ref={setRef(limbs.arms, i)}>
           <mesh position={[sd * 0.04, -0.05, 0]} material={mat(col.body, { rough: 0.95 })}><sphereGeometry args={[0.065, 12, 10]} /></mesh>
         </group>)}
