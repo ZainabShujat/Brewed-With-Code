@@ -1,5 +1,5 @@
 import { BLOCKERS, H, RR } from '../world/layout'
-import { STREET as S } from '../world/streetLayout'
+import { STREET as S, STORE_SHOPS, shopBlocks, inShop } from '../world/streetLayout'
 
 // Keyboard state for walk mode (WASD / arrows).
 export const keys = new Set<string>()
@@ -23,6 +23,7 @@ export function blocked(x: number, z: number) {
     if (z < -H + 0.3 + R) return true
     return BLOCKERS.some(([x0, z0, x1, z1]) => x > x0 - R && x < x1 + R && z > z0 - R && z < z1 + R)
   }
+  for (const sh of STORE_SHOPS) { if (shopBlocks(sh, x, z, R)) return true; if (inShop(sh, x, z)) return false } // inside a shop: only its walls + counter
   if (r < S.potClear + R) return true                                                             // the pot's walls
   if (Math.abs(x) > S.X - 0.5 - R || z < S.BACK + 0.5 + R || z > S.FRONT - 0.5 - R) return true     // the block's walls
   if (z > S.padB[1] && Math.abs(x) > S.side.pad - R) return true                                   // beyond the side street's pavements

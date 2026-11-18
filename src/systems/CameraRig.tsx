@@ -48,7 +48,7 @@ export function useMouseLook() {
       down = e.button; lx = e.clientX; ly = e.clientY
       // MOUSE LOOK, like any first-person game: hold the RIGHT button and move the mouse to turn your head.
       // In Walk view a left click on the scene locks the mouse for full look (Esc to let go).
-      if (view.mode !== 'dollhouse' && view.mode !== 'exterior' && view.mode !== 'pov' && (e.button === 2 || (view.mode === 'walk' && e.button === 0))) {
+      if (view.mode !== 'dollhouse' && view.mode !== 'exterior' && (e.button === 2 || (view.mode === 'walk' && e.button === 0)) && (view.mode !== 'pov' || e.button === 2)) {
         el.requestPointerLock?.(); view.looking = true; return
       }
       grabbed = document.body.style.cursor === 'grab' || document.body.style.cursor === 'grabbing' || document.body.style.cursor === 'pointer'
@@ -60,7 +60,8 @@ export function useMouseLook() {
         const k = 0.0022 * view.sens
         view.yaw -= e.movementX * k; view.pitch -= e.movementY * k
         view.pitch = Math.max(-1.1, Math.min(1.0, view.pitch))
-        if (view.mode === 'pov' || view.mode === 'cake') view.yaw = Math.max(-2.2, Math.min(2.2, view.yaw))
+        if (view.mode === 'cake') view.yaw = Math.max(-2.2, Math.min(2.2, view.yaw))
+        if (view.mode === 'pov') { view.yaw = Math.max(-0.6, Math.min(0.6, view.yaw)); view.pitch = Math.max(-0.15, Math.min(0.6, view.pitch)) } // the bar: a glance, not a spin
         return
       }
       if (down < 0 || TOUCH) return
@@ -190,6 +191,12 @@ export function CameraRig() {
     if (mode === 'pov') {
       // the coffee bar is played like Papa's: ONE fixed view of the whole workspace, the camera never moves
       wantPos.set(BAR_VIEW.x, BAR_VIEW.eyeY, BAR_VIEW.eyeZ); wantLook.set(BAR_VIEW.x, BAR_VIEW.lookY, BAR_VIEW.lookZ) // framing the workstation, close
+      // look up at your customers: hold the up arrow (or right-drag), arrows left/right glance sideways; it all eases back to the bar when you let go
+      if (keys.has('arrowup')) view.pitch = Math.min(0.6, view.pitch + dt * 1.6)
+      else if (!view.looking) view.pitch *= Math.max(0, 1 - dt * 3)
+      const glance = (keys.has('arrowleft') ? 1 : 0) - (keys.has('arrowright') ? 1 : 0)
+      if (glance) view.yaw = Math.max(-0.6, Math.min(0.6, view.yaw + glance * dt * 1.4)); else if (!view.looking) view.yaw *= Math.max(0, 1 - dt * 3)
+      wantLook.y += view.pitch * 2.6; wantLook.z += view.pitch * 3.5; wantLook.x += Math.sin(view.yaw) * 2.5
       { const asp = (camera as THREE.PerspectiveCamera).aspect; setFov(camera as THREE.PerspectiveCamera, Math.min(100, 2 * Math.atan(Math.tan(25 * Math.PI / 180) * Math.max(1, 1.75 / asp)) * 180 / Math.PI)) } // narrower screens: a wider lens so the whole bar fits (the wall is right behind you)
     }
     // portrait phone: step back from the stations so the whole machine / bar fits the narrow screen

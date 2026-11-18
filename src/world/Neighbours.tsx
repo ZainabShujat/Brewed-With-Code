@@ -1,10 +1,13 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
+import { useFrame } from '@react-three/fiber'
+import { useGame } from '../systems/store'
+import { Model } from './Models'
 import * as THREE from 'three'
 import { C } from '../data/palette'
 import { mat, glow } from './mats'
 import { RBox } from './Soft'
 import { nightGlow, shopGlass } from './Lighting'
-import { STREET as S, SHOPS, SHOP_DEPTH, PARK, BUS_STOP, CART, type Shop } from './streetLayout'
+import { STREET as S, SHOPS, SHOP_DEPTH, PARK, BUS_STOP, CART, WALL_T, DOOR_W, COUNTER_DEPTH, inShop, type Shop } from './streetLayout'
 
 // The neighbours: shopfronts along the street (human scale, 1 unit ≈ 1 m). Four of them are REAL shops that sell
 // the café's ingredients (The Daily Grind, Moo & Oat, Flour & Co., Sugar Plum: walk up to the door to buy);
@@ -199,6 +202,9 @@ function BladeSign({ shop, w }: { shop: Shop; w: number }) {
 
 function Shop({ shop }: { shop: Shop }) {
   const w = shop.x1 - shop.x0, h = shop.h, D = SHOP_DEPTH, lease = shop.kind === 'lease'
+  // inside an ingredient shop (in Explore): the roof and front lift away, Sims-style, so the camera can see in
+  const [inside, setInside] = useState(false)
+  useFrame(() => { if (!shop.store) return; const g = useGame.getState(), i = g.mode === 'walk' && inShop(shop, g.player.x, g.player.z); if (i !== inside) setInside(i) })
   const sign = useMemo(() => new THREE.MeshStandardMaterial({ map: signTex(shop.name, lease ? '#c4527e' : shop.trim), roughness: 0.6 }), [shop.name, shop.trim, lease])
   const awning = useMemo(() => new THREE.MeshStandardMaterial({ map: stripeTex(shop.awning[0], shop.awning[1], Math.round(w * 2)), roughness: 0.8, side: THREE.DoubleSide }), [shop.awning, w])
   const win = w * 0.56, winX = -w * 0.14, doorX = w * 0.32, ups = Math.max(2, Math.floor(w / 4.5))
@@ -207,7 +213,8 @@ function Shop({ shop }: { shop: Shop }) {
   const pos: [number, number, number] = shop.side === 'a' ? [cx, 0, S.padA[0]] : [cx, 0, S.padB[1]]
   return (
     <group position={pos} rotation={[0, shop.side === 'a' ? 0 : Math.PI, 0]}>
-      <mesh position={[0, h / 2, -D / 2]} material={mat(shop.wall)} castShadow receiveShadow><boxGeometry args={[w, h, D]} /></mesh>
+      {shop.store ? <StoreShell shop={shop} w={w} h={h} inside={inside} /> : <mesh position={[0, h / 2, -D / 2]} material={mat(shop.wall)} castShadow receiveShadow><boxGeometry args={[w, h, D]} /></mesh>}
+      <group visible={!inside}>
       {/* pilasters at the corners, a string course between the floors and a cornice with little dentils */}
       {[-w / 2, w / 2].map((x) => <mesh key={x} position={[x, h / 2, 0.1]} material={mat(shop.trim)}><boxGeometry args={[0.45, h, 0.3]} /></mesh>)}
       <mesh position={[0, 3.75, 0.1]} material={mat(shop.trim)}><boxGeometry args={[w + 0.1, 0.18, 0.28]} /></mesh>
@@ -230,10 +237,16 @@ function Shop({ shop }: { shop: Shop }) {
       </group>
       {/* the door, with a step and a little lamp */}
       <group position={[doorX, 0, 0.04]}>
+        {shop.store ? <>
+          {[-1, 1].map((sd) => <mesh key={sd} position={[sd * (DOOR_W / 2 + 0.08), 1.3, 0]} material={mat(shop.trim)}><boxGeometry args={[0.16, 2.7, 0.14]} /></mesh>)}
+          <mesh position={[0, 2.66, 0]} material={mat(shop.trim)}><boxGeometry args={[DOOR_W + 0.32, 0.14, 0.14]} /></mesh>
+          <group position={[-DOOR_W / 2, 0, 0.05]} rotation={[0, -1.35, 0]}><mesh position={[DOOR_W / 2 - 0.05, 1.25, 0]} material={mat(C.plum)}><boxGeometry args={[DOOR_W - 0.1, 2.4, 0.06]} /></mesh></group>
+        </> : <>
         <mesh position={[0, 1.3, 0]} material={mat(shop.trim)}><boxGeometry args={[1.5, 2.7, 0.14]} /></mesh>
         <mesh position={[0, 1.25, 0.08]} material={mat(lease ? '#b9a98c' : C.plum)}><boxGeometry args={[1.15, 2.4, 0.06]} /></mesh>
         {!lease && <mesh position={[0, 1.75, 0.12]} material={shopGlass}><planeGeometry args={[0.7, 0.8]} /></mesh>}
         <mesh position={[0.38, 1.2, 0.13]} material={mat(C.butter)}><sphereGeometry args={[0.05, 8, 6]} /></mesh>
+        </>}
         <mesh position={[0, 0.06, 0.35]} material={mat('#d8cfc2')}><boxGeometry args={[1.7, 0.12, 0.6]} /></mesh>
         {!lease && <mesh position={[0, 2.95, 0.25]} material={glow()}><sphereGeometry args={[0.1, 10, 8]} /></mesh>}
       </group>
@@ -267,6 +280,35 @@ function Shop({ shop }: { shop: Shop }) {
         </group>
       ))}
       <StreetGoods shop={shop} w={w} />
+      </group>
+    </group>
+  )
+}
+
+// a hollow shop you can walk into: walls with a doorway, a stocked back wall, a counter with a till, a rug.
+// When you're inside, the walls drop to waist height and the ceiling goes, so the camera looks in from above.
+function StoreShell({ shop, w, h, inside }: { shop: Shop; w: number; h: number; inside: boolean }) {
+  const D = SHOP_DEPTH, T = WALL_T, doorX = w * 0.32, dl = doorX - DOOR_W / 2, dr = doorX + DOOR_W / 2, DH = 2.6
+  const wallH = inside ? 1.3 : h, inner = mat(new THREE.Color(shop.wall).lerp(new THREE.Color('#fff6ee'), 0.35).getStyle(), { rough: 0.9 }), outer = mat(shop.wall)
+  return (
+    <group>
+      <mesh position={[0, 0.02, -D / 2]} rotation={[-Math.PI / 2, 0, 0]} material={mat('#c99a6b', { rough: 0.7 })} receiveShadow><planeGeometry args={[w - T * 2, D - T * 2]} /></mesh>
+      {/* walls (outside colour outside, a softer tint inside) */}
+      <mesh position={[0, wallH / 2, -D + T / 2]} material={inside ? inner : outer} castShadow><boxGeometry args={[w, wallH, T]} /></mesh>
+      {[-1, 1].map((sd) => <mesh key={sd} position={[sd * (w / 2 - T / 2), wallH / 2, -D / 2]} material={inside ? inner : outer} castShadow><boxGeometry args={[T, wallH, D]} /></mesh>)}
+      <mesh position={[(-w / 2 + dl) / 2, wallH / 2, -T / 2]} material={outer}><boxGeometry args={[dl + w / 2, wallH, T]} /></mesh>
+      <mesh position={[(dr + w / 2) / 2, wallH / 2, -T / 2]} material={outer}><boxGeometry args={[w / 2 - dr, wallH, T]} /></mesh>
+      {!inside && <mesh position={[doorX, (DH + h) / 2, -T / 2]} material={outer}><boxGeometry args={[DOOR_W, h - DH, T]} /></mesh>}
+      {!inside && <mesh position={[0, h, -D / 2]} material={outer}><boxGeometry args={[w, 0.2, D]} /></mesh>}
+      {/* the counter (with a till) where the shopkeeper serves you */}
+      <RBox size={[w * 0.64, 1.0, 1.0]} pos={[0, 0.5, -COUNTER_DEPTH]} color={shop.trim} r={0.08} />
+      <mesh position={[0, 1.04, -COUNTER_DEPTH]} material={mat('#f4ece4', { rough: 0.35 })}><boxGeometry args={[w * 0.66, 0.07, 1.1]} /></mesh>
+      <Model name="CashRegister_01" fit={0.42} pos={[w * 0.2, 1.08, -COUNTER_DEPTH]} rot={[0, Math.PI, 0]} />
+      {/* stocked shelves: the back wall and both sides */}
+      <group position={[0, 0, -D + 0.75]}><Display shop={shop} w={w - 1.6} /></group>
+      {[-1, 1].map((sd) => <group key={sd} position={[sd * (w / 2 - 0.7), 0, -D * 0.42]} rotation={[0, -sd * Math.PI / 2, 0]}><Display shop={shop} w={D * 0.55} /></group>)}
+      <mesh position={[doorX * 0.5, 0.035, -2.6]} rotation={[-Math.PI / 2, 0, 0]} material={mat(shop.awning[0], { rough: 0.95 })}><circleGeometry args={[1.5, 28]} /></mesh>
+      {inside && <pointLight position={[0, 3.4, -D / 2]} intensity={22} distance={16} decay={1.6} color="#ffdcb0" />}
     </group>
   )
 }

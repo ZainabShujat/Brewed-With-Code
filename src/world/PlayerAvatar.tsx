@@ -43,7 +43,7 @@ export function PlayerAvatar() {
   return (
     <group ref={ref}>
       <AvatarBody a={a} walking={walking} />
-      <Html position={[0, 2.5, 0]} center distanceFactor={12}><div className="nametag">{displayName(a)}</div></Html>
+      <Html zIndexRange={[19, 0]} position={[0, 2.5, 0]} center distanceFactor={12}><div className="nametag">{displayName(a)}</div></Html>
     </group>
   )
 }

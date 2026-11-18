@@ -96,7 +96,7 @@ export function Grab({ id, pos, size, children, tip, onClick, drops, disabled = 
         onPointerOut={() => { setHover(false); if (!held.id) document.body.style.cursor = '' }}>
         <boxGeometry args={size} />
       </mesh>}
-      {hover && !holding && !held.id && tip && !disabled && <Html position={[0, size[1] / 2 + 0.08, 0]} center className="tag tool">{tip}</Html>}
+      {hover && !holding && !held.id && tip && !disabled && <Html zIndexRange={[19, 0]} position={[0, size[1] / 2 + 0.08, 0]} center className="tag tool">{tip}</Html>}
     </group>
   )
 }
@@ -124,7 +124,7 @@ export function Hold({ id, pos, size, tip, onHold, onStart, onEnd, children }: {
         onPointerOut={() => { setHover(false); if (!held.id) document.body.style.cursor = '' }}>
         <boxGeometry args={size} />
       </mesh>
-      {hover && !held.id && tip && <Html position={[0, size[1] / 2 + 0.08, 0]} center className="tag tool">{tip}</Html>}
+      {hover && !held.id && tip && <Html zIndexRange={[19, 0]} position={[0, size[1] / 2 + 0.08, 0]} center className="tag tool">{tip}</Html>}
     </group>
   )
 }

@@ -155,8 +155,8 @@ function Body({ c }: { c: Cust }) {
   return (
     <group ref={ref} visible={false}>
       <group ref={seatLift}><group scale={FOLK_SCALE}><Townsperson key={c.ver} spec={c.spec} getPose={pose} phase={c.id * 0.9} /></group></group>
-      {EMBED && <Html position={[0, 2.35, 0]} center><div ref={tag} className="qtag" /></Html>}
-      <Html position={[0, 2.6, 0]} center><div ref={bubble} className="obubble" /></Html>
+      {EMBED && <Html zIndexRange={[19, 0]} position={[0, 2.35, 0]} center><div ref={tag} className="qtag" /></Html>}
+      <Html zIndexRange={[19, 0]} position={[0, 2.6, 0]} center><div ref={bubble} className="obubble" /></Html>
     </group>
   )
 }

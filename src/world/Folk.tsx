@@ -198,7 +198,7 @@ export function FolkLineup() {
       {KINDS.map((k, ci) => STATES.map((s, ri) => (
         <group key={k + s} position={[(ci - 1.5) * 1.7, 0, ri * 1.6]}>
           <Figure kind={k} state={s} i={ci * 3 + ri} />
-          {ri === 0 && <Html position={[0, 2.15, 0]} center distanceFactor={9}><div style={{ font: '800 13px Trebuchet MS', background: '#5e2a75', color: '#fff6ee', padding: '3px 9px', borderRadius: 9, whiteSpace: 'nowrap' }}>{LABEL[k]}</div></Html>}
+          {ri === 0 && <Html zIndexRange={[19, 0]} position={[0, 2.15, 0]} center distanceFactor={9}><div style={{ font: '800 13px Trebuchet MS', background: '#5e2a75', color: '#fff6ee', padding: '3px 9px', borderRadius: 9, whiteSpace: 'nowrap' }}>{LABEL[k]}</div></Html>}
         </group>
       )))}
     </group>
@@ -216,8 +216,8 @@ export function FolkGallery() {
         const col = n % 10, row = Math.floor(n / 10), x = (b ? 1.6 : -11.4) + col * 1.05, z = 22.4 + row * 1.25
         return <group key={kind + n} position={[x, 0, z]}><Townsperson spec={folk(kind, n)} pose={n % 7 === 3 ? 'walk' : 'wait'} phase={n * 0.37} /></group>
       }))}
-      {PAPER_MODELS.map((m, i) => <Html key={'p' + m} position={[-11.4 + i * 1.05, 1.7, 21.8]} center distanceFactor={14}><div style={{ font: '800 11px Trebuchet MS', background: '#5e2a75', color: '#fff6ee', padding: '2px 6px', borderRadius: 7 }}>{m}</div></Html>)}
-      {MALLOW_MODELS.map((m, i) => <Html key={'m' + m} position={[1.6 + i * 1.05, 1.7, 21.8]} center distanceFactor={14}><div style={{ font: '800 11px Trebuchet MS', background: '#a63f78', color: '#fff6ee', padding: '2px 6px', borderRadius: 7 }}>{m}</div></Html>)}
+      {PAPER_MODELS.map((m, i) => <Html zIndexRange={[19, 0]} key={'p' + m} position={[-11.4 + i * 1.05, 1.7, 21.8]} center distanceFactor={14}><div style={{ font: '800 11px Trebuchet MS', background: '#5e2a75', color: '#fff6ee', padding: '2px 6px', borderRadius: 7 }}>{m}</div></Html>)}
+      {MALLOW_MODELS.map((m, i) => <Html zIndexRange={[19, 0]} key={'m' + m} position={[1.6 + i * 1.05, 1.7, 21.8]} center distanceFactor={14}><div style={{ font: '800 11px Trebuchet MS', background: '#a63f78', color: '#fff6ee', padding: '2px 6px', borderRadius: 7 }}>{m}</div></Html>)}
     </group>
   )
 }

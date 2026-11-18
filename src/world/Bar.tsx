@@ -271,7 +271,7 @@ function OnePour({ p }: { p: Pour }) {
 function Label({ text, y = -0.04, z = -0.18 }: { text: string; y?: number; z?: number }) {
   const pov = useGame((s) => s.mode === 'pov')
   if (!pov) return null
-  return <Html position={[0, y, z]} center className="tag tool">{text}</Html>
+  return <Html zIndexRange={[19, 0]} position={[0, y, z]} center className="tag tool">{text}</Html>
 }
 
 function MilkBottle({ x, milk, color, cap }: { x: number; milk: 'whole' | 'oat' | 'almond'; color: string; cap: string }) {

@@ -46,7 +46,7 @@ export const BUS_STOP = { x: 50, z: STREET.padB[0] + 2.2 }
 export const CART = { x: -9, z: STREET.padB[0] + 2.0 }
 for (const sh of SHOPS) {
   const z0 = sh.side === 'a' ? STREET.padA[0] - SHOP_DEPTH : STREET.padB[1], z1 = sh.side === 'a' ? STREET.padA[0] : STREET.padB[1] + SHOP_DEPTH
-  STREET.blockers.push([sh.x0, z0, sh.x1, z1])
+  if (!sh.store) STREET.blockers.push([sh.x0, z0, sh.x1, z1]) // the ingredient shops are hollow: you can walk in (see shopInside)
 }
 STREET.blockers.push([PARK.x0, PARK.z0, PARK.x1, PARK.z1])                 // the park is fenced (you look over the railings)
 STREET.blockers.push([BUS_STOP.x - 2.2, BUS_STOP.z - 0.7, BUS_STOP.x + 2.2, BUS_STOP.z + 0.9])
@@ -57,3 +57,35 @@ export function shopDoor(sh: Shop): [number, number] {
   const cx = (sh.x0 + sh.x1) / 2, dx = (sh.x1 - sh.x0) * 0.32
   return sh.side === 'a' ? [cx + dx, STREET.padA[0] + 1.2] : [cx - dx, STREET.padB[1] - 1.2]
 }
+
+// ── shop interiors (the four ingredient shops) ──
+// In each shop's own frame: the shopfront is at z = 0 facing the street (+z), the room runs back to z = -SHOP_DEPTH.
+export const WALL_T = 0.35, DOOR_W = 1.3, COUNTER_DEPTH = 6.2
+export const STORE_SHOPS = SHOPS.filter((s) => s.store)
+/** world (x, z) → the shop's local frame (lx along the front, lz into the shop = negative) */
+export function toLocal(sh: Shop, x: number, z: number): [number, number] {
+  const cx = (sh.x0 + sh.x1) / 2
+  return sh.side === 'a' ? [x - cx, z - STREET.padA[0]] : [-(x - cx), -(z - STREET.padB[1])]
+}
+export function toWorld(sh: Shop, lx: number, lz: number): [number, number] {
+  const cx = (sh.x0 + sh.x1) / 2
+  return sh.side === 'a' ? [cx + lx, STREET.padA[0] + lz] : [cx - lx, STREET.padB[1] - lz]
+}
+/** is this point inside the shop's room (between its walls)? */
+export function inShop(sh: Shop, x: number, z: number) {
+  const [lx, lz] = toLocal(sh, x, z), w = sh.x1 - sh.x0
+  return Math.abs(lx) < w / 2 - WALL_T && lz < -WALL_T && lz > -SHOP_DEPTH + WALL_T
+}
+/** walls (with a gap at the door) and the counter, in the shop's local frame: true = you can't stand here */
+export function shopBlocks(sh: Shop, x: number, z: number, r: number) {
+  const [lx, lz] = toLocal(sh, x, z), w = sh.x1 - sh.x0, doorX = w * 0.32
+  if (Math.abs(lx) > w / 2 + r || lz > r || lz < -SHOP_DEPTH - r) return false          // nowhere near this shop
+  if (Math.abs(lx) > w / 2 - WALL_T - r) return true                                     // side walls
+  if (lz < -SHOP_DEPTH + WALL_T + r) return true                                         // back wall
+  if (lz > -WALL_T - r && Math.abs(lx - doorX) > DOOR_W / 2 - r) return true              // the shopfront, except the doorway
+  if (lz < -COUNTER_DEPTH + 0.5 + r && lz > -COUNTER_DEPTH - 0.5 - r && Math.abs(lx) < w * 0.32 + r) return true // the counter
+  return false
+}
+/** where you stand to be served (in front of the counter) and where the shopkeeper stands (behind it) */
+export const counterSpot = (sh: Shop) => toWorld(sh, 0, -COUNTER_DEPTH + 1.4)
+export const keeperSpot = (sh: Shop) => toWorld(sh, 0, -COUNTER_DEPTH - 1.1)

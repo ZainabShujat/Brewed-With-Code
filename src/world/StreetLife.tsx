@@ -78,7 +78,7 @@ function WalkerBody({ w, i, all, r }: { w: Walker; i: number; all: Walker[]; r: 
   return (
     <group ref={g}>
       <group scale={SCALE}><Townsperson key={ver} spec={w.spec} getPose={() => w.pose} phase={i * 1.3} /></group>
-      <Html position={[0, 2.5, 0]} center distanceFactor={14}><div ref={bubble} className="chat" /></Html>
+      <Html zIndexRange={[19, 0]} position={[0, 2.5, 0]} center distanceFactor={14}><div ref={bubble} className="chat" /></Html>
     </group>
   )
 }
