@@ -72,8 +72,9 @@ export function useMouseLook() {
       if (down === 0) {
         // pan across the miniature, like sliding a diorama on a table
         const a = view.yaw + view.spin, k = 0.03 * view.zoom
-        view.panX = Math.max(-11, Math.min(11, view.panX - (Math.cos(a) * dx + Math.sin(a) * dy) * k))
-        view.panZ = Math.max(-11, Math.min(11, view.panZ - (-Math.sin(a) * dx + Math.cos(a) * dy) * k))
+        // the whole street block can be reached: slide from the café out to the shops at either end and across the road
+        view.panX = Math.max(-72, Math.min(72, view.panX - (Math.cos(a) * dx + Math.sin(a) * dy) * k))
+        view.panZ = Math.max(-30, Math.min(56, view.panZ - (-Math.sin(a) * dx + Math.cos(a) * dy) * k))
         return
       }
       view.yaw -= dx * (orbit ? 0.006 : 0.003); view.pitch += dy * (orbit ? 0.004 : 0.003)
@@ -85,7 +86,7 @@ export function useMouseLook() {
       if (document.pointerLockElement !== el) view.looking = false
       pts.delete(e.pointerId); if (pts.size < 2) pinch = 0; down = -1 }
     window.addEventListener('pointercancel', pu)
-    const zoomBy = (f: number) => { view.zoom = Math.max(view.mode === 'dollhouse' ? 0.35 : 0.6, Math.min(view.mode === 'dollhouse' ? 1.8 : 1.3, view.zoom * f)) }
+    const zoomBy = (f: number) => { view.zoom = Math.max(view.mode === 'dollhouse' ? 0.35 : 0.6, Math.min(view.mode === 'dollhouse' ? 3.4 : 1.3, view.zoom * f)) } // dollhouse: zoom far enough out to see the whole street
     const wh = (e: WheelEvent) => { e.preventDefault(); zoomBy(e.deltaY > 0 ? 1.1 : 0.9) }
     const cm = (e: Event) => e.preventDefault()
     el.addEventListener('pointerdown', pd); window.addEventListener('pointermove', pm); window.addEventListener('pointerup', pu)
