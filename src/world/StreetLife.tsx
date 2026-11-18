@@ -4,7 +4,8 @@ import { Html } from '@react-three/drei'
 import * as THREE from 'three'
 import { Townsperson, type Pose } from './folk/Townsperson'
 import { folk, rng, type FolkSpec } from './folk/specs'
-import { SHOPS, shopDoor, STREET } from './streetLayout'
+import { SHOPS, shopDoor, STREET, BENCHES } from './streetLayout'
+import { seatHip } from './folk/Townsperson'
 import { hourNow } from '../systems/clock'
 
 // Street life: townsfolk out and about. Marshmallows come from the WEST end of the street, notebooks from the EAST
@@ -16,11 +17,22 @@ const SAY = {
   mallow: ['hi hi! 👋', 'so toasty today ☀️', 'cocoa later? ☕', 'strawberries at Sugar Plum! 🍓', "I'm a little squished 😅", 'that café smells amazing', 'see you at the bakery?', '🌷 for my mum'],
   paper: ['morning! 📓', 'new books at Chapter & Crumb 📚', 'oat milk again? 😩', 'I wrote a poem ✍️', 'have you met the barista?', 'the lid lights! ✨', 'running late, gotta go!', "I'm out of pages 😵"],
 }
-type Walker = { spec: FolkSpec; side: number; pos: THREE.Vector3; path: THREE.Vector3[]; wait: number; pose: Pose; facing: number; say: string; sayT: number; active: boolean; ver: number }
+type Walker = { bench: number; spec: FolkSpec; side: number; pos: THREE.Vector3; path: THREE.Vector3[]; wait: number; pose: Pose; facing: number; say: string; sayT: number; active: boolean; ver: number }
 const V = (x: number, z: number) => new THREE.Vector3(x, 0, z)
 
 // a little errand: from home along the pavement, maybe cross at the zebra, stop at a shop window, then home again
+const benchTaken = new Set<number>()
+const BENCH_SPOTS = BENCHES.flatMap(([x, z]) => [[x - 0.5, z], [x + 0.5, z]] as [number, number][])
 function errand(w: Walker, r: () => number) {
+  // sometimes: a sit on a bench by the park instead of shopping
+  const freeB = BENCH_SPOTS.map((_, i) => i).filter((i) => !benchTaken.has(i))
+  if (freeB.length && r() < 0.35) {
+    const b = freeB[Math.floor(r() * freeB.length)], [bx, bz] = BENCH_SPOTS[b], home = w.side * (STREET.X - 4)
+    benchTaken.add(b); w.bench = b; w.pos.copy(V(home, PAD_B)); w.wait = 0
+    w.path = [V(bx, PAD_B), V(bx, bz), V(bx, PAD_B), V(home, PAD_B)]
+    return
+  }
+  w.bench = -1
   const home = w.side * (STREET.X - 4), shops = SHOPS.filter((s) => s.kind !== 'lease'), shop = shops[Math.floor(r() * shops.length)]
   const [dx] = shopDoor(shop), sideB = shop.side === 'b', startZ = r() < 0.5 ? PAD_A : PAD_B, shopZ = sideB ? PAD_B : PAD_A
   const p: THREE.Vector3[] = []
@@ -34,7 +46,7 @@ export function StreetLife() {
   const r = useMemo(() => rng(4242), [])
   const walkers = useMemo<Walker[]>(() => Array.from({ length: N }, (_, i) => {
     const kind = i % 2 ? 'paper' : 'mallow', side = kind === 'mallow' ? -1 : 1
-    const w: Walker = { spec: folk(kind, (i * 13) % 50), side, pos: V(0, 0), path: [], wait: 0, pose: 'walk', facing: 0, say: '', sayT: 0, active: false, ver: 0 }
+    const w: Walker = { bench: -1, spec: folk(kind, (i * 13) % 50), side, pos: V(0, 0), path: [], wait: 0, pose: 'walk', facing: 0, say: '', sayT: 0, active: false, ver: 0 }
     errand(w, r); w.pos.x = (r() - 0.5) * 90 // already out and about when you arrive
     return w
   }), [r])
@@ -51,7 +63,7 @@ function WalkerBody({ w, i, all, r }: { w: Walker; i: number; all: Walker[]; r: 
     w.active = i < Math.round(N * busy)
     el.visible = w.active; if (!w.active) return
     w.sayT -= dt
-    if (w.wait > 0) { w.wait -= dt; w.pose = 'wait' }
+    if (w.wait > 0) { w.wait -= dt; w.pose = w.bench >= 0 && w.path.length === 2 ? 'sit' : 'wait'; if (w.pose === 'sit') { const [, bz] = BENCH_SPOTS[w.bench]; w.pos.z = bz; w.facing = Math.PI } }
     else {
       const t = w.path[0]
       if (!t) { // home: new townsperson, new errand
@@ -59,7 +71,7 @@ function WalkerBody({ w, i, all, r }: { w: Walker; i: number; all: Walker[]; r: 
       } else {
         const d = t.clone().sub(w.pos), dist = d.length(), step = 1.9 * dt
         if (dist > 0.05) { w.pos.addScaledVector(d.normalize(), Math.min(step, dist)); w.facing = Math.atan2(d.x, d.z); w.pose = 'walk' }
-        else { w.path.shift(); if (w.path.length === 1) w.wait = 3 + r() * 4 } // window-shopping at the shop
+        else { w.path.shift(); if (w.bench >= 0 && w.path.length === 2) { w.wait = 25 + r() * 30; w.pose = 'sit'; w.facing = Math.PI } else if (w.bench < 0 && w.path.length === 1) w.wait = 3 + r() * 4; if (w.bench >= 0 && w.path.length === 0) { benchTaken.delete(w.bench); w.bench = -1 } } // window-shopping / a sit on the bench
         // bump into a neighbour? stop and chat a moment
         if (w.sayT < -6) for (const o of all) {
           if (o === w || !o.active || o.wait > 0) continue
@@ -71,7 +83,7 @@ function WalkerBody({ w, i, all, r }: { w: Walker; i: number; all: Walker[]; r: 
         }
       }
     }
-    el.position.copy(w.pos)
+    el.position.copy(w.pos); el.position.y = w.pose === 'sit' ? 0.72 - seatHip(w.spec) * SCALE : 0 // on the bench seat
     let df = w.facing - el.rotation.y; df = Math.atan2(Math.sin(df), Math.cos(df)); el.rotation.y += df * 0.2
     if (bubble.current) { const show = w.sayT > 0 && w.sayT < 1.6; const txt = show ? w.say : ''; if (bubble.current.textContent !== txt) bubble.current.textContent = txt; bubble.current.style.opacity = show ? '1' : '0' }
   })

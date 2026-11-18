@@ -15,11 +15,13 @@ import { Reveal } from './world/Reveal'
 import { Lighting } from './world/Lighting'
 import { Kozie } from './world/Kozie'
 import { Customers, cafe as cafeLine } from './world/Customers'
-import { ShopHud } from './ui/ShopHud'
+// import { ShopHud } from './ui/ShopHud' (retired)
 import { HoldRing } from './ui/HoldRing'
 import { FolkLineup, FolkGallery, SHOW_FOLK } from './world/Folk'
 import { StreetShop, PantryNote } from './ui/StreetShop'
 import { ModeFade } from './ui/ModeFade'
+import { TakeOrder, ServeReturn } from './ui/TakeOrder'
+import { WindDown } from './ui/WindDown'
 import { TutorialBubble } from './ui/TutorialBubble'
 import { RecipeCard } from './ui/RecipeCard' // made by hand (the old meter HUD, ui/BrewHud.tsx, is kept for reference)
 import { DayHud } from './ui/DayHud'
@@ -130,10 +132,13 @@ export default function App() {
       {playing && mode === 'pov' && <RecipeCard />}
       {playing && mode === 'pov' && <TutorialBubble />}
       {playing && !SNAP && <ModeFade />}
+      {playing && !SNAP && <TakeOrder />}
+      {playing && <ServeReturn />}
+      {playing && <WindDown />}
       {playing && mode === 'pov' && <HoldRing />}
       {playing && mode === 'walk' && <StreetShop />}
       {playing && <PantryNote />}
-      {playing && mode !== 'cake' && mode !== 'pov' && <ShopHud />}
+      {/* the old ShopHud (order card + 'back behind the bar') is retired: Take order replaces it */}
       {playing && <CakeHud />}
       {SNAP && <Credits />}
       {playing && (TOUCH ? mode !== 'cake' && mode !== 'pov' && <Joystick /> : mode !== 'pov' && <LookHint mode={mode} />)}

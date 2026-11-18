@@ -7,7 +7,7 @@ import { C } from '../data/palette'
 import { mat, glow } from './mats'
 import { RBox } from './Soft'
 import { nightGlow, shopGlass } from './Lighting'
-import { STREET as S, SHOPS, SHOP_DEPTH, PARK, BUS_STOP, CART, WALL_T, DOOR_W, COUNTER_DEPTH, inShop, type Shop } from './streetLayout'
+import { STREET as S, SHOPS, SHOP_DEPTH, PARK, BENCHES, BUS_STOP, CART, WALL_T, DOOR_W, COUNTER_DEPTH, inShop, type Shop } from './streetLayout'
 
 // The neighbours: shopfronts along the street (human scale, 1 unit ≈ 1 m). Four of them are REAL shops that sell
 // the café's ingredients (The Daily Grind, Moo & Oat, Flour & Co., Sugar Plum: walk up to the door to buy);
@@ -326,6 +326,13 @@ function Park() {
           <mesh position={[0, 1.5, 0]} material={mat(C.woodDark)} castShadow><cylinderGeometry args={[0.22, 0.32, 3, 10]} /></mesh>
           <mesh position={[0, 4.0, 0]} material={mat(c as string)} castShadow><sphereGeometry args={[2.0, 18, 14]} /></mesh>
           <mesh position={[0.9, 4.7, 0.3]} material={mat(c as string)}><sphereGeometry args={[1.3, 14, 10]} /></mesh>
+        </group>
+      ))}
+      {BENCHES.map(([bx, bz]) => (
+        <group key={bx} position={[bx, 0.16, bz]} rotation={[0, Math.PI, 0]}>
+          <RBox size={[2.2, 0.12, 0.6]} pos={[0, 0.5, 0]} color={C.wood} r={0.04} />
+          <RBox size={[2.2, 0.55, 0.1]} pos={[0, 0.85, -0.28]} color={C.wood} r={0.04} />
+          {[-0.95, 0.95].map((x) => <mesh key={x} position={[x, 0.25, 0]} material={mat(C.plum)}><boxGeometry args={[0.08, 0.5, 0.5]} /></mesh>)}
         </group>
       ))}
       <group position={[x0 + 11, 0, z0 + 3.2]}>

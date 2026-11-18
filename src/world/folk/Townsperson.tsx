@@ -162,7 +162,8 @@ export function Townsperson({ spec, pose = 'wait', phase = 0, getPose }: { spec:
     const lap = limbs.lap?.current, folds = !!lap
     if (lap) lap.rotation.x += ((sit ? -Math.PI / 2 : 0) - lap.rotation.x) * 0.25 // fold at the belly into an L
     limbs.legs.current.forEach((l, k) => { if (l) l.rotation.x = sit ? (folds ? Math.PI / 2 - 0.15 : -1.4) : sw * 0.6 * (k ? 1 : -1) })
-    limbs.arms.current.forEach((a, k) => { if (a) a.rotation.x = sit ? -0.4 : walk ? -sw * 0.5 * (k ? 1 : -1) : Math.sin(t * 1.3 + k) * 0.06 })
+    const sip = sit && (t * 0.45) % 6 < 1.1 // seated folk lift a cup now and then
+    limbs.arms.current.forEach((a, k) => { if (a) a.rotation.x = sit ? (sip && k === 1 ? -2.3 : -0.4) : walk ? -sw * 0.5 * (k ? 1 : -1) : Math.sin(t * 1.3 + k) * 0.06 })
     g.position.y = 0; g.rotation.z = 0; g.scale.set(1, 1, 1)
     if (spec.kind === 'mallow') { const b = walk ? Math.abs(Math.sin(t * 7)) : p === 'wait' ? (Math.sin(t * 2) + 1) * 0.15 : 0, q = 0.08 * spec.squish
       g.position.y = b * 0.08; g.scale.set(1 + q - b * q, 1 - q + b * q + (sit ? -0.05 : 0), 1 + q - b * q) }

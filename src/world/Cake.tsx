@@ -8,6 +8,7 @@ import { RBox } from './Soft'
 import { Shelf } from './Props'
 import { tileTex } from './textures'
 import { Grab, DropTarget } from '../systems/drag'
+import { serveCake } from '../ui/TakeOrder'
 import { CakeMachine } from './CakeMachine'
 import { bodyGeo, edge, outline } from './cakeShape'
 import { glass } from './mats'
@@ -371,7 +372,7 @@ function CakeIngredients() {
       {bowl('frost-chocolate', -5.31, FRONT, FROST_COL.chocolate, 'chocolate frosting: drag onto the cake', () => k().frost('chocolate'), true)}
       {bowl('frost-lavender', -4.94, FRONT, FROST_COL.lavender, 'lavender frosting: drag onto the cake', () => k().frost('lavender'), true)}
       {jar(-6.3, 'sprinkles', C.counter)}{jar(-6.02, 'cherries', '#b3122e')}{jar(-5.74, 'strawberries', '#d8344a')}{jar(-5.46, 'candles', C.lilac)}
-      <Grab id="cakebox" tip="cake box: drag onto the cake to box it" pos={[-4.62, BENCH + 0.12, FRONT]} size={[0.3, 0.26, 0.3]} drops={{ turntable: () => k().box() }}>
+      <Grab id="cakebox" tip="cake box: drag onto the cake to box it" pos={[-4.62, BENCH + 0.12, FRONT]} size={[0.3, 0.26, 0.3]} drops={{ turntable: () => { const had = k().cake.layers.length > 0; k().box(); if (had) serveCake() } }}>
         <RBox size={[0.26, 0.2, 0.26]} color={C.counter} r={0.02} />
         <RBox size={[0.27, 0.03, 0.27]} pos={[0, 0.11, 0]} color={C.cream} r={0.01} shadow={false} />
       </Grab>

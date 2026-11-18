@@ -37,7 +37,7 @@ export const RECIPES: Recipe[] = [
 ]
 
 // customers sometimes customise: oat/almond milk, an extra shot, a different topping
-export type Order = { recipe: Recipe; want: Drink; label: string }
+export type Order = { recipe: Recipe; want: Drink; label: string; cake?: boolean }
 
 export function randomOrder(rand: () => number = Math.random): Order {
   const r = RECIPES[Math.floor(rand() * RECIPES.length)]

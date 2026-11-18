@@ -42,6 +42,8 @@ export const SHOPS: Shop[] = [
 export const SHOP_DEPTH = 11
 // the little park across the road (left of the side street), the bus stop and the level-1 coffee cart
 export const PARK = { x0: -40, x1: -12, z0: STREET.padB[1], z1: STREET.padB[1] + 14 }
+// benches along the park railing, facing the street (on the pavement side)
+export const BENCHES: [number, number][] = [[-36, PARK.z0 - 0.9], [-27, PARK.z0 - 0.9], [-18, PARK.z0 - 0.9]]
 export const BUS_STOP = { x: 50, z: STREET.padB[0] + 2.2 }
 export const CART = { x: -9, z: STREET.padB[0] + 2.0 }
 for (const sh of SHOPS) {

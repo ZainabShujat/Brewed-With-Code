@@ -2,6 +2,10 @@ import { useEffect, useState } from 'react'
 import { useDay, DAY_LEN } from '../systems/day'
 import { useShop } from '../systems/shop'
 import { sfx } from '../systems/sound'
+import { cafe } from '../world/Customers'
+import { useGame } from '../systems/store'
+import { useTutorial } from '../systems/tutorial'
+import { windDown, useWind } from './WindDown'
 
 // Top-centre day clock while the café is open, the "open for the day" button, and the results card.
 export function DayHud() {
@@ -10,10 +14,12 @@ export function DayHud() {
   useEffect(() => { const id = setInterval(() => tick((n) => n + 1), 250); return () => clearInterval(id) }, [])
   useEffect(() => { if (d.phase === 'results') sfx.perfect() }, [d.phase])
 
+  const winding = useWind((w) => w.on)
+  if (winding) return null
   if (d.phase === 'idle') return (
     <div className="dayopen">
       <div className="dayno">Day {d.day}</div>
-      <button className="brew-go" onClick={() => { useShop.getState().openShop(true); d.start(); sfx.bell() }}>☕ Open the café</button>
+      <button className="brew-go" onClick={() => { useShop.getState().openShop(true); d.start(); sfx.bell(); cafe.seed(3); if (useTutorial.getState().lesson >= 2) useGame.getState().setMode('walk') }}>☕ Open the café</button>
       <div className="daybank">💰 {d.bank} saved · ⭐ {d.stars}</div>
     </div>
   )
@@ -36,7 +42,7 @@ export function DayHud() {
             <div className="tot"><span>Today</span><b>💰 {total}</b></div>
           </div>
           <div className="bank">Saved so far: 💰 {d.bank} · best day 💰 {d.best}</div>
-          <button className="brew-go" onClick={() => { d.next(); sfx.tap() }}>Next day →</button>
+          <div className="dr-btns"><button className="brew-go wind" onClick={() => { windDown(); sfx.tap() }}>🌙 Wind down</button><button className="brew-go" onClick={() => { d.next(); sfx.tap() }}>Next day →</button></div>
         </div>
       </div>
     )

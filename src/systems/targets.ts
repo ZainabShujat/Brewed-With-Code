@@ -8,7 +8,7 @@ import { sfx } from './sound'
 // thermometer, a band on your glass). Letting go inside it plays a ding and a little "spot on". Cozy: missing it
 // never blocks you, it just doesn't sparkle.
 
-export const want = (): Drink | undefined => { const f = cafe.line.peek(); return f ? useShop.getState().orders[f.id]?.want : undefined }
+export const want = (): Drink | undefined => { const f = cafe.line.peek(), o = f ? useShop.getState().orders[f.id] : undefined; return o && !o.cake ? o.want : undefined }
 
 /** ml the shot glass should hold right now: the shots still missing from the glass */
 export function shotTarget() {

@@ -8,6 +8,7 @@ import { mat } from './mats'
 import { useShop } from '../systems/shop'
 import { TABLES, TABLE_SCALE } from './layout'
 import { useDay } from '../systems/day'
+import { useGame } from '../systems/store'
 import { Townsperson, seatHip, type Pose } from './folk/Townsperson'
 import { folk, type FolkSpec } from './folk/specs'
 
@@ -32,7 +33,8 @@ const IN_LANE = 2.6, OUT_LANE = 3.1
 export const SLOTS: [number, number][] = Array.from({ length: 6 }, (_, i) => [1.8, -5.3 + i * 1.15])
 
 type Phase = 'off' | 'in' | 'line' | 'out' | 'seat' | 'sit'
-export type Cust = { id: number; phase: Phase; pos: THREE.Vector3; path: THREE.Vector3[]; look: number; served: number; hurry: boolean; seat: number; sitT: number; patience: number; spec: FolkSpec; side: number; ver: number }
+const SIT_SAY = ['mmm ☕', 'so cozy here', 'best latte in town', '📖 one more chapter…', 'this foam! ✨', 'ahh, warm', 'did you hear about the bakery?', '😌', 'refill later?', 'love this place']
+export type Cust = { stay: number; id: number; phase: Phase; pos: THREE.Vector3; path: THREE.Vector3[]; look: number; served: number; hurry: boolean; seat: number; sitT: number; patience: number; spec: FolkSpec; side: number; ver: number }
 
 export const LOOKS = [
   { shirt: '#6fe0c4', hair: '#3b2a22', skin: '#f6cdb4' }, { shirt: '#ffcf5c', hair: '#1d1838', skin: '#c98a62' },
@@ -53,7 +55,7 @@ const homePath = (side: number) => [V(0, 13.3), V(0, 18.4), V(side * 2, STREET_Z
 
 // shared state: the pool, the queue, and controls (used by the game loop and by reel pages)
 export const cafe = {
-  pool: Array.from({ length: POOL }, (_, id): Cust => ({ id, phase: 'off', pos: V(...DOOR), path: [], look: id % LOOKS.length, served: 0, hurry: false, seat: -1, sitT: 0, patience: 1, spec: folk(id % 2 ? 'paper' : 'mallow', id * 7), side: id % 2 ? 1 : -1, ver: 0 })),
+  pool: Array.from({ length: POOL }, (_, id): Cust => ({ stay: 60, id, phase: 'off', pos: V(...DOOR), path: [], look: id % LOOKS.length, served: 0, hurry: false, seat: -1, sitT: 0, patience: 1, spec: folk(id % 2 ? 'paper' : 'mallow', id * 7), side: id % 2 ? 1 : -1, ver: 0 })),
   line: new PriorityQueue<Cust>(),   // in-a-hurry customers (priority 1) go ahead of normal ones (0)
   hurryChance: 0.2,
   auto: false,            // normal game: customers keep arriving and getting served on their own
@@ -76,9 +78,9 @@ export const cafe = {
     const c = this.line.dequeue(); if (!c) return false  // ← the front of the line leaves first
     // most customers take their drink to a free table and sit a while; in-a-hurry ones take it to go
     const free = SEATS.map((_, i) => i).filter((i) => !taken.has(i))
-    if (!EMBED && !c.hurry && free.length && Math.random() < 0.75) {
+    if (!EMBED && !c.hurry && free.length && Math.random() < 0.88) {
       const i = free[Math.floor(Math.random() * free.length)], st = SEATS[i]; taken.add(i)
-      c.phase = 'seat'; c.seat = i
+      c.phase = 'seat'; c.seat = i; c.stay = 45 + Math.random() * 45 // sit, sip and hang out a good while
       const [ax, az] = away(st, 0.9); c.path = [V(OUT_LANE, c.pos.z), V(OUT_LANE, az), V(ax, az), V(st.x, st.z)]
     } else { c.phase = 'out'; c.path = [V(OUT_LANE, c.pos.z), V(OUT_LANE, 11.4), ...(EMBED ? [V(...DOOR)] : homePath(c.side))] }
     return true
@@ -89,6 +91,15 @@ export const cafe = {
   },
   // who is in line, front first, with their shirt colour (for the queue strip in reels)
   order() { const out: { id: number; color: string; hurry: boolean }[] = []; for (let i = 0; i < this.line.size; i++) { const c = this.line.at(i)!; out.push({ id: c.id, color: LOOKS[c.look].shirt, hurry: c.hurry }) } return out },
+  // regulars already sitting with a drink (when the café opens, or lingering after closing)
+  seed(n: number) {
+    for (let k = 0; k < n; k++) {
+      const c = this.pool.find((p) => p.phase === 'off'), free = SEATS.map((_, i) => i).filter((i) => !taken.has(i)); if (!c || !free.length) return
+      const i = free[Math.floor(Math.random() * free.length)], st = SEATS[i]; taken.add(i)
+      c.side = Math.random() < 0.5 ? -1 : 1; c.spec = folk(c.side < 0 ? 'mallow' : 'paper', Math.floor(Math.random() * 50)); c.ver++
+      c.phase = 'sit'; c.seat = i; c.sitT = Math.random() * 10; c.stay = 50 + Math.random() * 50; c.path = []; c.pos.set(st.x, 0, st.z)
+    }
+  },
   reset() { taken.clear(); this.pool.forEach((p) => { p.phase = 'off'; p.path = []; p.seat = -1 }); while (this.line.dequeue()); },
 }
 
@@ -134,16 +145,18 @@ function Body({ c }: { c: Cust }) {
       // seated: hips on the chair seat, thighs forward; a slight lean in towards the table
       const [sx, sz] = c.spec.kind === 'mallow' ? away(st, 0.22) : [st.x, st.z]; g.position.set(sx, 0, sz); g.rotation.set(0, st.face, 0) // marshmallows are wide: a bit further back
       if (seatLift.current) seatLift.current.position.y = SEAT_TOP - seatHip(c.spec) * FOLK_SCALE // hips on the chair's seat
-      if (c.sitT > 22 + (c.id % 4) * 3) { taken.delete(c.seat); c.seat = -1; c.phase = 'out'; c.path = [V(...away(st, 0.9)), V(OUT_LANE, away(st, 0.9)[1]), V(OUT_LANE, 11.4), ...(EMBED ? [V(...DOOR)] : homePath(c.side))] }
+      if (c.sitT > c.stay) { taken.delete(c.seat); c.seat = -1; c.phase = 'out'; c.path = [V(...away(st, 0.9)), V(OUT_LANE, away(st, 0.9)[1]), V(OUT_LANE, 11.4), ...(EMBED ? [V(...DOOR)] : homePath(c.side))] }
       if (tag.current) tag.current.style.opacity = '0'
-      if (bubble.current && bubble.current.textContent) bubble.current.textContent = ''
+      // a sip now and then, a little chat with whoever's at the table
+      if (bubble.current) { const k = (c.sitT + c.id * 3.1) % 14, txt = k < 2.2 ? SIT_SAY[(c.id + Math.floor(c.sitT / 14)) % SIT_SAY.length] : ''; if (bubble.current.textContent !== txt) { bubble.current.textContent = txt; bubble.current.innerHTML = txt } }
       return
     }
     if (seatLift.current) seatLift.current.position.y = 0
     // walking: legs swing from the hips in opposite phase, a gentle bob, no cartoon hop
     g.position.set(c.pos.x, 0, c.pos.z); g.rotation.x = 0; g.rotation.z = 0
     poseWalk.current = moving
-    if (!EMBED && idx >= 0 && c.phase === 'line' && useDay.getState().day > CALM_DAYS) { // the first days are untimed: nobody walks out while you learn
+    const g8 = useGame.getState().mode
+    if (!EMBED && idx >= 0 && c.phase === 'line' && useDay.getState().day > CALM_DAYS && (g8 === 'pov' || g8 === 'cake')) { // waiting for you to take the order is free // the first days are untimed: nobody walks out while you learn
       c.patience -= dt / (c.hurry ? 45 : 80)
       if (c.patience <= 0) { cafe.line.remove(c); c.phase = 'out'; c.path = [V(OUT_LANE, c.pos.z), V(OUT_LANE, 11.4), ...(EMBED ? [V(...DOOR)] : homePath(c.side))]; useDay.getState().record('walkouts') }
     }

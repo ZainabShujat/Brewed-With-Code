@@ -7,6 +7,7 @@ import { C } from '../data/palette'
 import { mat, glass } from './mats'
 import { Html } from '@react-three/drei'
 import { useGame } from '../systems/store'
+import { useDay } from '../systems/day'
 import { Grab, DropTarget, Hold } from '../systems/drag'
 import { RBox } from './Soft'
 import { Model } from './Models'
@@ -621,7 +622,7 @@ const MATS: { n: number; label: string; at: V3; steps: Step[] }[] = [
   { n: 6, label: 'pass 🔔', at: [BAR.pass[0], TOP + 0.02, BZ - 0.16], steps: ['serve'] },
 ]
 function StationMats() {
-  const pov = useGame((st) => st.mode === 'pov')
+  const inPov = useGame((st) => st.mode === 'pov'), open = useDay((d) => d.phase === 'open' || d.phase === 'closing'), pov = inPov && open
   const [step, setStep] = useState<Step>('wait'), last = useRef<Step>('wait')
   useFrame(() => { const id = nextStep().id; if (id !== last.current) { last.current = id; setStep(id) } })
   if (!pov) return null
