@@ -9,6 +9,11 @@ Hard dates: **public launch 1 Dec 2026**; Claude access ends **12 Dec 2026** (th
 | 3 · The café | the teapot café: full bar, cake machine v2, tables | coins + level |
 | 4 · Two storeys | upstairs seating + bakery, stairs, more staff / co-op roles | after launch |
 
+## Two ways to play (chosen on the main menu, saved per save file)
+- **Story mode:** start with the coffee cart; earn coins and levels to unlock the mini café, then the café, then the second storey. Days, patience and goals give it a gentle arc.
+- **Chill mode:** open the full café straight away with everything unlocked; no patience timers, no day end, just make drinks and cakes at your own pace (and wander the street).
+Same game underneath: a `mode` flag picks the starting level, unlocks and pressure. Built on the progression day (24 Nov).
+
 ## Cake machine v2 (Purble Place-style mechanics, our own look)
 One belt; ◀ ▶ moves **every** pan together. New orders drop a fresh empty pan in at the start while you're
 mid-way through others. A dispenser click works on whatever cake is under it (careless clicks ruin the wrong
@@ -46,14 +51,14 @@ The 17 Nov glass crash (a blank screen the moment you placed a glass) went unnot
 | 2 | Wed 18 | **The street:** road, pavements, crossing, brick wall + gates, walkable in Explore | #03 "my café was floating in a field" |
 | 3 | Thu 19 | **Neighbours + the coffee cart:** CC0 kit shopfronts in our palette, streetlamps, the empty "For lease" unit, and the level-1 cart | #04 "I started with a coffee cart" |
 | 4 | Fri 20 | **Cake machine v2 + real orders** ("The Pass"): several pans on one belt, boxed cakes as objects, the pass, customers collect and pay | #05 "my cake station was just a mini-game" |
-| 5 | Sat 21 | **Coffee on the same system:** pour by holding the tool, drinks scored from what's in the glass, one ticket for cake + drink | #06 "no more menus" |
+| 5 | Sat 21 | **Coffee by hand (prototype from COFFEE_GAMEPLAY.md):** contents in ml, pull shots by holding the machine, fill + steam + pour milk with the glass filling for real, drinks scored correctness + craft at the pass | #06 "no more menus" |
 | 6 | Sun 22 | **Customers who act like people:** rigged CC0 characters (walk, queue, sit, sip, wave) + carrying orders to tables | #07 "they finally sit like people" |
 | 7 | Mon 23 | **Real surfaces + polish:** textures inside, lamp light, steam particles, performance pass (measured 18 Nov: bar view 440 draw calls / 654k triangles from the detailed espresso machine + grinder models; outside overview 756 calls from many small shop-window props → slim the models, merge/instance the props) | #08 "flat → real" (the week's before/after) |
 
 ## Launch run-up
 | Date | Build | Reel |
 |---|---|---|
-| Tue 24 | **Progression:** cart → mini café → café, unlocked with coins and levels; players start at the cart | #09 "from a coffee cart to a café" |
+| Tue 24 | **Progression + the two modes:** Story (cart → mini café → café, unlocked with coins and levels) or Chill (full café, no pressure), picked on the main menu | #09 "from a coffee cart to a café" |
 | Wed 25 | **Walk & serve camera:** third-person walk mode, E to interact, smooth station transitions (camera backlog, MVP slice) | #10 |
 | Thu 26 | **Kozie tutorial:** first-day guided order; How to play; saving; mobile pass | #11 |
 | Fri 27 | Playtest day: difficulty, coins, patience, bugs | gameplay clips |
