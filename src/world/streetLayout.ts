@@ -26,16 +26,18 @@ export const STREET = {
 // ── Day 3: the neighbours ──
 // Shopfronts face the street. `side: 'a'` = the café's side (front edge on pavement A, facing +z);
 // `side: 'b'` = across the road (front edge on pavement B, facing -z). x0..x1 = width along the street.
-export type ShopKind = 'books' | 'flowers' | 'lease' | 'records' | 'stationery' | 'laundry' | 'icecream'
-export type Shop = { kind: ShopKind; name: string; x0: number; x1: number; side: 'a' | 'b'; h: number; wall: string; trim: string; awning: [string, string] }
+export type ShopKind = 'books' | 'flowers' | 'lease' | 'coffee' | 'dairy' | 'baking' | 'sweets'
+export type Roof = 'gable' | 'mansard' | 'dutch' | 'flat'
+// `store`: the ingredient shops sell real coffee and cake ingredients (data/ingredients.ts); the others are neighbours
+export type Shop = { kind: ShopKind; name: string; x0: number; x1: number; side: 'a' | 'b'; h: number; wall: string; trim: string; awning: [string, string]; roof: Roof; store?: 'coffee' | 'dairy' | 'baking' | 'sweets'; icon: string }
 export const SHOPS: Shop[] = [
-  { kind: 'books', name: 'Chapter & Crumb', x0: -57, x1: -43, side: 'a', h: 8.5, wall: '#e3b892', trim: '#8a4f3a', awning: ['#8a4f3a', '#f2e3cf'] },
-  { kind: 'flowers', name: 'Petal Post', x0: -41, x1: -29, side: 'a', h: 7.5, wall: '#a8c4d6', trim: '#4f6f8f', awning: ['#e98fa6', '#fbeff2'] },
-  { kind: 'lease', name: 'FOR LEASE', x0: 24, x1: 38, side: 'a', h: 8, wall: '#e9d7a8', trim: '#a68a52', awning: ['#e9d7a8', '#e9d7a8'] },
-  { kind: 'records', name: 'Spin City', x0: 40, x1: 54, side: 'a', h: 9, wall: '#c7b6e0', trim: '#5a3f86', awning: ['#5a3f86', '#efe7fa'] },
-  { kind: 'stationery', name: 'Inkwell', x0: -57, x1: -44, side: 'b', h: 8, wall: '#d8a7a0', trim: '#7a3b33', awning: ['#7a3b33', '#f7e6e2'] },
-  { kind: 'laundry', name: 'Suds & Co.', x0: 14, x1: 28, side: 'b', h: 7.5, wall: '#b8d8cf', trim: '#3f7a6e', awning: ['#3f7a6e', '#eaf6f2'] },
-  { kind: 'icecream', name: 'Scoops', x0: 30, x1: 43, side: 'b', h: 7, wall: '#f6c8d6', trim: '#c4527e', awning: ['#f2c66a', '#fff6e0'] },
+  { kind: 'books', name: 'Chapter & Crumb', x0: -57, x1: -43, side: 'a', h: 8.5, wall: '#e3b892', trim: '#8a4f3a', awning: ['#8a4f3a', '#f2e3cf'], roof: 'gable', icon: '📚' },
+  { kind: 'flowers', name: 'Petal Post', x0: -41, x1: -29, side: 'a', h: 8.5, wall: '#a8c4d6', trim: '#4f6f8f', awning: ['#e98fa6', '#fbeff2'], roof: 'flat', icon: '🌷' },
+  { kind: 'lease', name: 'FOR LEASE', x0: 24, x1: 38, side: 'a', h: 8.5, wall: '#e9d7a8', trim: '#a68a52', awning: ['#e9d7a8', '#e9d7a8'], roof: 'flat', icon: '' },
+  { kind: 'coffee', name: 'The Daily Grind', x0: 40, x1: 54, side: 'a', h: 9, wall: '#c9a27e', trim: '#4a2c20', awning: ['#4a2c20', '#f2e3cf'], roof: 'mansard', store: 'coffee', icon: '☕' },
+  { kind: 'baking', name: 'Flour & Co.', x0: -57, x1: -44, side: 'b', h: 8.5, wall: '#f1e4cc', trim: '#9a6b3c', awning: ['#9a6b3c', '#fbf3e6'], roof: 'dutch', store: 'baking', icon: '🥖' },
+  { kind: 'dairy', name: 'Moo & Oat', x0: 14, x1: 28, side: 'b', h: 8.5, wall: '#cfe4f2', trim: '#3c6f9a', awning: ['#3c6f9a', '#ffffff'], roof: 'gable', store: 'dairy', icon: '🥛' },
+  { kind: 'sweets', name: 'Sugar Plum', x0: 30, x1: 43, side: 'b', h: 8.5, wall: '#f6c8d6', trim: '#a63f78', awning: ['#f2c66a', '#fff6e0'], roof: 'dutch', store: 'sweets', icon: '🍬' },
 ]
 export const SHOP_DEPTH = 11
 // the little park across the road (left of the side street), the bus stop and the level-1 coffee cart
@@ -49,3 +51,9 @@ for (const sh of SHOPS) {
 STREET.blockers.push([PARK.x0, PARK.z0, PARK.x1, PARK.z1])                 // the park is fenced (you look over the railings)
 STREET.blockers.push([BUS_STOP.x - 2.2, BUS_STOP.z - 0.7, BUS_STOP.x + 2.2, BUS_STOP.z + 0.9])
 STREET.blockers.push([CART.x - 1.3, CART.z - 0.8, CART.x + 1.3, CART.z + 0.8])
+
+// the door of a shop, on the pavement (where you stand to go in): the door sits at 0.32 of the width from the centre
+export function shopDoor(sh: Shop): [number, number] {
+  const cx = (sh.x0 + sh.x1) / 2, dx = (sh.x1 - sh.x0) * 0.32
+  return sh.side === 'a' ? [cx + dx, STREET.padA[0] + 1.2] : [cx - dx, STREET.padB[1] - 1.2]
+}

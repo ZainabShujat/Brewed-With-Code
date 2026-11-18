@@ -2,6 +2,9 @@ import { create } from 'zustand'
 import { stationStars, EMPTY, randomOrder, score, craft as craftScore, CAP, SHOT_ML, NO_CONTENTS, filled, type Contents, type Drink, type MilkType, type Order, type Topping } from '../data/recipes'
 import { cafe } from '../world/Customers'
 import { useDay } from './day'
+import { usePantry } from './pantry'
+import { USE, milkId } from '../data/ingredients'
+const P = () => usePantry.getState()
 
 // The café's gameplay state: who ordered what, what's in the cup right now, coins, and the last result.
 export type Pour = { kind: 'shot' | 'water' | 'choc' | 'milk' | 'sprinkle' | 'whip'; t0: number; color: string; tag?: string; dur?: number } // dur: how long the pour lasts (hold-to-pour); default per kind
@@ -90,7 +93,7 @@ export const useShop = create<Shop>((set, get) => ({
     set({ pours: same ? s.pours : [...s.pours, { ...pour('shot', '#5b2e1c'), t0: now() + SHOT_FILL }] })
     setTimeout(() => { if (g !== glass) return; pending--; const st = get(); if (st.cup) { const ml = { ...st.ml, espresso: st.ml.espresso + SHOT_ML }; set({ ml, drink: derive(st.drink, ml, st.texture) }) } }, (SHOT_FILL + 0.35) * 1000) },
   water: () => { const s = get(); if (!s.cup || s.drink.water) return; const ml = { ...s.ml, water: Math.max(0, FULL * CAP[s.drink.size] - filled(s.ml)) } /* hot water tops the glass up to the brim */; set({ ml, drink: derive(s.drink, ml, s.texture), pours: [...s.pours, pour('water', '#bfe3f2')] }) },
-  choc: () => { const s = get(); if (!s.cup || s.drink.chocolate) return; const ml = { ...s.ml, choc: 20 }; set({ ml, drink: derive(s.drink, ml, s.texture), pours: [...s.pours, pour('choc', '#3b1d12')] }) },
+  choc: () => { const s = get(); if (!s.cup || s.drink.chocolate) return; if (!P().use('chocSauce', USE.chocPerDrink)) return; const ml = { ...s.ml, choc: 20 }; set({ ml, drink: derive(s.drink, ml, s.texture), pours: [...s.pours, pour('choc', '#3b1d12')] }) },
   // one-click milk (reels and the old flow): tops the glass up to ~90% with milk of that texture
   milk: (kind) => { const s = get(); if (!s.cup || s.drink.milk !== 'none' || kind === 'none') return
     const room = Math.max(0, CAP[s.drink.size] * 0.9 - filled(s.ml)), f = foamFrac(kind as Texture)
@@ -98,7 +101,9 @@ export const useShop = create<Shop>((set, get) => ({
     set({ ml, texture: kind as Texture, drink: { ...derive(s.drink, ml, kind as Texture), milkType: s.milkType }, pours: [...s.pours, pour('milk', s.milkType === 'oat' ? '#f1e2c6' : s.milkType === 'almond' ? '#f5ead8' : '#fffaf2')] }) },
   pickMilk: (t) => set({ milkType: t, menu: null }),
   cycleMilkStyle: () => set((s) => ({ milkStyle: s.milkStyle === 'steamed' ? 'foamy' : s.milkStyle === 'foamy' ? 'micro' : 'steamed' })),
-  top: (t) => { const s = get(); if (!s.cup || s.drink.topping !== 'none') return; set({ shake: 0.7, drink: { ...s.drink, topping: t }, menu: null, pours: [...s.pours, pour(t === 'whipped' ? 'whip' : 'sprinkle', t === 'cocoa' ? '#5b2e1c' : t === 'cinnamon' ? '#b0602a' : '#ff7fb6', t)] }) },
+  top: (t) => { const s = get(); if (!s.cup || s.drink.topping !== 'none') return
+    if (!(t === 'whipped' ? P().use('cream', USE.whipCream) : P().use(t as 'cocoa', USE.topping[t] ?? 3))) return
+    set({ shake: 0.7, drink: { ...s.drink, topping: t }, menu: null, pours: [...s.pours, pour(t === 'whipped' ? 'whip' : 'sprinkle', t === 'cocoa' ? '#5b2e1c' : t === 'cinnamon' ? '#b0602a' : '#ff7fb6', t)] }) },
   trash: () => { glass++; pending = 0; set({ cup: false, drink: { ...EMPTY }, ...fresh() }) },
   serve: () => {
     const s = get(), front = cafe.line.peek()
@@ -125,8 +130,11 @@ export const useShop = create<Shop>((set, get) => ({
     for (let i = 0; i < n && grains.length < 90; i++) { const k = grains.length, a = k * 2.39996, r = 0.012 + ((k * 37) % 23) / 23 * 0.03
       let x = s.shakeAt[0] + Math.cos(a) * r, z = s.shakeAt[1] + Math.sin(a) * r; const d = Math.hypot(x, z); if (d > 0.15) { x *= 0.15 / d; z *= 0.15 / d }
       grains.push([x, z]) }
-    set(s.drink.topping === 'none' && shake >= 0.35 ? { shake, grains, drink: { ...s.drink, topping: t } } : { shake, grains }) },
-  pullTick: (dt) => { const s = get(); if (s.shotGlass >= 95) return; set({ shotGlass: Math.min(95, s.shotGlass + 25 * dt) }) },
+    if (s.drink.topping === 'none' && shake >= 0.35) { if (!P().use(t as 'cocoa', USE.topping[t] ?? 3)) return; set({ shake, grains, drink: { ...s.drink, topping: t } }) }
+    else set({ shake, grains }) },
+  pullTick: (dt) => { const s = get(); if (s.shotGlass >= 95) return; const add = Math.min(95 - s.shotGlass, 25 * dt)
+    if (!P().use('beans', add * USE.beansPerMl)) return
+    set({ shotGlass: s.shotGlass + add }) },
   pourShotGlass: () => { const s = get()
     if (!s.cup) { set({ hint: 'put a glass on the coaster first' }); return }
     if (s.shotGlass < 3) { set({ hint: 'the shot glass is empty: hold the machine to pull a shot' }); return }
@@ -135,7 +143,8 @@ export const useShop = create<Shop>((set, get) => ({
   fillPitcher: (t, dt) => { const s = get(), p = s.pitcher, have = p.milk + p.foam
     if (have >= 360) return
     // a different milk into a part-full pitcher just takes over (it's a cozy game)
-    set({ milkType: t, hint: '', pitcher: { ...p, type: t, milk: p.milk + Math.min(90 * dt, 360 - have) } }) },
+    const add = Math.min(90 * dt, 360 - have); if (!P().use(milkId(t), add)) return
+    set({ milkType: t, hint: '', pitcher: { ...p, type: t, milk: p.milk + add } }) },
   placePitcher: (at) => set((s) => ({ pitcher: { ...s.pitcher, at } })),
   steamTick: (dt) => { const s = get(), p = s.pitcher, have = p.milk + p.foam
     if (p.at !== 'wand' || have < 5) { set({ hint: p.at !== 'wand' ? 'put the pitcher on the steam wand first' : 'the pitcher is empty: hold a milk bottle to fill it' }); return }

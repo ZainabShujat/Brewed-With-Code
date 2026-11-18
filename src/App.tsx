@@ -13,6 +13,7 @@ import { Kozie } from './world/Kozie'
 import { Customers, cafe as cafeLine } from './world/Customers'
 import { ShopHud } from './ui/ShopHud'
 import { HoldRing } from './ui/HoldRing'
+import { StreetShop, PantryNote } from './ui/StreetShop'
 import { RecipeCard } from './ui/RecipeCard' // made by hand (the old meter HUD, ui/BrewHud.tsx, is kept for reference)
 import { DayHud } from './ui/DayHud'
 import { MusicButton } from './ui/MusicButton'
@@ -114,6 +115,8 @@ export default function App() {
       {playing && !SNAP && (mode === 'pov' || mode === 'cake' || mode === 'dollhouse' || mode === 'walk') && <DayHud />}
       {playing && mode === 'pov' && <RecipeCard />}
       {playing && mode === 'pov' && <HoldRing />}
+      {playing && mode === 'walk' && <StreetShop />}
+      {playing && <PantryNote />}
       {playing && mode !== 'cake' && mode !== 'pov' && <ShopHud />}
       {playing && <CakeHud />}
       {SNAP && <Credits />}

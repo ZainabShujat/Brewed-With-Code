@@ -294,3 +294,24 @@ body.station-cursor, body.station-cursor canvas { cursor: url("data:image/svg+xm
 .brewpop .stars span { display: flex; flex-direction: column; align-items: center; line-height: 1; }
 .brewpop .stars small { font-size: 14px; letter-spacing: 2px; text-transform: uppercase; color: #fff6ee; text-shadow: none; margin-bottom: 4px; }
 @media (max-width: 700px) { .brewpop .stars { font-size: 20px; gap: 8px; } }
+
+/* the street shops: a prompt at the door, then the shop counter */
+.shop-prompt { position: fixed; left: 50%; bottom: 120px; transform: translateX(-50%); z-index: 25; border: 0; cursor: pointer;
+  font: 800 18px 'Trebuchet MS', sans-serif; color: #fff6ee; background: #5e2a75; padding: 10px 18px 12px; border-radius: 16px; box-shadow: 0 5px 0 #2a1830; }
+.shop-prompt b { color: #f2c66a; } .shop-prompt kbd { margin-left: 8px; background: #f2c66a; color: #2a1830; border-radius: 6px; padding: 1px 7px; font: 900 14px monospace; }
+.shop-counter { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 45; width: min(640px, 94vw); max-height: 86vh; overflow: auto;
+  background: #fff6ee; color: #5e2a75; border-radius: 22px; box-shadow: 0 8px 0 #ff7fb6, 0 20px 50px rgba(0,0,0,.35); font-family: 'Trebuchet MS', sans-serif; }
+.sc-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 14px 18px; background: #5e2a75; color: #fff6ee; border-radius: 22px 22px 0 0; font-size: 20px; }
+.sc-icon { font-size: 26px; margin-right: 8px; } .sc-bank { font-size: 14px; font-weight: 700; color: #f2c66a; }
+.sc-x { border: 0; background: #ff7fb6; color: #fff; width: 32px; height: 32px; border-radius: 50%; font-weight: 900; cursor: pointer; }
+.sc-list { padding: 8px 14px; }
+.sc-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 4px; border-bottom: 1px dashed rgba(94,42,117,.2); }
+.sc-name { font-weight: 800; font-size: 16px; display: flex; flex-direction: column; } .sc-name span { font-size: 22px; } .sc-name small { font-weight: 700; opacity: .65; font-size: 12px; }
+.sc-packs { display: flex; gap: 6px; }
+.sc-pack { display: flex; flex-direction: column; align-items: center; min-width: 78px; border: 0; border-radius: 12px; padding: 6px 8px; background: #ffe4f0; color: #5e2a75; box-shadow: 0 3px 0 #ff7fb6; cursor: pointer; font-family: inherit; }
+.sc-pack i { font-style: normal; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; opacity: .7; } .sc-pack b { font-size: 14px; } .sc-pack em { font-style: normal; font-size: 12px; font-weight: 800; }
+.sc-pack:disabled { opacity: .45; cursor: default; } .sc-pack.locked { background: #eee6ef; box-shadow: 0 3px 0 #c9bfd0; }
+.sc-foot { padding: 10px 18px 14px; font-size: 13px; font-weight: 700; opacity: .8; }
+.pantry-note { position: fixed; left: 50%; bottom: 150px; transform: translateX(-50%); z-index: 46; pointer-events: none; font: 800 16px 'Trebuchet MS', sans-serif;
+  color: #fff6ee; background: #5e2a75; padding: 8px 16px 10px; border-radius: 14px; box-shadow: 0 4px 0 #2a1830; animation: popin 2.6s ease-out forwards; }
+@media (max-width: 700px) { .sc-row { flex-direction: column; align-items: stretch; } .sc-pack { min-width: 0; flex: 1; } }

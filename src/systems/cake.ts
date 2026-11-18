@@ -1,5 +1,8 @@
 import { create } from 'zustand'
 import { useDay } from './day'
+import { usePantry } from './pantry'
+import { USE, type IngredientId } from '../data/ingredients'
+const use = (items: [IngredientId, number][]) => usePantry.getState().useAll(items)
 
 // The cake bench: stack sponges, fill, frost, pipe rosettes, top, box. Every step is data,
 // so the 3D cake (world/Cake.tsx) just draws whatever is in this state, animating new parts in.
@@ -77,14 +80,19 @@ export const useCake = create<CakeState>((set, get) => ({
   setTin: (tin) => { const c = get().cake; if (c.layers.length) return; set({ cake: { ...c, tin }, t: { ...get().t, tin: now() } }) },
   // a sponge can only go on bare cake or on a filling (fillings sit *between* layers)
   addLayer: (s) => { const c = get().cake; if (c.tin === 'none' || c.frosting !== 'none' || c.layers.length >= 4 || c.layers.length > c.fillings.length) return
+    const ex = USE.spongeExtra[s]; if (!use([['flour', USE.layer.flour], ['sugar', USE.layer.sugar], ['eggs', USE.layer.eggs], ['butter', USE.layer.butter], ...(ex ? [ex] : [])])) return
     set({ cake: { ...c, layers: [...c.layers, s] }, t: { ...get().t, [`L${c.layers.length}`]: now() } }) },
   addFilling: (f) => { const c = get().cake; if (c.frosting !== 'none' || !c.layers.length || c.fillings.length >= c.layers.length) return
+    if (!use([USE.filling[f]])) return
     set({ cake: { ...c, fillings: [...c.fillings, f] }, t: { ...get().t, [`F${c.fillings.length}`]: now() } }) },
   frost: (f) => { const c = get().cake; if (!c.layers.length || c.frosting !== 'none' || c.fillings.length >= c.layers.length) return
+    if (!use([['sugar', USE.frosting.sugar], ['butter', USE.frosting.butter]])) return
     set({ cake: { ...c, frosting: f }, t: { ...get().t, frost: now() } }) },
   pipe: (p) => { const c = get().cake; if (c.frosting === 'none' || c.piping !== 'none') return
+    if (!use([['sugar', USE.piping.sugar], ['cream', USE.piping.cream]])) return
     set({ cake: { ...c, piping: p }, t: { ...get().t, pipe: now() } }) },
   topWith: (tp) => { const c = get().cake; if (c.frosting === 'none' || c.top !== 'none') return
+    if (!use([USE.cakeTop[tp]])) return
     set({ cake: { ...c, top: tp }, t: { ...get().t, top: now() } }) },
   box: () => { const s = get(); if (!s.cake.layers.length) return
     const r0 = scoreCake(s.cake, s.order.want), r = { ...r0, pct: Math.max(0, r0.pct - s.peeks * 5) } // each peek at the order costs a little
