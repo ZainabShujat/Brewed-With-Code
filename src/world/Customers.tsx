@@ -43,7 +43,7 @@ export const MAX_LINE = 3, CALM_DAYS = 2
 
 // Townsfolk: marshmallows live to the LEFT of the market (west, -x), notebooks to the RIGHT (east, +x). Each customer
 // walks in along the pavement from their own side, comes in through the door, and goes back home the same way.
-const STREET_Z = 19.6, FROM = 30, FOLK_SCALE = 1.3, SEAT_TOP = 0.672
+const STREET_Z = 19.6, FROM = 30, FOLK_SCALE = 1.7, SEAT_TOP = 0.672
 const inPath = (side: number) => [V(side * 2, STREET_Z), V(0, 18.4), V(0, 13.3), V(IN_LANE, 11.4), V(IN_LANE, 1.2)]
 const homePath = (side: number) => [V(0, 13.3), V(0, 18.4), V(side * 2, STREET_Z), V(side * FROM, STREET_Z)]
 
@@ -159,7 +159,7 @@ function Body({ c }: { c: Cust }) {
     <group ref={ref} visible={false}>
       <group ref={seatLift}><group scale={FOLK_SCALE}><Townsperson key={c.ver} spec={c.spec} getPose={pose} phase={c.id * 0.9} /></group></group>
       {EMBED && <Html zIndexRange={[19, 0]} position={[0, 2.35, 0]} center><div ref={tag} className="qtag" /></Html>}
-      <Html zIndexRange={[19, 0]} position={[0, 2.6, 0]} center><div ref={bubble} className="obubble" /></Html>
+      <Html zIndexRange={[19, 0]} position={[0, 3.2, 0]} center><div ref={bubble} className="obubble" /></Html>
     </group>
   )
 }

@@ -19,8 +19,8 @@ export function Keepers() {
         const k = KEEPERS[sh.kind]!, [x, z, face] = keeperPos(sh)
         return (
           <group key={sh.kind} position={[x, 0, z]} rotation={[0, face, 0]}>
-            <group scale={1.45}><Townsperson spec={k.spec} pose="wait" phase={x} /></group>
-            <Html zIndexRange={[19, 0]} position={[0, 2.85, 0]} center distanceFactor={14}><div className="nametag keeper">{sh.icon} {k.name}</div></Html>
+            <group scale={1.9}><Townsperson spec={k.spec} pose="wait" phase={x} /></group>
+            <Html zIndexRange={[19, 0]} position={[0, 3.5, 0]} center distanceFactor={14}><div className="nametag keeper">{sh.icon} {k.name}</div></Html>
           </group>
         )
       })}

@@ -10,7 +10,7 @@ import { hourNow } from '../systems/clock'
 // Street life: townsfolk out and about. Marshmallows come from the WEST end of the street, notebooks from the EAST
 // (that's where they live), window-shop, cross at the zebra, stop to chat in pairs, then head home. Busier at
 // midday, nearly empty at night. Pure ambience: they don't block you and never enter the café (customers do).
-const N = 14, SCALE = 1.3
+const N = 14, SCALE = 1.7
 const PAD_A = STREET.padA[0] + 1.6, PAD_B = STREET.padB[1] - 1.6, ZEBRA_X = 0
 const SAY = {
   mallow: ['hi hi! 👋', 'so toasty today ☀️', 'cocoa later? ☕', 'strawberries at Sugar Plum! 🍓', "I'm a little squished 😅", 'that café smells amazing', 'see you at the bakery?', '🌷 for my mum'],
@@ -78,7 +78,7 @@ function WalkerBody({ w, i, all, r }: { w: Walker; i: number; all: Walker[]; r: 
   return (
     <group ref={g}>
       <group scale={SCALE}><Townsperson key={ver} spec={w.spec} getPose={() => w.pose} phase={i * 1.3} /></group>
-      <Html zIndexRange={[19, 0]} position={[0, 2.5, 0]} center distanceFactor={14}><div ref={bubble} className="chat" /></Html>
+      <Html zIndexRange={[19, 0]} position={[0, 3.1, 0]} center distanceFactor={14}><div ref={bubble} className="chat" /></Html>
     </group>
   )
 }
