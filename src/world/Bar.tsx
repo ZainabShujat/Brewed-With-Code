@@ -11,25 +11,30 @@ import { Grab, DropTarget, Hold } from '../systems/drag'
 import { RBox } from './Soft'
 import { Model } from './Models'
 import { SHOT_FILL, textureOf } from '../systems/shop'
-import { CAP } from '../data/recipes'
+import { CAP, filled, type Topping } from '../data/recipes'
+import { BAR, TOP, BZ, RZ, SPOUT_Y, MACHINE } from './barLayout'
 import { liquidMat, surfaceTex, Surface, Stream, WhipSpiral, useCupGeometry, ceramic } from './Liquid'
 
 // The playable bar. Coordinates are the counter's local space (the Counter group in Interior).
 // Every station is clickable: R3F casts a ray from the mouse into the scene (raycasting) and
 // calls onClick on the first mesh it hits.
-const TOP = COUNTER.top + 0.1, Z = COUNTER.z - 0.1
-// the working cup sits front and centre on the barista's side, big enough to watch it fill
-export const CUP_AT: [number, number, number] = [0.2, TOP + 0.06, COUNTER.z - 0.3]
-const CUP_SCALE = 0.95 // (large; small and medium scale down from this)
+// every position comes from ./barLayout (measured from the real machine), so nothing drifts out of line
+export const CUP_AT = BAR.cup
+// real-world glass sizes, in proportion to the machine: large ≈ 28 cm here (the machine is ~85 cm), small ≈ 17 cm
+const CUP_SCALE = 0.3 // (large; small and medium scale down from this)
+// the glass model's base sits 0.3075 below its origin: lift it so it stands ON the coaster
+const lift = (S: number) => 0.3075 * S - 0.06
 // where the pitcher / kettle hovers for each glass size, and where its spout ends up when tilted (counter units).
 // The tilt (~1.1 rad) swings the spout down and to the side, so the tool sits offset by that much: the spout is
 // then right over the middle of the glass, a little above the rim.
-export const glassTop = (size: keyof typeof SIZE_K) => 0.613 * CUP_SCALE * SIZE_K[size]
+export const glassTop = (size: keyof typeof SIZE_K) => 0.613 * CUP_SCALE * SIZE_K[size] + lift(CUP_SCALE * SIZE_K[size])
 export const SPOUT = { milk: { side: 0.128, dy: -0.03 }, water: { side: 0.099, dy: -0.084 }, shot: { side: 0.063, dy: -0.013 } } as const
-export const pourAbove = (size: keyof typeof SIZE_K) => glassTop(size) + 0.2
+export const pourAbove = (size: keyof typeof SIZE_K) => glassTop(size) + 0.12
 // bottles/cans held upside down: nozzle tip this far below the tool's centre
 const NOZZLE = { choc: 0.175, whip: 0.195 } as const
-export const SIZE_K = { small: 0.72, medium: 0.86, large: 1 } as const // a big see-through glass: you watch the drink build in layers (like the cake)
+const SHAKE_ABOVE = 0.16 // a shaker's centre this far over the rim
+const SHAKE_TILT = 2.0 // a shaker tips this far over the glass (rad) — tilted, not upside down
+export const SIZE_K = { small: 0.62, medium: 0.79, large: 1 } as const // a big see-through glass: you watch the drink build in layers (like the cake)
 
 // ── animation timing (all derived from the pour's start time, so reels stay frame-exact) ──
 export const GO = 0.35, BACK = 0.35          // tool flies over / flies home
@@ -65,7 +70,7 @@ function Flyer({ kind, tag, home, act, side = 0.14, above = 0.42, children }: {
     const tx = CUP_AT[0] + side - home[0], ty = CUP_AT[1] + above - home[1], tz = CUP_AT[2] - home[2]
     g.position.set(tx * w, ty * w + Math.sin(w * Math.PI) * 0.12, tz * w)  // a little arc on the way
     if (act === 'tilt') g.rotation.z = w * (0.35 + 0.75 * Math.sin(Math.min(1, a * 1.4) * Math.PI / 2) * (acting ? 1 : 0.4))
-    else if (act === 'shake') { g.rotation.z = w * (2.6 + (acting ? Math.sin(t * 30) * 0.35 : 0)); g.position.y += acting ? Math.abs(Math.sin(t * 30)) * 0.03 : 0 }
+    else if (act === 'shake') { g.rotation.z = w * (SHAKE_TILT + (acting ? Math.sin(t * 34) * 0.18 : 0)); g.position.y += acting ? Math.abs(Math.sin(t * 34)) * 0.025 : 0 } // tilted over the glass, a quick wrist shake
     else g.rotation.z = w * Math.PI * 0.92 // upside down (whipped cream can)
   })
   return <group ref={ref}>{children}</group>
@@ -74,7 +79,7 @@ function Flyer({ kind, tag, home, act, side = 0.14, above = 0.42, children }: {
 
 // liquid layers rise smoothly to their target height (an easing lerp every frame)
 // every layer sits on the CURRENT height of the ones below it, so the drink rises as one column (no floating discs)
-function Layer({ h, i, col, color, r = 0.19 }: { h: number; i: number; col: number[]; color: string; r?: number }) {
+function Layer({ h, i, col, color }: { h: number; i: number; col: number[]; color: string; r?: number }) {
   const ref = useRef<THREE.Mesh>(null)
   useFrame((_, dt) => {
     const m = ref.current; if (!m) return
@@ -82,14 +87,15 @@ function Layer({ h, i, col, color, r = 0.19 }: { h: number; i: number; col: numb
     col[i] = (col[i] ?? 0) + (Math.max(0, h) - (col[i] ?? 0)) * k
     let y = 0.03; for (let j = 0; j < i; j++) y += col[j] ?? 0
     m.scale.y = Math.max(0.0001, col[i]); m.position.y = y + col[i] / 2
+    const rr = glassR(y + col[i] / 2 - 0.23); m.scale.x = m.scale.z = rr // fits the glass at this height
     m.visible = col[i] > 0.002
   })
   const m = useMemo(() => liquidMat(color), [color])
-  return <mesh ref={ref} material={m}><cylinderGeometry args={[r, r * 0.9, 1, 32]} /></mesh>
+  return <mesh ref={ref} material={m}><cylinderGeometry args={[1, 1, 1, 32]} /></mesh>
 }
 
 // the shot glass lives under the machine's group head: espresso streams into it, then it's carried over and poured
-const SHOT_HOME: [number, number, number] = [-1.92, TOP + 0.06, COUNTER.z - 0.6]
+const SHOT_HOME = BAR.shot // right under the machine's front brew head
 const shotState = () => { const s = useShop.getState(), p = active('shot')
   if (!p) return { fill: Math.min(1, s.shotGlass / 90), pulling: s.pulling } // made by hand: the real ml
   const t = nowS() - p.t0
@@ -103,16 +109,30 @@ function MachineStream() {
   const ref = useRef<THREE.Group>(null)
   useFrame(() => { const g = ref.current; if (!g) return; const { pulling } = shotState(); g.visible = pulling; g.children.forEach((c, i) => { c.scale.x = c.scale.z = 0.8 + Math.sin(nowS() * 37 + i) * 0.2 }) })
   // two thin streams from the double spout of the group head into the shot glass
-  return <group ref={ref} visible={false}>{[-0.012, 0.012].map((x) => <mesh key={x} position={[x, 0.2, 0]} material={mat('#5b2e1c', { rough: 0.2 })}><cylinderGeometry args={[0.005, 0.005, 0.32, 6]} /></mesh>)}</group>
+  const top = SPOUT_Y - SHOT_HOME[1], bottom = -0.03 // from the spout's tip down into the shot glass
+  return <group ref={ref} visible={false}>{[-0.012, 0.012].map((z) => <mesh key={z} position={[0, (top + bottom) / 2, z]} material={mat('#5b2e1c', { rough: 0.2 })}><cylinderGeometry args={[0.005, 0.005, top - bottom, 6]} /></mesh>)}</group>
 }
 
-// the machine's left group head, in counter space (the cup slides under it for every shot)
-const UNDER_MACHINE: [number, number, number] = [-1.92, CUP_AT[1], COUNTER.z - 0.6]
 
 // the drink glass: a lathe-turned tumbler, thin and clear (no transmission pass: cheap on laptop GPUs)
 const GLASS_GEO = (() => { const P = (x: number, y: number) => new THREE.Vector2(x, y)
   return new THREE.LatheGeometry([P(0.205, -0.28), P(0.215, -0.1), P(0.235, 0.2), P(0.245, 0.33), P(0.25, 0.34), P(0.24, 0.34), P(0.228, 0.2), P(0.208, -0.1), P(0.198, -0.23)], 48) })()
-const GLASS_MAT = new THREE.MeshPhysicalMaterial({ color: '#ffffff', roughness: 0.04, clearcoat: 1, transparent: true, opacity: 0.2, side: THREE.DoubleSide, depthWrite: false })
+const GLASS_MAT = new THREE.MeshPhysicalMaterial({ color: '#f4fbff', roughness: 0.04, clearcoat: 1, transparent: true, opacity: 0.12, side: THREE.DoubleSide, depthWrite: false })
+// glass looks like glass because its edges catch the light: brighten + firm up the alpha where the surface turns away
+GLASS_MAT.onBeforeCompile = (sh) => {
+  sh.fragmentShader = sh.fragmentShader.replace('#include <dithering_fragment>', `#include <dithering_fragment>
+    float fres = pow(1.0 - abs(dot(normalize(vNormal), normalize(vViewPosition))), 2.2);
+    gl_FragColor.rgb += fres * 0.28; gl_FragColor.a = clamp(gl_FragColor.a + fres * 0.6, 0.0, 1.0);`)
+}
+const RIM_MAT = new THREE.MeshStandardMaterial({ color: '#ffffff', emissive: '#dff1f7', emissiveIntensity: 0.35, roughness: 0.1, transparent: true, opacity: 0.85 })
+// the glass's inner radius at a height (in the glass's own space), so the liquid always fits the glass exactly
+const PROFILE: [number, number][] = [[-0.28, 0.205], [-0.1, 0.215], [0.2, 0.235], [0.33, 0.245]]
+export function glassR(yAbs: number) {
+  const y = (yAbs - 0.12) / 1.45
+  for (let i = 1; i < PROFILE.length; i++) { const [y0, r0] = PROFILE[i - 1], [y1, r1] = PROFILE[i]
+    if (y <= y1 || i === PROFILE.length - 1) return (r0 + (r1 - r0) * Math.min(1, Math.max(0, (y - y0) / (y1 - y0)))) * 0.78 - 0.007 }
+  return 0.16
+}
 const GLASS_STACK = new THREE.MeshPhysicalMaterial({ color: '#eaf6f8', roughness: 0.05, clearcoat: 1, transparent: true, opacity: 0.38, side: THREE.DoubleSide, depthWrite: false })
 const GLASS_BASE = new THREE.MeshPhysicalMaterial({ color: '#e8f2f4', roughness: 0.05, clearcoat: 1, transparent: true, opacity: 0.55 })
 
@@ -138,15 +158,16 @@ function Cup() {
   // (all hooks above the early return: React needs the same hooks every render)
   const col = useRef<number[]>([]).current, top = useRef<THREE.Group>(null)
   if (!cup) col.length = 0 // a fresh glass starts empty
-  useFrame(() => { if (top.current) { let y = 0.03; for (let j = 0; j < placed.length; j++) y += col[j] ?? 0; top.current.position.y = y } })
+  useFrame(() => { if (top.current) { let y = 0.03; for (let j = 0; j < placed.length; j++) y += col[j] ?? 0; top.current.position.y = y; const k = glassR(y - 0.23) / 0.166; top.current.scale.set(k, 1, k) } })
   if (!cup) return null
   const lastT = pours.length ? pours[pours.length - 1].t0 + GO : 0
   return (
     <group ref={ref}>
-      <group scale={CUP_SCALE * SIZE_K[d.size]}>
+      <group scale={CUP_SCALE * SIZE_K[d.size]} position={[0, lift(CUP_SCALE * SIZE_K[d.size]), 0]}>
         {/* a tall clear glass: you see every layer go in (espresso, chocolate, milk, foam, cream) */}
         <mesh geometry={GLASS_GEO} material={GLASS_MAT} renderOrder={2} scale={[0.78, 1.45, 0.78]} position={[0, 0.12, 0]} />
-        <mesh position={[0, -0.27, 0]} material={GLASS_BASE}><cylinderGeometry args={[0.158, 0.166, 0.05, 40]} /></mesh>
+        <mesh position={[0, 0.611, 0]} rotation={[Math.PI / 2, 0, 0]} material={RIM_MAT} renderOrder={3}><torusGeometry args={[0.19, 0.006, 8, 48]} /></mesh>
+        <mesh position={[0, -0.27, 0]} material={GLASS_BASE}><cylinderGeometry args={[0.158, 0.162, 0.075, 40]} /></mesh>
         <group position={[0, -0.23, 0]}>
           {placed.map((l, i) => <Layer key={i} h={l.h} i={i} col={col} color={l.color} r={0.162} />)}
           <group ref={top}>
@@ -162,12 +183,16 @@ function Cup() {
 
 // toppings stay on the drink: cocoa/cinnamon dust or sprinkles, or a whipped-cream swirl
 function ToppingFx({ y }: { y: number }) {
-  const t = useShop((s) => s.drink.topping)
-  const dots = useMemo(() => Array.from({ length: 14 }, (_, i) => [Math.cos(i * 2.4) * 0.12 * ((i % 4) / 4 + 0.3), Math.sin(i * 2.4) * 0.12 * ((i % 4) / 4 + 0.3)] as const), [])
+  const t = useShop((s) => s.drink.topping), shake = useShop((s) => s.shake)
+  // the more you shake, the more lands on the drink (spread across the surface, a little denser in the middle)
+  const dots = useMemo(() => Array.from({ length: 60 }, (_, i) => { const a = i * 2.39996, r = Math.sqrt((i + 0.5) / 60) * 0.15; return [Math.cos(a) * r, Math.sin(a) * r, (i * 7) % 4] as const }), [])
   if (t === 'none') return null
   if (t === 'whipped') return <Whip y={y} />
-  const cols = t === 'sprinkles' ? [C.counter, C.mint, C.butter, C.lilac] : t === 'cocoa' ? ['#5b2e1c'] : ['#b0602a']
-  return <group position={[0, y + 0.005, 0]}>{dots.map(([x, z], i) => <mesh key={i} position={[x, 0, z]} material={mat(cols[i % cols.length])}><sphereGeometry args={[0.018, 6, 4]} /></mesh>)}</group>
+  const n = Math.min(60, Math.round(shake * 70))
+  const cols = t === 'sprinkles' ? [C.counter, C.mint, C.butter, C.lilac] : t === 'cocoa' ? ['#5b2e1c', '#6b3a24'] : ['#b0602a', '#c0763a']
+  return <group position={[0, y + 0.004, 0]}>{dots.slice(0, n).map(([x, z, k], i) => t === 'sprinkles'
+    ? <mesh key={i} position={[x, 0.004, z]} rotation={[Math.PI / 2, 0, i]} material={mat(cols[k % cols.length])}><capsuleGeometry args={[0.006, 0.02, 2, 5]} /></mesh>
+    : <mesh key={i} position={[x, 0.001, z]} rotation={[-Math.PI / 2, 0, 0]} material={mat(cols[k % cols.length])}><circleGeometry args={[0.012 + (k % 2) * 0.006, 7]} /></mesh>)}</group>
 }
 
 // whipped cream: a real piped spiral that winds up into a peak while the can sprays
@@ -182,8 +207,9 @@ function PourFx() {
 }
 function OnePour({ p }: { p: Pour }) {
   const size = useShop((st) => st.drink.size), S = CUP_SCALE * SIZE_K[size]
-  const spout = p.kind === 'milk' || p.kind === 'water' || p.kind === 'shot' ? (pourAbove(size) + SPOUT[p.kind].dy) / S
-    : p.kind === 'choc' ? (glassTop(size) + 0.3 - NOZZLE.choc) / S : 1.0
+  const L = lift(S) // fx live in the glass's own space, which is lifted onto the coaster
+  const spout = p.kind === 'milk' || p.kind === 'water' || p.kind === 'shot' ? (pourAbove(size) + SPOUT[p.kind].dy - L) / S
+    : p.kind === 'choc' ? (glassTop(size) + 0.3 - NOZZLE.choc - L) / S : 1.0
   const stream = useRef<THREE.Mesh>(null), twin = useRef<THREE.Mesh>(null)
   const bits = useRef<THREE.Group>(null)
   const seeds = useMemo(() => Array.from({ length: 22 }, (_, i) => ({ x: Math.cos(i * 1.7) * 0.12 * Math.random(), z: Math.sin(i * 1.7) * 0.12 * Math.random(), d: Math.random() * 0.5 })), [])
@@ -203,11 +229,17 @@ function OnePour({ p }: { p: Pour }) {
     }
     if (twin.current) { twin.current.visible = false; if (s) { twin.current.scale.copy(s.scale); twin.current.position.set(0.04, s.position.y, 0) } }
     const g = bits.current
-    if (g) g.children.forEach((c, i) => {
-      const t = age - seeds[i].d * 0.8, fall = 0.95 - 2.6 * Math.max(0, t) * Math.max(0, t) * 2
-      c.visible = p.kind === 'sprinkle' && t > 0 && fall > 0.02
-      c.position.set(seeds[i].x, fall, seeds[i].z)
-    })
+    if (g && p.kind === 'sprinkle') {
+      const st = useShop.getState(), surf = -0.2 + (filled(st.ml) / CAP[st.drink.size]) * 0.76
+      const mouthX = -Math.sin(SHAKE_TILT) * 0.09 / S, mouthY = (glassTop(size) + SHAKE_ABOVE + Math.cos(SHAKE_TILT) * 0.09 - L) / S
+      g.children.forEach((c, i) => {
+        // each grain falls on a loop while you shake: from the mouth to the surface in ~0.35 s, then it's on the drink
+        const period = 0.45, local = age - seeds[i].d * period, k = local < 0 || age > dur ? -1 : (local % period) / period
+        const fallT = k * period, y = mouthY - 9 * fallT * fallT
+        c.visible = k >= 0 && y > surf
+        c.position.set(mouthX + seeds[i].x * k, Math.max(surf, y), seeds[i].z * k)
+      })
+    } else if (g) g.children.forEach((c) => { c.visible = false })
   })
   const w = p.kind === 'shot' ? 0.022 : p.kind === 'choc' ? 0.03 : 0.045
   return (
@@ -223,8 +255,6 @@ function OnePour({ p }: { p: Pour }) {
   )
 }
 
-const BZ = COUNTER.z - 0.32   // front row (barista side)
-const RZ = COUNTER.z + 0.22   // back row (shakers, bottles)
 
 // a small floating label under each tool, only in the barista view
 function Label({ text, y = -0.04, z = -0.18 }: { text: string; y?: number; z?: number }) {
@@ -251,10 +281,11 @@ function MilkBottle({ x, milk, color, cap }: { x: number; milk: 'whole' | 'oat' 
   )
 }
 
-function Shaker({ x, label, color, onClick }: { x: number; label: string; color: string; onClick: () => void }) {
+function Shaker({ x, label, color }: { x: number; label: string; color: string; onClick?: () => void }) {
+  const size = useShop((st) => st.drink.size)
   return (
-    <Grab id={label} tip={`${label}: click, then click your glass`} pos={[x, TOP + 0.13, RZ]} size={[0.18, 0.3, 0.18]} onClick={onClick} drops={{ cup: onClick }}>
-      <Flyer kind="sprinkle" tag={label} home={[x, TOP + 0.13, RZ]} act="shake" side={0} above={0.38}>
+    <Grab id={label} tip={`${label}: click, then hold over your glass to shake`} pos={[x, TOP + 0.13, RZ]} size={[0.18, 0.3, 0.18]} drops={{ cup: () => startShake(label as Topping) }}>
+      <Flyer kind="sprinkle" tag={label} home={[x, TOP + 0.13, RZ]} act="shake" side={0} above={glassTop(size) + SHAKE_ABOVE}>
         <mesh position={[0, -0.02, 0]} material={glass()}><cylinderGeometry args={[0.06, 0.06, 0.18, 16]} /></mesh>
         <mesh position={[0, -0.04, 0]} material={mat(color)}><cylinderGeometry args={[0.054, 0.054, 0.12, 16]} /></mesh>
         <mesh position={[0, 0.09, 0]} material={mat(C.steel)}><cylinderGeometry args={[0.06, 0.06, 0.05, 16]} /></mesh>
@@ -270,27 +301,27 @@ export function Bar() {
   const size = useShop((st) => st.drink.size)
   const hasCup = useShop((st) => st.cup)
   const pAt = useShop((st) => st.pitcher.at)
-  const pHome: [number, number, number] = pAt === 'wand' ? [WAND[0], TOP + 0.12, WAND[2]] : [1.95, TOP + 0.12, BZ]
+  const pHome: [number, number, number] = pAt === 'wand' ? [WAND[0], TOP + 0.12, WAND[2]] : BAR.pitcher
   useFrame(() => s().tick(performance.now() / 1000))
   return (
     <group>
       {/* ── left → right as the barista sees it ── */}
       {/* the glass shelf: small, medium and large glasses, stacked upside down */}
-      <group position={[2.62, TOP, RZ + 0.08]}>
+      <group position={[BAR.shelf.x, TOP, RZ + 0.08]}>
         <RBox size={[0.98, 0.04, 0.34]} pos={[0, 0.0, 0]} color={C.woodDark} r={0.015} />
         <RBox size={[0.98, 0.04, 0.34]} pos={[0, 0.5, 0]} color={C.woodDark} r={0.015} />
         {[-0.47, 0.47].map((x) => <RBox key={x} size={[0.04, 0.54, 0.34]} pos={[x, 0.25, 0]} color={C.wood} r={0.012} />)}
       </group>
       {(['small', 'medium', 'large'] as const).map((sz, i) => (
-        <Grab key={sz} id={`cups-${sz}`} tip={`${sz} glass: click to pick up, then click the coaster`} pos={[2.32 + i * 0.3, TOP + 0.02, RZ + 0.08]} size={[0.26, 0.46, 0.26]} onClick={() => s().takeCup(sz)} drops={{ cup: () => s().takeCup(sz) }}>
+        <Grab key={sz} id={`cups-${sz}`} tip={`${sz} glass: click to pick up, then click the coaster`} pos={[BAR.shelf.stacks[i], TOP + 0.02, RZ + 0.08]} size={[0.26, 0.46, 0.26]} onClick={() => s().takeCup(sz)} drops={{ cup: () => s().takeCup(sz) }}>
           {[0, 1, 2].map((k) => <mesh key={k} geometry={GLASS_GEO} material={GLASS_STACK} position={[0, 0.2 * SIZE_K[sz] + k * 0.055, 0]} rotation={[Math.PI, 0, 0]} scale={[0.5 * SIZE_K[sz], 0.62 * SIZE_K[sz], 0.5 * SIZE_K[sz]]} />)}
           <Html position={[0, -0.04, 0.16]} center zIndexRange={[4, 0]} style={{ pointerEvents: 'none' }}><div className="sizetag">{sz[0].toUpperCase()}</div></Html>
         </Grab>
       ))}
       {/* milk bottles: pick a milk */}
-      <MilkBottle x={2.75} milk="whole" color="#fbf8f2" cap="#4a90c2" />
-      <MilkBottle x={2.4} milk="oat" color="#eedcb8" cap="#c9a24a" />
-      <MilkBottle x={2.05} milk="almond" color="#f2e6d2" cap="#9a6a4a" />
+      <MilkBottle x={BAR.milks[0]} milk="whole" color="#fbf8f2" cap="#4a90c2" />
+      <MilkBottle x={BAR.milks[1]} milk="oat" color="#eedcb8" cap="#c9a24a" />
+      <MilkBottle x={BAR.milks[2]} milk="almond" color="#f2e6d2" cap="#9a6a4a" />
       {/* steel pitcher: steam the milk */}
       <Grab id="milk" tip="milk pitcher: put it on the steam wand, or hold it over your glass to pour" pos={pHome} size={[0.26, 0.3, 0.26]} drops={{ cup: startMilkPour, wand: () => s().placePitcher('wand'), pitcherHome: () => s().placePitcher('home') }}>
         <Flyer kind="milk" home={pHome} act="tilt" side={SPOUT.milk.side} above={pourAbove(size)}>
@@ -303,31 +334,32 @@ export function Bar() {
         </Flyer>
       </Grab>
       {/* toppings (back row) */}
-      <Shaker x={1.6} label="cocoa" color="#5b2e1c" onClick={() => s().top('cocoa')} />
-      <Shaker x={1.25} label="cinnamon" color="#b0602a" onClick={() => s().top('cinnamon')} />
-      <Shaker x={0.9} label="sprinkles" color={C.counter} onClick={() => s().top('sprinkles')} />
-      <Grab id="whipped" tip="whipped cream: click, then click your glass" pos={[0.5, TOP + 0.17, RZ]} size={[0.16, 0.38, 0.16]} onClick={() => s().top('whipped')} drops={{ cup: () => s().top('whipped') }}>
-        <Flyer kind="whip" home={[0.5, TOP + 0.17, RZ]} act="invert" side={0} above={glassTop(size) + 0.42}>
+      <Shaker x={BAR.shakers.cocoa} label="cocoa" color="#5b2e1c" />
+      <Shaker x={BAR.shakers.cinnamon} label="cinnamon" color="#b0602a" />
+      <Shaker x={BAR.shakers.sprinkles} label="sprinkles" color={C.counter} />
+      <HandShake />
+      <Grab id="whipped" tip="whipped cream: click, then click your glass" pos={BAR.whip} size={[0.16, 0.38, 0.16]} onClick={() => s().top('whipped')} drops={{ cup: () => s().top('whipped') }}>
+        <Flyer kind="whip" home={BAR.whip} act="invert" side={0} above={glassTop(size) + 0.42}>
           <mesh material={mat(C.white)}><cylinderGeometry args={[0.05, 0.05, 0.26, 16]} /></mesh>
           <mesh position={[0, 0.16, 0]} material={mat(C.steel)}><coneGeometry args={[0.035, 0.07, 10]} /></mesh>
         </Flyer>
       </Grab>
       {/* chocolate sauce + hot-water kettle */}
-      <Grab id="choc" tip="chocolate: click, then click your glass" pos={[-0.3, TOP + 0.14, BZ]} size={[0.18, 0.32, 0.18]} onClick={() => s().choc()} drops={{ cup: () => s().choc() }}>
-        <Flyer kind="choc" home={[-0.3, TOP + 0.14, BZ]} act="invert" side={0} above={glassTop(size) + 0.3}>
+      <Grab id="choc" tip="chocolate: click, then click your glass" pos={BAR.choc} size={[0.18, 0.32, 0.18]} onClick={() => s().choc()} drops={{ cup: () => s().choc() }}>
+        <Flyer kind="choc" home={BAR.choc} act="invert" side={0} above={glassTop(size) + 0.3}>
           <mesh material={mat('#5a3424', { rough: 0.3 })}><cylinderGeometry args={[0.055, 0.06, 0.22, 16]} /></mesh>
           <mesh position={[0, 0.14, 0]} material={mat('#3b1d12')}><coneGeometry args={[0.035, 0.07, 10]} /></mesh>
         </Flyer>
       </Grab>
-      <Grab id="water" tip="hot water: click, then click your glass" pos={[-0.7, TOP + 0.12, BZ]} size={[0.3, 0.3, 0.26]} onClick={() => s().water()} drops={{ cup: () => s().water() }}>
-        <Flyer kind="water" home={[-0.7, TOP + 0.12, BZ]} act="tilt" side={SPOUT.water.side} above={pourAbove(size)}>
+      <Grab id="water" tip="hot water: click, then click your glass" pos={BAR.kettle} size={[0.3, 0.3, 0.26]} onClick={() => s().water()} drops={{ cup: () => s().water() }}>
+        <Flyer kind="water" home={BAR.kettle} act="tilt" side={SPOUT.water.side} above={pourAbove(size)}>
           <mesh material={mat(C.steel)}><cylinderGeometry args={[0.08, 0.1, 0.16, 20]} /></mesh>
           <mesh position={[0, 0.09, 0]} material={mat(C.steel)}><sphereGeometry args={[0.08, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2]} /></mesh>
           <mesh position={[-0.12, 0.05, 0]} rotation={[0, 0, 0.9]} material={mat(C.steel)}><cylinderGeometry args={[0.01, 0.012, 0.2, 8]} /></mesh>
         </Flyer>
       </Grab>
       {/* espresso machine (pull a shot) */}
-      <Hold id="machine" tip="hold to pull a shot (watch the shot glass)" pos={[-1.6, TOP + 0.6, Z - 0.05]} size={[1.4, 1.3, 1.0]}
+      <Hold id="machine" tip="hold to pull a shot (watch the shot glass)" pos={[MACHINE.x, TOP + 0.45, MACHINE.z]} size={[0.5, 0.9, 0.62]}
         onStart={() => useShop.setState({ pulling: true })} onEnd={() => useShop.setState({ pulling: false })} onHold={(dt) => s().pullTick(dt)} />
       <SteamWand />
       {/* the shot glass: fills under the machine, then is poured into your glass */}
@@ -340,20 +372,20 @@ export function Bar() {
       </Grab>
       <group position={SHOT_HOME}><MachineStream /></group>
       {/* flavour syrups on the back row (Sketchfab, CC BY: oparaskos) */}
-      {[-0.95, -0.78].map((x, i) => <Model key={x} name="sf:syrup" fit={0.36} pos={[x, TOP - 0.06, RZ + 0.05]} rot={[0, i * 0.8, 0]} />)}
+      {BAR.syrups.map((x, i) => <Model key={x} name="sf:syrup" fit={0.36} pos={[x, TOP - 0.06, RZ + 0.05]} rot={[0, i * 0.8, 0]} />)}
       {/* service bell */}
-      <Grab id="bell" tip="serve 🔔" pos={[1.15, TOP + 0.06, BZ]} size={[0.3, 0.2, 0.3]} onClick={() => s().serve()}>
+      <Grab id="bell" tip="the pass: put your glass here to serve 🔔" pos={BAR.pass} size={[0.3, 0.2, 0.3]} onClick={() => s().serve()}>
         <mesh position={[0, -0.03, 0]} material={mat(C.plum)}><cylinderGeometry args={[0.1, 0.11, 0.03, 16]} /></mesh>
         <mesh position={[0, 0.01, 0]} material={mat(C.butter, { rough: 0.25 })}><sphereGeometry args={[0.08, 16, 10, 0, Math.PI * 2, 0, Math.PI / 2]} /></mesh>
       </Grab>
       {/* drop targets: the cup on its saucer, and the pitcher (for milk bottles) */}
       <DropTarget id="cup" pos={[CUP_AT[0], TOP + 0.01, CUP_AT[2]]} r={0.26} />
-      <DropTarget id="pitcherHome" pos={[1.95, TOP + 0.01, BZ]} r={0.2} />
+      <DropTarget id="pitcherHome" pos={[BAR.pitcher[0], TOP + 0.01, BAR.pitcher[2]]} r={0.2} />
       <DropTarget id="wand" pos={[WAND[0], TOP + 0.01, WAND[2]]} r={0.22} />
-      <DropTarget id="pass" pos={[1.15, TOP + 0.01, BZ]} r={0.3} />
+      <DropTarget id="pass" pos={[BAR.pass[0], TOP + 0.01, BAR.pass[2]]} r={0.3} />
       {/* your cup on a saucer, front and centre */}
-      <mesh position={[CUP_AT[0], TOP + 0.005, CUP_AT[2]]} material={mat(C.cream)}><cylinderGeometry args={[0.2, 0.17, 0.02, 28]} /></mesh>
-      <Grab id="glass" tip="your glass: pick it up, put it on the pass (🔔) to serve" pos={CUP_AT} size={[0.42, 0.9, 0.42]} disabled={!hasCup} drops={{ pass: () => s().serve() }}>
+      <mesh position={[CUP_AT[0], TOP + 0.005, CUP_AT[2]]} material={mat(C.cream)}><cylinderGeometry args={[0.13, 0.11, 0.02, 28]} /></mesh>
+      <Grab id="glass" tip="your glass: pick it up, put it on the pass (🔔) to serve" pos={CUP_AT} size={[0.26, 0.4, 0.26]} disabled={!hasCup} drops={{ pass: () => s().serve() }}>
         <Cup />
       </Grab>
       <HandPour />
@@ -362,7 +394,7 @@ export function Bar() {
 }
 
 // ── made by hand: the steam wand, the pitcher's level, and pouring for as long as you hold ──
-const WAND: [number, number, number] = [-0.95, 0, COUNTER.z - 0.55]
+const WAND = BAR.wand // off the machine's side; the pitcher sits under its tip
 // start a hold-to-pour: the pitcher flies over and tilts; milk flows every frame until you let go
 function startMilkPour() {
   const s = useShop.getState(), p = s.pitcher
@@ -393,10 +425,13 @@ function SteamWand() {
     g.children.forEach((c, i) => { const k = ((t * 0.9 + seeds[i].d) % 1); c.visible = on; c.position.set(seeds[i].x * (1 + k), 0.35 + k * 0.45, seeds[i].z * (1 + k)); c.scale.setScalar(0.5 + k * 1.4) })
   })
   return (
-    <Hold id="wand" tip="steam wand: put the pitcher here, then hold to steam" pos={[WAND[0], TOP + 0.3, WAND[2]]} size={[0.3, 0.6, 0.3]}
+    <Hold id="wand" tip="steam wand: put the pitcher here, then hold to steam" pos={[WAND[0], TOP + 0.03, WAND[2]]} size={[0.3, 0.4, 0.3]}
       onStart={() => useShop.setState({ steaming: useShop.getState().pitcher.at === 'wand' })} onEnd={() => useShop.setState({ steaming: false })} onHold={(dt) => useShop.getState().steamTick(dt)}>
-      <mesh position={[0, 0.25, -0.12]} rotation={[0.35, 0, 0]} material={mat(C.steel, { rough: 0.25 })}><cylinderGeometry args={[0.012, 0.012, 0.42, 8]} /></mesh>
-      <mesh position={[0, 0.45, -0.2]} material={mat(C.steel)}><sphereGeometry args={[0.03, 10, 8]} /></mesh>
+      {/* arm out of the machine's side, an elbow, and the pipe down into the pitcher */}
+      <mesh position={[-0.08, 0.27, 0]} rotation={[0, 0, Math.PI / 2]} material={mat(C.steel, { rough: 0.25 })}><cylinderGeometry args={[0.013, 0.013, 0.17, 8]} /></mesh>
+      <mesh position={[0, 0.27, 0]} material={mat(C.steel)}><sphereGeometry args={[0.02, 10, 8]} /></mesh>
+      <mesh position={[0, 0.13, 0]} material={mat(C.steel, { rough: 0.25 })}><cylinderGeometry args={[0.01, 0.012, 0.28, 8]} /></mesh>
+      <mesh position={[-0.16, 0.27, 0]} material={mat(C.plum)}><sphereGeometry args={[0.03, 10, 8]} /></mesh>
       <group ref={puffs}>{seeds.map((_, i) => <mesh key={i} visible={false} material={mat('#ffffff', { opacity: 0.45 })}><sphereGeometry args={[0.035, 8, 6]} /></mesh>)}</group>
     </Hold>
   )
@@ -418,3 +453,23 @@ function PitcherLevel() {
   )
 }
 export { textureOf }
+
+// hold-to-shake: the shaker flies over and tilts; the longer you shake, the more lands (and the topping counts at ~0.35 s)
+function startShake(t: Topping) {
+  const s = useShop.getState()
+  if (!s.cup) { useShop.setState({ hint: 'put a glass on the coaster first' }); return }
+  if (s.drink.topping !== 'none' && s.drink.topping !== t) { useShop.setState({ hint: `it already has ${s.drink.topping} on top` }); return }
+  const color = t === 'cocoa' ? '#5b2e1c' : t === 'cinnamon' ? '#b0602a' : '#ff7fb6'
+  const pour = { kind: 'sprinkle' as const, tag: t, t0: nowS(), color, dur: Infinity }
+  useShop.setState({ shaking: t, pours: [...s.pours, pour], hint: '' })
+  const up = () => { window.removeEventListener('pointerup', up); pour.dur = Math.max(0.3, nowS() - pour.t0 - GO); useShop.setState({ shaking: null }) }
+  window.addEventListener('pointerup', up)
+}
+function HandShake() {
+  useFrame((_, dt) => {
+    const s = useShop.getState(); if (!s.shaking) return
+    const p = s.pours[s.pours.length - 1]; if (!p || p.kind !== 'sprinkle' || nowS() - p.t0 < GO) return
+    s.shakeTick(s.shaking as Topping, Math.min(dt, 0.1))
+  })
+  return null
+}

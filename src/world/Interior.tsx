@@ -1,3 +1,4 @@
+import { BAR } from './barLayout'
 import { useMemo } from 'react'
 import { HQ } from './Lighting'
 import * as THREE from 'three'
@@ -181,9 +182,9 @@ function CounterTop() {
     <group>
       {/* espresso machine: a real two-group machine, facing the barista (-z) */}
       {/* the real espresso machine (Sketchfab, CC BY: KWojcik), with a grinder beside it */}
-      <Model name="sf:espresso" fit={0.85} pos={[-1.6, y, z - 0.05]} rot={[0, Math.PI, 0]} />
-      <Model name="sf:grinder" fit={0.5} pos={[-2.5, y, z + 0.1]} />
-      <Steam pos={[-1.6, y + 0.9, z - 0.05]} />
+      <Model name="sf:espresso" fit={0.85} pos={BAR.machine} rot={[0, Math.PI, 0]} />
+      <Model name="sf:grinder" fit={0.5} pos={BAR.grinder} />
+      <Steam pos={[BAR.machine[0], y + 0.9, BAR.machine[2]]} />
       <group position={[-1.6, y, z - 0.05]} visible={false}>
         {/* brushed-steel body with a pastel enamel side panel, sitting on short feet */}
         <RBox size={[1.34, 0.95, 0.8]} pos={[0, 0.62, 0]} color={C.steel} r={0.07} />

@@ -1,3 +1,4 @@
+import { BAR_VIEW } from '../world/barLayout'
 import { useEffect } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
@@ -181,7 +182,7 @@ export function CameraRig() {
     if (mode === 'pov' || mode === 'cake') wantPos.sub(wantLook).multiplyScalar(0.9).add(wantLook)
     if (mode === 'pov') {
       // the coffee bar is played like Papa's: ONE fixed view of the whole workspace, the camera never moves
-      wantPos.set(0.2, 3.9, -9.6); wantLook.set(0.2, 1.05, -7.45)
+      wantPos.set(BAR_VIEW.x, BAR_VIEW.eyeY, BAR_VIEW.eyeZ); wantLook.set(BAR_VIEW.x, BAR_VIEW.lookY, BAR_VIEW.lookZ) // framing the workstation, close
       { const asp = (camera as THREE.PerspectiveCamera).aspect; setFov(camera as THREE.PerspectiveCamera, Math.min(100, 2 * Math.atan(Math.tan(25 * Math.PI / 180) * Math.max(1, 1.75 / asp)) * 180 / Math.PI)) } // narrower screens: a wider lens so the whole bar fits (the wall is right behind you)
     }
     // portrait phone: step back from the stations so the whole machine / bar fits the narrow screen

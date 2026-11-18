@@ -49,6 +49,9 @@ type Shop = {
   steamTick: (dt: number) => void     // hold the steam wand (pitcher on it)
   pourMilkTick: (dt: number) => void  // hold the pitcher over your glass
   hint: string                        // why the last action did nothing (shown on the recipe card)
+  shake: number                       // seconds of shaking a topping onto this glass (how much lands)
+  shaking: string | null              // which shaker is being held over the glass right now
+  shakeTick: (t: Topping, dt: number) => void
 }
 
 const now = () => performance.now() / 1000
@@ -61,13 +64,13 @@ export const textureOf = (stretch: number): Texture => (stretch < 1.0 ? 'micro' 
 const foamFrac = (t: Texture) => (t === 'micro' ? 0.06 : t === 'steamed' ? 0.12 : 0.45)
 // the Drink fields follow from what's really in the glass
 const derive = (d: Drink, c: Contents, texture: Texture | null): Drink => ({ ...d, shots: Math.round(c.espresso / SHOT_ML), chocolate: c.choc > 0, water: c.water > 0, milk: c.milk + c.foam > 15 ? texture ?? 'steamed' : 'none' })
-const fresh = () => ({ ml: { ...NO_CONTENTS }, spilled: false, texture: null as Texture | null })
+const fresh = () => ({ ml: { ...NO_CONTENTS }, spilled: false, texture: null as Texture | null, shake: 0 })
 const pour = (kind: Pour['kind'], color: string, tag?: string): Pour => ({ kind, t0: now(), color, tag })
 
 export const useShop = create<Shop>((set, get) => ({
   open: false, orders: {}, cup: false, drink: { ...EMPTY }, milkType: 'whole', milkStyle: 'steamed', pours: [],
   coins: 0, served: 0, last: null, menu: null,
-  ...fresh(), shotGlass: 0, pulling: false, steaming: false, pouringMilk: false, hint: '',
+  ...fresh(), shotGlass: 0, pulling: false, steaming: false, pouringMilk: false, hint: '', shaking: null,
   pitcher: { milk: 0, foam: 0, type: 'whole', at: 'home', stretch: 0 },
   setMenu: (menu) => set({ menu }),
   openShop: (on) => { cafe.auto = on; cafe.serveEvery = 1e9; set({ open: on }) }, // customers arrive on their own; YOU serve them
@@ -88,7 +91,7 @@ export const useShop = create<Shop>((set, get) => ({
     set({ ml, texture: kind as Texture, drink: { ...derive(s.drink, ml, kind as Texture), milkType: s.milkType }, pours: [...s.pours, pour('milk', s.milkType === 'oat' ? '#f1e2c6' : s.milkType === 'almond' ? '#f5ead8' : '#fffaf2')] }) },
   pickMilk: (t) => set({ milkType: t, menu: null }),
   cycleMilkStyle: () => set((s) => ({ milkStyle: s.milkStyle === 'steamed' ? 'foamy' : s.milkStyle === 'foamy' ? 'micro' : 'steamed' })),
-  top: (t) => { const s = get(); if (!s.cup || s.drink.topping !== 'none') return; set({ drink: { ...s.drink, topping: t }, menu: null, pours: [...s.pours, pour(t === 'whipped' ? 'whip' : 'sprinkle', t === 'cocoa' ? '#5b2e1c' : t === 'cinnamon' ? '#b0602a' : '#ff7fb6', t)] }) },
+  top: (t) => { const s = get(); if (!s.cup || s.drink.topping !== 'none') return; set({ shake: 0.7, drink: { ...s.drink, topping: t }, menu: null, pours: [...s.pours, pour(t === 'whipped' ? 'whip' : 'sprinkle', t === 'cocoa' ? '#5b2e1c' : t === 'cinnamon' ? '#b0602a' : '#ff7fb6', t)] }) },
   trash: () => { glass++; pending = 0; set({ cup: false, drink: { ...EMPTY }, ...fresh() }) },
   serve: () => {
     const s = get(), front = cafe.line.peek()
@@ -109,6 +112,8 @@ export const useShop = create<Shop>((set, get) => ({
     set({ cup: false, drink: { ...EMPTY }, ...fresh(), hint: '', coins: s.coins + coins, served: s.served + 1, orders, last: { ...r, coins, mood, t: now(), craft: cr, tip } })
   },
   // ── made by hand ──
+  shakeTick: (t, dt) => { const s = get(); if (!s.cup) return; const shake = s.shake + dt
+    set(s.drink.topping === 'none' && shake >= 0.35 ? { shake, drink: { ...s.drink, topping: t } } : { shake }) },
   pullTick: (dt) => { const s = get(); if (s.shotGlass >= 95) return; set({ shotGlass: Math.min(95, s.shotGlass + 25 * dt) }) },
   pourShotGlass: () => { const s = get()
     if (!s.cup) { set({ hint: 'put a glass on the coaster first' }); return }
