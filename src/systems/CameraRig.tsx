@@ -65,8 +65,10 @@ export function useMouseLook() {
       if (down < 0 || TOUCH) return
       const orbit = view.mode === 'dollhouse'
       if (down === 0 && grabbed) return                   // dragging an item, not the view
-      if (!orbit) return                                  // only the dollhouse is dragged round; elsewhere you turn your head with Q / E
       const dx = e.clientX - lx, dy = e.clientY - ly; lx = e.clientX; ly = e.clientY
+      if (view.mode === 'walk') { // drag to look around in Walk: turn all the way round, like any first-person game
+        view.yaw -= dx * 0.005 * view.sens; view.pitch = Math.max(-1.1, Math.min(1.0, view.pitch - dy * 0.004 * view.sens)); return }
+      if (!orbit) return                                  // only the dollhouse is dragged round; elsewhere you turn your head with Q / E
       if (down === 0) {
         // pan across the miniature, like sliding a diorama on a table
         const a = view.yaw + view.spin, k = 0.03 * view.zoom
@@ -96,8 +98,9 @@ export const brewCam = { x: null as number | null } // set by the coffee flow: w
 function applyLook(mode: string, dt: number) {
   // Q / E (or ← → in barista view) turn your head like a person would; it eases back when you let go
   if (mode !== 'dollhouse' && mode !== 'exterior') {
-    const turn = (keys.has('q') ? 1 : 0) - (keys.has('e') ? 1 : 0)
-    if (turn) view.yaw = Math.max(-1.3, Math.min(1.3, view.yaw + turn * dt * 1.6))
+    const walk = mode === 'walk'
+    const turn = (keys.has('q') || (walk && keys.has('arrowleft')) ? 1 : 0) - (keys.has('e') || (walk && keys.has('arrowright')) ? 1 : 0)
+    if (turn) view.yaw = walk ? view.yaw + turn * dt * 2.2 : Math.max(-1.3, Math.min(1.3, view.yaw + turn * dt * 1.6)) // Walk: turn all the way round
   }
   if (mode !== 'walk' && (stick.x || stick.y)) {
     const orbit = mode === 'dollhouse' || mode === 'exterior'
@@ -169,8 +172,7 @@ export function CameraRig() {
     if (mode === 'walk') {
       // first person at eye height (~1.65 m): the mouse turns you, W walks where you look
       step(player, dt, view.mode === 'walk' ? view.yaw : 0)
-      const bob = player.moving ? Math.sin(performance.now() / 160) * 0.025 : 0
-      wantPos.set(player.x, 1.65 + bob, player.z)
+      wantPos.set(player.x, 1.65, player.z) // steady eyes: no walk bob (it read as camera shake)
       wantLook.set(player.x, 1.65, player.z - 1)
     } else if (mode === 'pov') {
       // POV = the barista standing behind the counter
@@ -192,7 +194,7 @@ export function CameraRig() {
     wantPos.multiplyScalar(WORLD); wantLook.multiplyScalar(WORLD)
     if (mode !== 'pov') applyLook(mode, dt); else if (view.mode !== mode) { view.mode = mode; view.yaw = 0; view.pitch = 0; view.zoom = 1 }
     // ?snap = jump straight to the shot (used for footage capture and tests)
-    const k = SNAP || cut ? 1 : 1 - Math.exp(-dt * (mode === 'outro' ? 1.4 : view.looking ? 30 : 4)) // mouse look = instant, like a game
+    const k = SNAP || cut || mode === 'walk' ? 1 : 1 - Math.exp(-dt * (mode === 'outro' ? 1.4 : view.looking ? 30 : 4)) // Walk: the camera IS your eyes // mouse look = instant, like a game
     camera.position.lerp(wantPos, k)
     look.lerp(wantLook, k)
     camera.lookAt(look)

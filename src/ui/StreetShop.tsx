@@ -5,7 +5,7 @@ import { useDay } from '../systems/day'
 import { SHOPS, shopDoor, type Shop } from '../world/streetLayout'
 import { INGREDIENTS, PACKS, packAmount, packPrice, fmt, type IngredientId, type PackKind } from '../data/ingredients'
 
-// Walk up to an ingredient shop's door on the street: a prompt appears; press E (or tap it) to go in.
+// Walk up to an ingredient shop's door on the street: a prompt appears; press F (or tap it) to go in.
 // Inside: what this shop sells, how much you have, and the packs you can buy with coins from your bank.
 // Bigger packs (bulk, wholesale) are cheaper per gram and unlock as the café levels up.
 const STORES = SHOPS.filter((s) => s.store)
@@ -20,14 +20,14 @@ export function StreetShop() {
   }, [])
   useEffect(() => {
     const k = (e: KeyboardEvent) => {
-      if (e.key === 'e' || e.key === 'E') { const s = near(useGame.getState().player); if (s) setOpen((o) => (o ? null : s)) }
+      if (e.key === 'f' || e.key === 'F') { const s = near(useGame.getState().player); if (s) setOpen((o) => (o ? null : s)) }
       if (e.key === 'Escape') setOpen(null)
     }
     window.addEventListener('keydown', k); return () => window.removeEventListener('keydown', k)
   }, [])
   if (open) return <ShopCounter shop={open} close={() => setOpen(null)} />
   if (!at) return null
-  return <button className="shop-prompt" onPointerDown={(e) => e.stopPropagation()} onClick={() => setOpen(at)}>{at.icon} shop at <b>{at.name}</b> <kbd>E</kbd></button>
+  return <button className="shop-prompt" onPointerDown={(e) => e.stopPropagation()} onClick={() => setOpen(at)}>{at.icon} shop at <b>{at.name}</b> <kbd>F</kbd></button>
 }
 
 function ShopCounter({ shop, close }: { shop: Shop; close: () => void }) {

@@ -96,7 +96,7 @@ export function Menu({ screen, setScreen }: { screen: Screen; setScreen: (s: Scr
           <div className="logo small">How to play</div>
           <p><b>Café:</b> a customer walks up and their order shows on the ticket. Click a tool to pick it up, then click your glass to use it: a glass from the shelf, chocolate, the shot glass under the machine, the milk pitcher, a topping. Follow the steps at the bottom, then serve.</p>
           <p><b>Cakes:</b> memorise the order (peek costs 5%). Move the cake along the belt with ◀ ▶ and click a colour on the dispenser above it: tin, sponge, filling, frosting, rosettes, toppings.</p>
-          <p><b>Explore:</b> click to look with the mouse, <b>WASD</b> to walk.</p>
+          <p><b>Explore:</b> drag the mouse (or Q / E) to look all the way round, <b>WASD</b> to walk, <b>Shift</b> to run. Walk out the door to the street shops and press <b>F</b> at a door to buy ingredients.</p>
           <p><b>Keys:</b> <b>Esc</b> pause (or the ☰ Menu button, top-left) · <b>Esc</b> again puts a held tool back.</p>
           <button onClick={() => setScreen(mode === 'exterior' ? 'main' : 'paused')}>Back</button>
         </div>

@@ -38,8 +38,8 @@ export function step(p: { x: number; z: number; facing: number; moving?: boolean
     let f = 0, r = 0
     if (keys.has('w') || keys.has('arrowup')) f += 1
     if (keys.has('s') || keys.has('arrowdown')) f -= 1
-    if (keys.has('a') || keys.has('arrowleft')) r -= 1
-    if (keys.has('d') || keys.has('arrowright')) r += 1
+    if (keys.has('a')) r -= 1   // A / D sidestep; ← → turn (CameraRig)
+    if (keys.has('d')) r += 1
     if (stick.x || stick.y) { r = stick.x; f = -stick.y }
     dx = Math.cos(heading) * r - Math.sin(heading) * f
     dz = -Math.sin(heading) * r - Math.cos(heading) * f
