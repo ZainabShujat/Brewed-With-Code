@@ -139,18 +139,18 @@ function Mallow({ s, limbs }: { s: Extract<FolkSpec, { kind: 'mallow' }>; limbs:
 /** hip height when seated (so chairs can place them) */
 export const seatHip = (s: FolkSpec) => s.kind === 'paper' ? LEG : BASE
 
-export function Townsperson({ spec, pose, phase = 0 }: { spec: FolkSpec; pose: Pose; phase?: number }) {
+export function Townsperson({ spec, pose = 'wait', phase = 0, getPose }: { spec: FolkSpec; pose?: Pose; phase?: number; getPose?: () => Pose }) {
   const inner = useRef<THREE.Group>(null), limbs: Limbs = { legs: useRef<THREE.Group[]>([]), arms: useRef<THREE.Group[]>([]) }
   useFrame(({ clock }) => {
     const t = clock.elapsedTime + phase, g = inner.current; if (!g) return
-    const walk = pose === 'walk', sit = pose === 'sit', sw = walk ? Math.sin(t * 7) : 0
+    const p = getPose ? getPose() : pose, walk = p === 'walk', sit = p === 'sit', sw = walk ? Math.sin(t * 7) : 0
     limbs.legs.current.forEach((l, k) => { if (l) l.rotation.x = sit ? -1.4 : sw * 0.6 * (k ? 1 : -1) })
     limbs.arms.current.forEach((a, k) => { if (a) a.rotation.x = sit ? -0.4 : walk ? -sw * 0.5 * (k ? 1 : -1) : Math.sin(t * 1.3 + k) * 0.06 })
     g.position.y = 0; g.rotation.z = 0; g.scale.set(1, 1, 1)
-    if (spec.kind === 'mallow') { const b = walk ? Math.abs(Math.sin(t * 7)) : pose === 'wait' ? (Math.sin(t * 2) + 1) * 0.15 : 0, q = 0.08 * spec.squish
+    if (spec.kind === 'mallow') { const b = walk ? Math.abs(Math.sin(t * 7)) : p === 'wait' ? (Math.sin(t * 2) + 1) * 0.15 : 0, q = 0.08 * spec.squish
       g.position.y = b * 0.08; g.scale.set(1 + q - b * q, 1 - q + b * q + (sit ? -0.05 : 0), 1 + q - b * q) }
     else { g.rotation.z = walk ? sw * 0.08 : Math.sin(t * 1.5) * 0.02; g.position.y = walk ? Math.abs(sw) * 0.03 : 0 }
-    g.rotation.y = pose === 'wait' ? Math.sin(t * 0.6) * 0.45 : 0
+    g.rotation.y = p === 'wait' ? Math.sin(t * 0.6) * 0.45 : 0
   })
   return <group ref={inner}>{spec.kind === 'paper' ? <Paper s={spec} limbs={limbs} /> : <Mallow s={spec} limbs={limbs} />}</group>
 }
