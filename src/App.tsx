@@ -8,6 +8,7 @@ import { Interior } from './world/Interior'
 import { Hotspots } from './world/Hotspots'
 import { Barista } from './world/Barista'
 import { PlayerAvatar } from './world/PlayerAvatar'
+import { StreetLife } from './world/StreetLife'
 import { RR as ROOM_R } from './world/layout'
 import { Reveal } from './world/Reveal'
 import { Lighting } from './world/Lighting'
@@ -65,7 +66,7 @@ export function World() {
       <group scale={WORLD}>
       {/* zone culling (like occlusion culling): rooms you can't see from this view aren't drawn at all.
           Behind the bar or at the cake machine you face a wall, so the whole outdoors is skipped. */}
-      <group visible={REEL || (mode !== 'pov' && mode !== 'cake')}><Exterior showPot={!inside || outro || (mode === 'walk' && !indoors)} fadeIn={outro} />{!outro && <><Street /><Neighbours /></>}</group>
+      <group visible={REEL || (mode !== 'pov' && mode !== 'cake')}><Exterior showPot={!inside || outro || (mode === 'walk' && !indoors)} fadeIn={outro} />{!outro && <><Street /><Neighbours /><StreetLife /></>}</group>
       {inside && SHOW_FOLK && <FolkLineup />}
       {SHOW_FOLK && <FolkGallery />}
       {inside && <Interior cutaway={mode === 'dollhouse' || outro || walkIn} pov={mode === 'pov'} only={REEL ? '' : mode === 'pov' ? 'bar' : mode === 'cake' ? 'kitchen' : ''} />}
