@@ -9,7 +9,7 @@ import { TOUCH } from '../systems/CameraRig'
 const C = 2 * Math.PI * 40
 const EMBED = typeof location !== 'undefined' && location.search.includes('embed') // videos draw their own cursor + ring
 export function HoldRing() {
-  const s = useShop()
+  const s = useShop.getState() // its own 60 ms tick below (a subscription re-rendered it every frame while steaming)
   const [pos, setPos] = useState<[number, number] | null>(null)
   const [, tick] = useState(0)
   useEffect(() => {

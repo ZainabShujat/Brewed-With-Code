@@ -141,6 +141,19 @@ export function glassR(yAbs: number) {
 const GLASS_STACK = new THREE.MeshPhysicalMaterial({ color: '#eaf6f8', roughness: 0.05, clearcoat: 1, transparent: true, opacity: 0.38, side: THREE.DoubleSide, depthWrite: false })
 const GLASS_BASE = new THREE.MeshPhysicalMaterial({ color: '#e8f2f4', roughness: 0.05, clearcoat: 1, transparent: true, opacity: 0.55 })
 
+// Shader warm-up: the drink's glossy liquid and foam surfaces use materials the bar doesn't otherwise draw, so the
+// first milk pour compiled four new shader programs mid-pour and froze the game (measured 19 Nov: ~700 ms of
+// shader compiling during one pour). For the first few seconds at the bar, draw one tiny sample of each, hidden
+// inside the counter, so they're compiled before you ever pour.
+function Warmup() {
+  const [on, setOn] = useState(true)
+  const mats = useMemo(() => [liquidMat('#d8b48c'), ...(['crema', 'foam', 'art', 'plain'] as const).map((k) => new THREE.MeshPhysicalMaterial({ map: surfaceTex(k, '#f6eadb'), roughness: 0.25, clearcoat: 0.8, clearcoatRoughness: 0.15 }))], [])
+  useFrame(({ clock }) => { if (on && clock.elapsedTime > 0 && !Warmup.t0) Warmup.t0 = clock.elapsedTime; if (on && clock.elapsedTime - Warmup.t0 > 3) setOn(false) })
+  if (!on) return null
+  // + a speck of the see-through glass: it makes three.js draw the scene again behind glass, which needs its own (linear) versions of these shaders
+  return <group position={[CUP_AT[0], TOP - 0.4, CUP_AT[2]]}>{mats.map((m, i) => <mesh key={i} material={m} position={[i * 0.02, 0, 0]} frustumCulled={false}><circleGeometry args={[0.005, 6]} /></mesh>)}<mesh material={GLASS_MAT} position={[0.12, 0, 0]} frustumCulled={false}><circleGeometry args={[0.005, 6]} /></mesh></group>
+}
+Warmup.t0 = 0
 function Cup() {
   const cup = useShop((s) => s.cup), d = useShop((s) => s.drink), pours = useShop((s) => s.pours)
   const ref = useRef<THREE.Group>(null)
@@ -423,7 +436,7 @@ export function Bar() {
       {/* your cup on a saucer, front and centre */}
       <mesh position={[CUP_AT[0], TOP + 0.005, CUP_AT[2]]} material={mat(C.cream)}><cylinderGeometry args={[0.17, 0.15, 0.02, 28]} /></mesh>
       <Grab id="glass" tip="your glass: pick it up, put it on the pass (🔔) to serve" pos={CUP_AT} size={[0.4, 0.72, 0.4]} disabled={!hasCup} drops={{ pass: () => s().serve() }}>
-        <Cup />
+        <Cup /><Warmup />
       </Grab>
       <HandPour />
       <StationMats />

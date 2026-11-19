@@ -22,6 +22,9 @@ function Inner({ name, scale = 1, pos = [0, 0, 0], rot = [0, 0, 0], fit }: P) {
     // GPU) metal has nothing to reflect, so it rendered almost black: make it a glossy non-metal, a touch lifted
     if (name === 'sf:espresso') c.traverse((o) => { const m = o as THREE.Mesh; if (!m.isMesh) return
       const src = m.material as THREE.MeshStandardMaterial, k = src.clone(); k.metalnessMap = null; k.metalness = 0.15; k.roughness = 0.42
+      // and NO transmission: the model ships as 'glass' (transmission 1), which made three.js render the whole bar a second time
+      // every frame and compile shaders mid-pour: the freeze at the espresso machine / milk (19 Nov)
+      ; (k as THREE.MeshPhysicalMaterial).transmission = 0; k.transparent = false; k.opacity = 1
       k.emissive = new THREE.Color('#3a2a33'); k.emissiveMap = src.map; k.emissiveIntensity = 0.55; m.material = k })
     if (!fit) return c
     // normalise: measure, then wrap so the model is `fit` tall with its base at 0 and centred

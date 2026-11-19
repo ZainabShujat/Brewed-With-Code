@@ -10,8 +10,12 @@ import { hoverTip } from '../systems/drag'
 // The coffee bar's HUD for making drinks by hand: the order ticket, a live recipe card that ticks itself off as you
 // work, a hint for what to do next, and the result when you serve. No meters: the objects are the meters
 // (the shot glass line, the foam in the pitcher, the level in your glass).
+const picCache = new Map<string, string>()
+const picFor = (w: Parameters<typeof drinkSvg>[0]) => { const k = JSON.stringify(w); let v = picCache.get(k); if (!v) { v = drinkSvg(w, 150); picCache.set(k, v) } return v }
 export function RecipeCard() {
-  const s = useShop()
+  // read on our own 4×/s tick, NOT as a subscription: steaming / pouring update the shop every frame, and re-rendering
+  // this card (and its drink picture) 60×/s froze the game at the milk steps
+  const s = useShop.getState()
   const [, tick] = useState(0)
   useEffect(() => { const id = setInterval(() => tick((n) => n + 1), 250); return () => clearInterval(id) }, [])
   const front = cafe.line.peek(), order = front ? s.orders[front.id] : undefined, w = order?.want
@@ -43,7 +47,7 @@ export function RecipeCard() {
     <>
       <div className="ticket">
         <div className="tk-h">order</div>
-        {order ? <><div className="cc-pic" dangerouslySetInnerHTML={{ __html: drinkSvg(order.want, 150) }} /><div className="cc-name">{order.label}</div></>
+        {order ? <><div className="cc-pic" dangerouslySetInnerHTML={{ __html: picFor(order.want) }} /><div className="cc-name">{order.label}</div></>
           : <div className="tk-note">{cafe.line.size ? 'customer walking up…' : 'waiting for customers…'}</div>}
         {rows.length > 0 && (
           <div className="recipe">
