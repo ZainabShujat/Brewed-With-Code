@@ -1,3 +1,4 @@
+import { groundY } from './streetLayout'
 import { useMemo, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { Html } from '@react-three/drei'
@@ -36,7 +37,7 @@ export function PlayerAvatar() {
   const walking = () => !!useGame.getState().player.moving
   useFrame(() => {
     const p = useGame.getState().player, g = ref.current; if (!g) return
-    g.position.set(p.x, 0, p.z)
+    g.position.set(p.x, groundY(p.x, p.z), p.z)
     // face where you're walking (Kozie's model faces +z like the townsfolk)
     let d = p.facing - g.rotation.y; d = Math.atan2(Math.sin(d), Math.cos(d)); g.rotation.y += d * 0.25
   })

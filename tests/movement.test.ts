@@ -39,3 +39,24 @@ test('EDGE: the cart, the bus shelter and the park railings block you, but you c
   assert.equal(blocked(BUS_STOP.x, BUS_STOP.z), true); assert.equal(blocked(BUS_STOP.x, S.road[1] - 1), false)
   assert.equal(blocked((PARK.x0 + PARK.x1) / 2, PARK.z0 + 5), true)
 })
+
+// 19 Nov: the park and the sweet shop's garden are walkable; the fountain, the pond and the railings are not
+import { FOUNTAIN, POND, BRIDGE, GARDEN, PARK, groundY } from '../src/world/streetLayout'
+test('the park: in through the main gate and the side path, round the plaza and the pond, over the bridge', () => {
+  for (let z = 31; z <= FOUNTAIN.z - FOUNTAIN.r - 0.6; z += 0.25) assert.equal(blocked(FOUNTAIN.x, z), false, `main gate stuck at z=${z}`)
+  for (let x = -5; x >= -15; x -= 0.25) assert.equal(blocked(x, 37.5), false, `side path stuck at x=${x}`)
+  for (let z = FOUNTAIN.z + FOUNTAIN.r + 0.6; z <= 62; z += 0.25) assert.equal(blocked(BRIDGE.x, z), false, `bridge stuck at z=${z}`)
+  assert.ok(groundY(BRIDGE.x, POND.z) > 0.4, 'the bridge lifts you')
+  assert.equal(groundY(-35, 40), 0)
+})
+test('EDGE: not into the fountain or the pond, nor over the park railing or hedge', () => {
+  assert.equal(blocked(FOUNTAIN.x + 3, FOUNTAIN.z), true)
+  assert.equal(blocked(POND.x - 6, POND.z), true); assert.equal(blocked(POND.x + 6, POND.z), true)
+  assert.equal(blocked(-35, PARK.z0 + 0.2), true)  // the railing along the street (away from the gate)
+  assert.equal(blocked(-7, 45), true)              // the hedge on the side street (away from the path)
+})
+test('the garden: in through its gate only', () => {
+  const gx = (GARDEN.gate[0] + GARDEN.gate[1]) / 2
+  for (let z = 31; z <= 36; z += 0.25) assert.equal(blocked(gx, z), false, `garden gate stuck at z=${z}`)
+  assert.equal(blocked(50, GARDEN.z0 + 0.2), true)
+})

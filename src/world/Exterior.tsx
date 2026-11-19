@@ -181,10 +181,10 @@ function Flowers() {
 }
 
 const GRASS = grassMat([150, 140])
-export function Exterior({ showPot, fadeIn = false }: { showPot: boolean; fadeIn?: boolean }) {
+export function Exterior({ showPot, fadeIn = false, lawn = true }: { showPot: boolean; fadeIn?: boolean; lawn?: boolean }) {
   return (
     <group>
-      <mesh position={[0, 0, 7]} rotation={[-Math.PI / 2, 0, 0]} material={GRASS} receiveShadow><planeGeometry args={[150, 140]} /></mesh>
+      {lawn && <mesh position={[0, 0, 7]} rotation={[-Math.PI / 2, 0, 0]} material={GRASS} receiveShadow><planeGeometry args={[150, 140]} /></mesh>}{/* (otherwise the Terrain is the ground) */}
       {/* everything outside scales so the pot contains the interior */}
       <group scale={OUT_SCALE}>
       {showPot && (fadeIn ? <FadeIn><CoffeePot /></FadeIn> : <CoffeePot />)}

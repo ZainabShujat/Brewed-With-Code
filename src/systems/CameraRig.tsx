@@ -1,3 +1,4 @@
+import { groundY } from '../world/streetLayout'
 import { RR } from '../world/layout'
 import { BAR_VIEW } from '../world/barLayout'
 import { useEffect } from 'react'
@@ -215,8 +216,8 @@ export function CameraRig() {
       if (tapAt.on) { tapAt.on = false; _rc.setFromCamera(_ndc.set(tapAt.x, tapAt.y), camera); if (_rc.ray.intersectPlane(_floor, _hit)) Object.assign(goTo, { x: _hit.x / WORLD, z: _hit.z / WORLD, on: true }) }
       step(player, dt, view.mode === 'fp' ? view.yaw : 0)
       const pitch = Math.max(-1.0, Math.min(0.9, view.pitch))
-      wantPos.set(player.x, EYE, player.z)
-      wantLook.set(player.x - Math.sin(view.yaw) * Math.cos(pitch) * 4, EYE - Math.sin(pitch) * 4, player.z - Math.cos(view.yaw) * Math.cos(pitch) * 4)
+      const gy = groundY(player.x, player.z); wantPos.set(player.x, EYE + gy, player.z)
+      wantLook.set(player.x - Math.sin(view.yaw) * Math.cos(pitch) * 4, EYE + gy - Math.sin(pitch) * 4, player.z - Math.cos(view.yaw) * Math.cos(pitch) * 4)
     } else if (mode === 'pov') {
       // POV = the barista standing behind the counter
       player.x = 0.3; player.z = -8.4; player.facing = 0

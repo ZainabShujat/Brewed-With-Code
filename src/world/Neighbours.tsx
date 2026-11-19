@@ -1,4 +1,3 @@
-import { NiceTree } from './Scenery'
 import { useMemo, useState } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { useGame } from '../systems/store'
@@ -8,7 +7,7 @@ import { C } from '../data/palette'
 import { mat, glow } from './mats'
 import { RBox } from './Soft'
 import { nightGlow, shopGlass } from './Lighting'
-import { STREET as S, SHOPS, SHOP_DEPTH, PARK, BENCHES, BUS_STOP, CART, WALL_T, DOOR_W, COUNTER_DEPTH, inShop, type Shop } from './streetLayout'
+import { STREET as S, SHOPS, SHOP_DEPTH, PARK, FOUNTAIN, BENCHES, BUS_STOP, CART, WALL_T, DOOR_W, COUNTER_DEPTH, inShop, type Shop } from './streetLayout'
 
 // The neighbours: shopfronts along the street (human scale, 1 unit ≈ 1 m). Four of them are REAL shops that sell
 // the café's ingredients (The Daily Grind, Moo & Oat, Flour & Co., Sugar Plum: walk up to the door to buy);
@@ -316,13 +315,20 @@ function StoreShell({ shop, w, h, inside }: { shop: Shop; w: number; h: number; 
 
 // a small fenced park: grass, railings, a bench, trees and a lamp
 function Park() {
-  const { x0, x1, z0, z1 } = PARK, w = x1 - x0, d = z1 - z0
+  const { x0, x1, z0, z1 } = PARK
   return (
     <group>
-      <mesh position={[(x0 + x1) / 2, 0.06, (z0 + z1) / 2]} rotation={[-Math.PI / 2, 0, 0]} material={mat('#86b86a')} receiveShadow><planeGeometry args={[w, d]} /></mesh>
-      {Array.from({ length: Math.round(w / 1.2) + 1 }, (_, i) => x0 + i * (w / Math.round(w / 1.2))).map((x) => <mesh key={x} position={[x, 0.55, z0 + 0.15]} material={mat(C.plum)}><cylinderGeometry args={[0.03, 0.03, 1.1, 6]} /></mesh>)}
-      {[0.3, 1.0].map((y) => <mesh key={y} position={[(x0 + x1) / 2, y, z0 + 0.15]} material={mat(C.plum)}><boxGeometry args={[w, 0.06, 0.06]} /></mesh>)}
-      {[[x0 + 3.2, z0 + 3.4, '#f2a9c9'], [x0 + 3.4, z0 + 11.2, ''], [x0 + 25, z0 + 11, '#d7b4ef'], [x0 + 24.6, z0 + 3.2, '']].map(([x, z, c], k) => <NiceTree key={k} x={x as number} z={z as number} h={8.5 + k} kind={k + 1} tint={(c as string) || undefined} />)}
+      {/* the railing along the street, open at the main gate (straight onto the fountain plaza); the ground, trees and
+          everything inside are in ParkLife / Terrain */}
+      {[[x0, FOUNTAIN.x - 2.6], [FOUNTAIN.x + 2.6, x1]].map(([a, b]) => (
+        <group key={a}>
+          {Array.from({ length: Math.round((b - a) / 1.2) + 1 }, (_, i) => a + i * ((b - a) / Math.round((b - a) / 1.2))).map((x) => <mesh key={x} position={[x, 0.55, z0 + 0.15]} material={mat(C.plum)}><cylinderGeometry args={[0.03, 0.03, 1.1, 6]} /></mesh>)}
+          {[0.3, 1.0].map((y) => <mesh key={y} position={[(a + b) / 2, y, z0 + 0.15]} material={mat(C.plum)}><boxGeometry args={[b - a, 0.06, 0.06]} /></mesh>)}
+        </group>
+      ))}
+      {[-1, 1].map((s) => <group key={s} position={[FOUNTAIN.x + s * 2.75, 0, z0 + 0.15]}><mesh position={[0, 0.8, 0]} material={mat(C.plum)}><boxGeometry args={[0.3, 1.6, 0.3]} /></mesh><mesh position={[0, 1.72, 0]} material={mat(C.butter)}><sphereGeometry args={[0.2, 12, 8]} /></mesh></group>)}
+      {/* a low railing on the west side, beside the bakery */}
+      {[0.3, 0.9].map((y) => <mesh key={'w' + y} position={[x0 + 0.1, y, (z0 + z1) / 2]} material={mat(C.plum)}><boxGeometry args={[0.06, 0.06, z1 - z0]} /></mesh>)}
       {BENCHES.map(([bx, bz]) => (
         <group key={bx} position={[bx, 0.16, bz]} rotation={[0, Math.PI, 0]}>
           <RBox size={[2.2, 0.12, 0.6]} pos={[0, 0.5, 0]} color={C.wood} r={0.04} />

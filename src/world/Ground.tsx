@@ -1,7 +1,7 @@
 import { Suspense, useMemo } from 'react'
 import { useGLTF } from '@react-three/drei'
 import * as THREE from 'three'
-import { STREET as S, SHOPS, SHOP_DEPTH, PARK } from './streetLayout'
+import { STREET as S, SHOPS, SHOP_DEPTH, PARK, GARDEN } from './streetLayout'
 import { rng } from './folk/specs'
 import { quality } from '../ui/Menu'
 
@@ -42,6 +42,8 @@ function onGrass(x: number, z: number) {
   if (Math.abs(x) > S.X && Math.abs(z - (S.padA[0] + S.padB[1]) / 2) < 8 && Math.abs(x) < S.X + 64) return false // the road out + the arch
   if (Math.hypot(x, z + 32) < 9 || (x > 26 && x < 46 && z < -26 && z > -42)) return false // the gazebo lawn, the allotments
   if (x > PARK.x0 - 0.5 && x < PARK.x1 + 0.5 && z > PARK.z0 - 0.5 && z < PARK.z1 + 0.5) return false
+  if (x > GARDEN.x0 - 1.5 && x < GARDEN.x1 + 0.5 && z > GARDEN.z0 - 0.5 && z < GARDEN.z1 + 0.5) return false // landscaped by hand
+  if (z < S.BACK && x > -64 && x < 4) return false // the forest-edge prototype has its own clusters
   for (const sh of SHOPS) { const z0 = sh.side === 'a' ? S.padA[0] - SHOP_DEPTH : S.padB[1], z1 = sh.side === 'a' ? S.padA[0] : S.padB[1] + SHOP_DEPTH; if (x > sh.x0 - 1 && x < sh.x1 + 1 && z > z0 - 1 && z < z1 + 1) return false }
   return true
 }

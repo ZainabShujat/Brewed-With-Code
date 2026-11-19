@@ -40,8 +40,50 @@ export const SHOPS: Shop[] = [
   { kind: 'sweets', name: 'Sugar Plum', x0: 30, x1: 43, side: 'b', h: 8.5, wall: '#f6c8d6', trim: '#a63f78', awning: ['#f2c66a', '#fff6e0'], roof: 'dutch', store: 'sweets', icon: '🍬' },
 ]
 export const SHOP_DEPTH = 11
-// the little park across the road (left of the side street), the bus stop and the level-1 coffee cart
-export const PARK = { x0: -40, x1: -12, z0: STREET.padB[1], z1: STREET.padB[1] + 14 }
+// the park across the road (left of the side street, right up to the front wall), the bus stop and the coffee cart.
+// 19 Nov: a walkable landscaped park — the grand fountain (14 m) on a paved plaza by the street, the pond behind it
+export const PARK = { x0: -42.5, x1: -STREET.side.pad, z0: STREET.padB[1], z1: STREET.FRONT - 0.9, side: [35.6, 39.4] as [number, number] }
+export const FOUNTAIN = { x: -24.6, z: STREET.padB[1] + 9.4, r: 7.2, plaza: 9.0 }
+// the pond: a kidney of water (half-width a, half-depth b, pinched to a channel at the middle, where the bridge crosses)
+export const POND = { x: -24.6, z: 56.4, a: 12.4, b: 3.4 }
+export const BRIDGE = { x: POND.x, w: 2.3, rise: 0.42 } // runs along z across the channel
+/** the pond's shoreline, as a closed loop (n points, counter-clockwise), grown outward by `grow` metres */
+export function pondLoop(n = 64, grow = 0): [number, number][] {
+  const out: [number, number][] = []
+  for (let i = 0; i < n; i++) {
+    const t = (i / n) * Math.PI * 2, c = Math.cos(t), sn = Math.sin(t)
+    const pinch = 0.5 + 0.5 * Math.pow(Math.abs(c), 0.7)                 // narrow at the middle: two lobes and a channel
+    const wob = 1 + 0.05 * Math.sin(3 * t + 1) + 0.04 * Math.sin(5 * t)  // a natural, uneven bank
+    out.push([POND.x + c * (POND.a + grow) * wob, POND.z + sn * (POND.b * pinch + grow) * wob + (c > 0 ? -0.5 : 0.35) * c * c])
+  }
+  return out
+}
+const inLoop = (pts: [number, number][], x: number, z: number) => { let c = false; for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) { const [xi, zi] = pts[i], [xj, zj] = pts[j]; if ((zi > z) !== (zj > z) && x < ((xj - xi) * (z - zi)) / (zj - zi) + xi) c = !c } return c }
+const POND_EDGE = pondLoop(64, 0.25)
+export const onBridge = (x: number, z: number) => Math.abs(x - BRIDGE.x) < BRIDGE.w / 2 && z > POND.z - 3.3 && z < POND.z + 3.3
+export const inPond = (x: number, z: number) => !onBridge(x, z) && inLoop(POND_EDGE, x, z)
+/** the ground's height where you stand (only the arched bridge lifts you) */
+export function groundY(x: number, z: number) {
+  if (!onBridge(x, z)) return 0
+  const k = 1 - Math.pow((z - POND.z) / 3.3, 2); return Math.max(0, k) * BRIDGE.rise + 0.12
+}
+// the sweet shop's side garden (east of Sugar Plum): a little patio with tables, flower borders, a gate onto pavement B
+export const GARDEN = { x0: 44.2, x1: 61.4, z0: STREET.padB[1], z1: STREET.padB[1] + 12.5, gate: [55.5, 58.3] as [number, number] }
+/** places past the side street's pavements that you can walk into (the park, the garden) */
+export function walkable(x: number, z: number, r: number) {
+  if (x > PARK.x0 + 0.4 + r && x < PARK.x1 + r && z > PARK.z0 - 1 && z < PARK.z1 - r) {
+    if (z < PARK.z0 + 0.35 + r && Math.abs(x - FOUNTAIN.x) > 2.6 - r) return false // the railing, except the main gate
+    if (x > PARK.x1 - 0.7 - r && (z < PARK.side[0] + r || z > PARK.side[1] - r)) return false // the hedge on the side street, except the path in
+    return true
+  }
+  if (x > GARDEN.x0 + 0.3 + r && x < GARDEN.x1 - 0.3 - r && z > GARDEN.z0 - 1 && z < GARDEN.z1 - 0.3 - r) {
+    if (z < GARDEN.z0 + 0.3 + r && (x < GARDEN.gate[0] + r || x > GARDEN.gate[1] - r)) return false // the fence, except the gate
+    return true
+  }
+  return false
+}
+/** solid things inside the park / garden (round: x, z, radius) */
+export const ROUND: [number, number, number][] = [[FOUNTAIN.x, FOUNTAIN.z, FOUNTAIN.r + 0.2]]
 // benches along the park railing, facing the street (on the pavement side)
 export const BENCHES: [number, number][] = [[-36, PARK.z0 - 0.9], [-27, PARK.z0 - 0.9], [-18, PARK.z0 - 0.9]]
 export const BUS_STOP = { x: 50, z: STREET.padB[0] + 2.2 }
@@ -50,7 +92,6 @@ for (const sh of SHOPS) {
   const z0 = sh.side === 'a' ? STREET.padA[0] - SHOP_DEPTH : STREET.padB[1], z1 = sh.side === 'a' ? STREET.padA[0] : STREET.padB[1] + SHOP_DEPTH
   if (!sh.store) STREET.blockers.push([sh.x0, z0, sh.x1, z1]) // the ingredient shops are hollow: you can walk in (see shopInside)
 }
-STREET.blockers.push([PARK.x0, PARK.z0, PARK.x1, PARK.z1])                 // the park is fenced (you look over the railings)
 STREET.blockers.push([BUS_STOP.x - 2.2, BUS_STOP.z - 0.7, BUS_STOP.x + 2.2, BUS_STOP.z + 0.9])
 STREET.blockers.push([CART.x - 1.3, CART.z - 0.8, CART.x + 1.3, CART.z + 0.8])
 

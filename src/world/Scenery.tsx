@@ -4,8 +4,10 @@ import * as THREE from 'three'
 import { STREET as S } from './streetLayout'
 import { rng } from './folk/specs'
 import { quality } from '../ui/Menu'
-import { grassMat, Instanced, type Spot } from './Ground'
+import { Instanced, type Spot } from './Ground'
 import { TownshipsThemed } from './Township'
+import { forestEdge } from './Terrain'
+import { EDGE_X } from './Landscape'
 
 // The world beyond the street: a forest of stylised trees behind the café's back wall, and the two townships
 // (marshmallow homes to the west, notebook homes to the east) beyond the side walls. CC0 models: Quaternius
@@ -42,11 +44,11 @@ export function Forest() {
     const r = rng(9091), by = new Map<string, Spot[]>(), add = (f: string, sp: Spot) => { if (!by.has(f)) by.set(f, []); by.get(f)!.push(sp) }
     const n = quality.high ? 170 : 85
     for (let i = 0; i < n; i++) {
-      const depth = Math.pow(r(), 0.8), x = -105 + r() * 210, z = S.BACK - 2.5 - depth * 40
+      const depth = Math.pow(r(), 0.8), x = -105 + r() * 210, proto = x > EDGE_X[0] && x < EDGE_X[1], z = (proto ? forestEdge(x) - 1.5 : S.BACK - 2.5) - depth * 40 // the prototype stretch: a wandering treeline
       const pine = r() < 0.6, file = pine ? PINES[Math.floor(r() * 5)] : TREES[Math.floor(r() * 5)]
       add(file, { x, z, h: (pine ? 9 : 7.5) + depth * 8 + r() * 3.5, rot: r() * 6.28 })
     }
-    for (let i = 0; i < (quality.high ? 110 : 50); i++) add(BUSHES[i % 2], { x: -100 + r() * 200, z: S.BACK - 1.5 - r() * 14, h: 1.6 + r() * 1.6, rot: r() * 6.28 }) // a dense understorey, cheap
+    for (let i = 0; i < (quality.high ? 110 : 50); i++) { const x = -100 + r() * 200; if (x > EDGE_X[0] && x < EDGE_X[1]) continue; add(BUSHES[i % 2], { x, z: S.BACK - 1.5 - r() * 14, h: 1.6 + r() * 1.6, rot: r() * 6.28 }) } // a dense understorey, cheap
     return [...by.entries()]
   }, [])
   return <group>{groups.map(([file, items]) => <Instanced key={file} file={file} items={items} />)}</group>
@@ -70,7 +72,6 @@ export function TreeBelts() {
 // ── the two townships beyond the side walls: little streets of homes, tinted to their folk ──
 const HOUSES = 'abcdefghijklmnopqrstu'.split('').map((l) => `suburban/building-type-${l}.glb`)
 const TOWN_TINT = { west: ['#ffd6e4', '#fff0d6', '#f7c8dc', '#ffe3ef'], east: ['#d6e8ff', '#e6dcff', '#d8f2ea', '#eef0ff'] } // marshmallow pinks / notebook blues
-const TOWN_GRASS = grassMat([480, 260])
 export function Townships() {
   const homes = useMemo(() => {
     const r = rng(5150), out: { file: string; x: number; z: number; rot: number; tint: string; h: number }[] = []
@@ -89,7 +90,6 @@ export function Townships() {
   return (
     <group>
       {/* ground for the townships and the forest (the street block's own grass stops at the walls) */}
-      <mesh position={[0, -0.02, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow material={TOWN_GRASS}><planeGeometry args={[480, 260]} /></mesh>
             {/* (the Kenney houses were replaced by the themed townships: see Township.tsx) */}
       <TownshipsThemed />
       {yards.map((t, i) => <NiceTree key={'y' + i} x={t.x} z={t.z} h={t.h} kind={t.k} />)}
