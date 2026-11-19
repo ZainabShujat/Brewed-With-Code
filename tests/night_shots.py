@@ -4,6 +4,7 @@ from playwright.sync_api import sync_playwright
 BASE = sys.argv[1] if len(sys.argv) > 1 else 'http://localhost:5180'; HOUR = int(sys.argv[2]) if len(sys.argv) > 2 else 21
 W = 1.2
 SHOTS = [('corner', (8, 3.5, 38), (-4, 2.5, 26)), ('shops', (-14, 3.2, 27), (-30, 3, 15)), ('park', (-12, 4, 30), (-24, 2, 42))]
+if len(sys.argv) > 3 and sys.argv[3] == 'sign': SHOTS = [('sign-street', (0, 4, 34), (0, 7.5, 17)), ('sign-close', (2.5, 7.5, 26), (0, 7.9, 18)), ('sign-angle', (12, 5, 30), (0, 7.5, 17))]
 if len(sys.argv) > 3 and sys.argv[3] == 'door': SHOTS = [('door-out', (2.5, 3.2, 24), (0, 2.6, 17)), ('door-in', (1.5, 3.0, 6), (0, 2.4, 13.5)), ('facade', (0, 12, 52), (0, 8, 14))]
 JS = """([e, t]) => { const s = window.__r3f; const cam = s.camera.clone(); cam.fov = 50; cam.near = 0.2; cam.far = 2000;
   cam.aspect = s.gl.domElement.width / s.gl.domElement.height; cam.position.set(...e); cam.lookAt(...t); cam.updateProjectionMatrix(); cam.updateMatrixWorld();
