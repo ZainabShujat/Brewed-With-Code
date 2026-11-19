@@ -8,6 +8,7 @@ import { useAvatar } from '../systems/avatar'
 import { Creator } from './Creator'
 import { autoFullscreen } from './FullscreenButton'
 import { HowTo } from './HowTo'
+import { TitleBoard } from './TitleBoard'
 
 // ── The game's front end: title screen → main menu → play, with a pause menu (Esc) ──────────
 export type Screen = 'title' | 'main' | 'howto' | 'settings' | 'credits' | 'playing' | 'paused' | 'creator'
@@ -74,8 +75,7 @@ export function Menu({ screen, setScreen }: { screen: Screen; setScreen: (s: Scr
     <div className={`gmenu ${screen === 'title' ? 'title-screen' : ''}`} onClick={() => { if (screen === 'title') leaveTitle() }}>
       {screen === 'title' && (
         <div className="title-wrap">
-          {/* the title: a badge in the café signboard's style (scalloped purple frame, pink border, cream panel, cup, </> medallion) */}
-          <h1 className="logo-board"><span className="lb-cup">☕</span><span className="lb-flower l">✿</span><span className="lb-flower r">✿</span><span className="lb-panel">Brewed With Code</span><span className="lb-code">&lt;/&gt;</span></h1>
+          <h1 className="sr-only">Brewed With Code</h1><TitleBoard />
           <div className="tagline">a cosy café you run yourself</div>
           <div className="press">tap or press any key</div>
         </div>

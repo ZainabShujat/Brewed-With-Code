@@ -873,3 +873,9 @@ html:not(.phone) .fullscreenbtn { left: auto; right: 14px; top: auto; bottom: 14
 .phone .title-screen .tagline { bottom: 15vh; } .phone .title-screen .press { bottom: 6vh; }
 /* on the title / menus the world is scenery: no floating chat bubbles or name tags over it */
 .menuidle .chat, .menuidle .obubble, .menuidle .nametag, .menuidle .qtag, .menuidle .headtag { visibility: hidden !important; }
+
+/* the title: the café's real 3D board in its own canvas, up in the sky above the lid */
+.titleboard { position: absolute; left: 50%; top: 2vh; width: min(760px, 70vw); height: min(300px, 28vw); transform: translateX(-50%); pointer-events: none; }
+.phone .titleboard { width: 52vw; height: 21vw; top: 1vh; }
+.titleboard { width: min(1100px, 88vw); height: min(430px, 36vw); top: 0; }
+.phone .titleboard { width: 70vw; height: 28vw; top: 0; }

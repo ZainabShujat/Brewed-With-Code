@@ -212,6 +212,9 @@ function NightGlow() {
   useFrame(() => { const n = nightGlow.opacity / 0.85; PANEL.emissiveIntensity = n * 0.75; RIM.emissiveIntensity = n * 0.35; BEAD.emissiveIntensity = n * 1.6 })
   return null
 }
+/** just the board (for the title screen's own little canvas): the same pieces as the one on the café */
+export function SignFace() { return <group><Plaque /><Lettering /><CupEmblem /><Garnish /><Medallion /></group> }
+export const SIGN_CENTRE: [number, number, number] = [0, 10.4, 18.85]
 export function Signboard() {
   // sign space has its origin on the wall (x 0, the pot's axis R behind it): move it out to the pot's front
   return (
