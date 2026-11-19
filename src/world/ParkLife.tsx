@@ -13,8 +13,8 @@ import { hourNow } from '../systems/clock'
 
 // The park comes alive: a fountain in the middle with a ring of benches, and townsfolk hanging out (sitting and
 // chatting on the benches, standing in little groups by the water), murmuring when you walk by.
-const FX = (PARK.x0 + PARK.x1) / 2 - 0.5, FZ = (PARK.z0 + PARK.z1) / 2, SCALE = 1.95 // the open middle of the park (trees are in the corners)
-const BENCH_R = 5.6
+const FX = (PARK.x0 + PARK.x1) / 2 - 3.5, FZ = (PARK.z0 + PARK.z1) / 2, SCALE = 1.95 // the open middle of the park (trees are in the corners)
+const BENCH_R = 6.2, FS = 1.7 // a BIG fountain
 const BENCH_A = [0.2, 1.25, 2.3, 3.35, 4.4, 5.45]
 const SAY = ['what a day ☀️', 'the fountain is so pretty', 'tried the new café?', 'my feet hurt 😅', 'look, ducks! 🦆', 'one more lap?', 'I love this bench', 'shh, I\'m reading 📖', 'ice cream later?', 'mmm, sunshine']
 
@@ -27,7 +27,7 @@ function Fountain() {
       c.position.set(Math.cos(d.a) * r, 2.1 + Math.sin(k * Math.PI) * 1.1 - k * 0.9, Math.sin(d.a) * r); c.scale.setScalar(1 - k * 0.6) })
   })
   return (
-    <group position={[FX, 0.06, FZ]}>
+    <group position={[FX, 0.06, FZ]} scale={[FS, FS, FS]}>
       <mesh position={[0, 0.3, 0]} material={mat('#e9dfe8', { rough: 0.6 })} castShadow><cylinderGeometry args={[2.6, 2.8, 0.6, 40]} /></mesh>
       <mesh position={[0, 0.58, 0]} rotation={[-Math.PI / 2, 0, 0]} material={mat('#8fd0ea', { rough: 0.05, opacity: 0.85 })}><circleGeometry args={[2.35, 40]} /></mesh>
       <mesh position={[0, 1.2, 0]} material={mat('#e9dfe8')}><cylinderGeometry args={[0.35, 0.5, 1.4, 20]} /></mesh>
@@ -70,6 +70,22 @@ function Hanger({ h, i }: { h: Hang; i: number }) {
   )
 }
 
+function Pond() {
+  const px = PARK.x1 - 7.2, pz = (PARK.z0 + PARK.z1) / 2
+  const duck = useRef<THREE.Group>(null)
+  useFrame(({ clock }) => { const d = duck.current; if (d) { const a = clock.elapsedTime * 0.25; d.position.set(px + Math.cos(a) * 1.4, 0.12, pz + Math.sin(a) * 1.0); d.rotation.y = -a } })
+  return (
+    <group>
+      <mesh position={[px, 0.07, pz]} rotation={[-Math.PI / 2, 0, 0]} scale={[1, 0.75, 1]} material={mat('#6fb9d6', { rough: 0.08 })}><circleGeometry args={[2.6, 36]} /></mesh>
+      <mesh position={[px, 0.065, pz]} rotation={[-Math.PI / 2, 0, 0]} scale={[1, 0.75, 1]} material={mat('#c9b48e')}><ringGeometry args={[2.55, 2.85, 36]} /></mesh>
+      {[[0.9, 0.4], [-1.1, -0.3], [0.2, -0.9], [-0.4, 0.8]].map(([dx, dz], i) => <mesh key={i} position={[px + dx, 0.09, pz + dz]} rotation={[-Math.PI / 2, 0, i]} material={mat('#5aa35a')}><circleGeometry args={[0.32, 14, 0, Math.PI * 1.8]} /></mesh>)}
+      <group ref={duck}><mesh position={[0, 0.12, 0]} material={mat('#fff6e0')}><sphereGeometry args={[0.2, 12, 10]} /></mesh>
+        <mesh position={[0, 0.3, 0.14]} material={mat('#fff6e0')}><sphereGeometry args={[0.11, 10, 8]} /></mesh>
+        <mesh position={[0, 0.28, 0.26]} rotation={[Math.PI / 2, 0, 0]} material={mat('#f2a33a')}><coneGeometry args={[0.04, 0.1, 8]} /></mesh></group>
+    </group>
+  )
+}
+
 export function ParkLife() {
   const hang = useMemo<Hang[]>(() => {
     const out: Hang[] = []
@@ -78,7 +94,7 @@ export function ParkLife() {
       const spec = folk(k % 2 ? 'paper' : 'mallow', 11 + k * 7)
       out.push({ spec, x, z, face: Math.atan2(FX - x, FZ - z), pose: 'sit', y: 0.62 - seatHip(spec) * SCALE }) })
     // two little groups standing by the water, chatting
-    ;[[1.75, 0], [4.85, 1]].forEach(([a, k0]) => { const cx = FX + Math.cos(a) * 4.1, cz = FZ + Math.sin(a) * 4.1, tx = -Math.sin(a), tz = Math.cos(a) // a pair, side by side along the ring
+    ;[[1.75, 0], [4.85, 1]].forEach(([a, k0]) => { const cx = FX + Math.cos(a) * 5.2, cz = FZ + Math.sin(a) * 5.2, tx = -Math.sin(a), tz = Math.cos(a) // a pair, side by side along the ring
       ;[-0.9, 0.9].forEach((o, j) => { const x = cx + tx * o, z = cz + tz * o, ox = cx - tx * o, oz = cz - tz * o
         out.push({ spec: folk(j ? 'mallow' : 'paper', 23 + (k0 as number) * 9 + j * 5), x, z, face: Math.atan2(ox - x, oz - z), pose: 'wait', y: 0.06 }) }) })
     return out
@@ -87,6 +103,7 @@ export function ParkLife() {
   return (
     <group>
       <Fountain />
+      <Pond />
       {BENCH_A.map((a) => <Bench key={a} a={a} />)}
       {hang.map((h, i) => <Hanger key={i} h={h} i={i} />)}
     </group>
