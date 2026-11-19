@@ -12,6 +12,7 @@ import { StreetLife } from './world/StreetLife'
 import { ParkLife } from './world/ParkLife'
 import { Forest, Townships } from './world/Scenery'
 import { GrassScatter } from './world/Ground'
+import { Outskirts } from './world/Outskirts'
 import { Keepers } from './world/Keepers'
 import { RR as ROOM_R } from './world/layout'
 import { Reveal } from './world/Reveal'
@@ -80,7 +81,7 @@ export function World() {
       <group scale={WORLD}>
       {/* zone culling (like occlusion culling): rooms you can't see from this view aren't drawn at all.
           Behind the bar or at the cake machine you face a wall, so the whole outdoors is skipped. */}
-      <group visible={REEL || (mode !== 'pov' && mode !== 'cake')}><Exterior showPot={!inside || outro || ((mode === 'walk' || mode === 'fp') && !indoors)} fadeIn={outro} />{!outro && <><Street /><Neighbours /><StreetLife /><ParkLife /><Keepers /><Forest /><Townships /><GrassScatter /></>}</group>
+      <group visible={REEL || (mode !== 'pov' && mode !== 'cake')}><Exterior showPot={!inside || outro || ((mode === 'walk' || mode === 'fp') && !indoors)} fadeIn={outro} />{!outro && <><Street /><Neighbours /><StreetLife /><ParkLife /><Keepers /><Forest /><Townships /><GrassScatter /><Outskirts /></>}</group>
       {inside && SHOW_FOLK && <FolkLineup />}
       {SHOW_FOLK && <FolkGallery />}
       {inside && <Interior cutaway={mode === 'dollhouse' || outro || walkIn} pov={mode === 'pov'} only={REEL ? '' : mode === 'pov' ? 'bar' : mode === 'cake' ? 'kitchen' : ''} />}
