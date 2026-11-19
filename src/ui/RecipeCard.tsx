@@ -3,7 +3,7 @@ import { useShop } from '../systems/shop'
 import { cafe } from '../world/Customers'
 import { CAP, SHOT_ML, filled } from '../data/recipes'
 import { drinkSvg } from './drinkSvg'
-import { nextStep } from '../systems/targets'
+import { nextStep, orderSteps, STEP_LABEL } from '../systems/targets'
 import { useTutorial } from '../systems/tutorial'
 import { hoverTip } from '../systems/drag'
 
@@ -31,7 +31,10 @@ export function RecipeCard() {
   const ready = rows.length > 0 && rows.every((r) => r.ok)
 
   // the next thing to do, in plain words (or why the last action did nothing)
-  const next = s.hint || nextStep().text
+  const step = nextStep(), next = s.hint || step.text
+  const steps = orderSteps(), at = steps.indexOf(step.id)
+  // HOLD / DRAG / LET GO stand out, so you know at a glance which kind of move it is
+  const words = next.split(/(HOLD|DRAG|LET GO)/).map((t, i) => (t === 'HOLD' || t === 'DRAG' || t === 'LET GO') ? <b key={i} className={'verb v-' + t.replace(' ', '').toLowerCase()}>{t === 'HOLD' ? '👆 hold' : t === 'DRAG' ? '✋ drag' : 'let go'}</b> : t)
   const tutOn = useTutorial((t) => t.lesson < 2)
 
   const fresh = s.last && performance.now() / 1000 - s.last.t < 2.5
@@ -50,7 +53,11 @@ export function RecipeCard() {
         )}
       </div>
       <div className="coins">💰 {s.coins} · served {s.served}</div>
-      <div className={'brew-next' + (ready ? ' ready' : '')} style={tutOn ? { display: 'none' } : undefined}>{next}{hoverTip.text && <div className="brew-tip">👆 {hoverTip.text}</div>}</div>
+      <div className={'brew-next' + (ready ? ' ready' : '')}>
+        {at >= 0 && <div className="steps">{steps.map((id, i) => <span key={id} className={i < at ? 'done' : i === at ? 'now' : ''}>{STEP_LABEL[id][0]}<small>{STEP_LABEL[id][1]}</small></span>)}</div>}
+        {!tutOn && <div className="brew-say">{at >= 0 && <em>step {at + 1} of {steps.length} · </em>}{words}</div>}
+        {!tutOn && hoverTip.text && <div className="brew-tip">👆 {hoverTip.text}</div>}
+      </div>
       {fresh && s.last && (
         <div className="brewpop" key={s.last.t}>
           {s.last.mood} {s.last.pct}% right · +{s.last.coins}💰

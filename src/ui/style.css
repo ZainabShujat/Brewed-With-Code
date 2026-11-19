@@ -802,3 +802,23 @@ html:not(.phone) .fullscreenbtn { left: auto; right: 14px; top: auto; bottom: 14
 @media (max-width: 640px) and (min-height: 521px) { .ht-card { grid-template-columns: 1fr; } }
 @media (max-height: 520px) { .ht-pic.trio { flex-direction: row; } .ht-pic.trio img { aspect-ratio: 3/4; } }
 .townsign { font: 900 26px 'Trebuchet MS', sans-serif; color: #fff; text-shadow: 0 2px 0 rgba(42,24,48,.5); white-space: nowrap; letter-spacing: 1px; }
+
+/* 19 Nov: clearer drink steps. A step tracker for the whole order, HOLD / DRAG called out, and the hold ring says LET GO */
+.brew-next .steps { display: flex; gap: 4px; justify-content: center; flex-wrap: wrap; margin-bottom: 6px; }
+.brew-next .steps span { display: inline-flex; flex-direction: column; align-items: center; min-width: 44px; padding: 3px 5px 2px; border-radius: 9px; background: rgba(255,246,238,.08); opacity: .5; font-size: 16px; line-height: 1.1; }
+.brew-next .steps span small { font-size: 9px; font-weight: 800; letter-spacing: .02em; }
+.brew-next .steps span.done { opacity: .9; background: rgba(142,224,160,.25); }
+.brew-next .steps span.done small::before { content: '✓ '; }
+.brew-next .steps span.now { opacity: 1; background: #f2c66a; color: #2a1830; transform: scale(1.12); }
+.brew-say em { font-style: normal; opacity: .65; font-size: .85em; }
+.verb { display: inline-block; padding: 0 7px 1px; border-radius: 7px; margin: 0 2px; text-transform: uppercase; font-weight: 900; letter-spacing: .03em; color: #2a1830; }
+.v-hold { background: #f2c66a; } .v-drag { background: #a8d8ff; } .v-letgo { background: #8ee0a0; }
+.holdring.go b { background: #8ee0a0; font-size: 18px; animation: popin .4s ease-out; }
+.holdring.over b { background: #ff8a9a; }
+.holdring.docked { transform: translate(-50%, 0) scale(1.35); margin: 0; transform-origin: top center; }
+@media (max-width: 700px) { .brew-next .steps span { min-width: 34px; font-size: 13px; } .brew-next .steps span small { font-size: 8px; } }
+.phone .brew-next { font-size: 14px !important; padding: 6px 12px 7px !important; max-width: 64vw !important; }
+.phone .brew-next .steps { margin-bottom: 4px; gap: 3px; }
+.phone .brew-next .steps span { min-width: 30px; padding: 2px 3px; font-size: 13px; }
+.phone .brew-next .steps span small { display: none; }
+.phone .brew-next .steps span.now small { display: block; }

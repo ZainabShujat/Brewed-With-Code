@@ -112,6 +112,27 @@ function Lamp({ x, z }: { x: number; z: number }) {
   )
 }
 
+// the T-junction's two corners: one tall post, a cross of four arms, a lantern on each pointing N / E / S / W
+// (same iron + glow as the streetlamps, so all four brighten together at dusk)
+function CornerLamp({ x, z }: { x: number; z: number }) {
+  return (
+    <group position={[x, 0.16, z]} scale={[2.1, 2.25, 2.1]}>
+      <mesh position={[0, 2.25, 0]} material={ironMat} castShadow><cylinderGeometry args={[0.08, 0.13, 4.5, 10]} /></mesh>
+      <mesh position={[0, 0.17, 0]} material={ironMat}><cylinderGeometry args={[0.26, 0.3, 0.34, 12]} /></mesh>
+      <mesh position={[0, 4.62, 0]} material={ironMat}><sphereGeometry args={[0.12, 12, 8]} /></mesh>
+      {[0, 1, 2, 3].map((i) => (
+        <group key={i} rotation={[0, (i * Math.PI) / 2, 0]}>
+          <mesh position={[0.32, 4.45, 0]} rotation={[0, 0, Math.PI / 2]} material={ironMat}><cylinderGeometry args={[0.035, 0.035, 0.64, 8]} /></mesh>
+          <mesh position={[0.64, 4.3, 0]} material={ironMat}><coneGeometry args={[0.24, 0.2, 6]} /></mesh>
+          <mesh position={[0.64, 4.05, 0]} material={glow()}><boxGeometry args={[0.28, 0.34, 0.28]} /></mesh>
+          <Billboard position={[0.64, 4.05, 0]}><mesh material={nightGlow}><planeGeometry args={[1.9, 1.9]} /></mesh></Billboard>
+        </group>
+      ))}
+      <mesh position={[0, 0.03, 0]} rotation={[-Math.PI / 2, 0, 0]} material={nightGlow}><planeGeometry args={[12, 12]} /></mesh>
+    </group>
+  )
+}
+
 // lights around the café: knee-high garden lanterns on the grass ringing the teapot, and a lantern each side of the door
 function CafeLights() {
   const ring = useMemo(() => Array.from({ length: 14 }, (_, i) => (i / 14) * Math.PI * 2).filter((a) => Math.cos(a) < 0.93)
@@ -205,6 +226,7 @@ export function Street() {
       {[-48, -32, -16, 16, 32, 48].map((x) => <Lamp key={`a${x}`} x={x} z={padA[1] - 0.6} />)}
       {[-40, -20, 20, 40].map((x) => <Lamp key={`b${x}`} x={x} z={padB[0] + 0.6} />)}
       {[44, 58].map((z) => <Lamp key={`s${z}`} x={side.road + 0.6} z={z} />)}
+      {[-1, 1].map((k) => <CornerLamp key={`t${k}`} x={k * (side.road + 0.8)} z={padB[0] + 0.8} />)}{/* the T's two corners */}
       {/* the block's brick walls, with closed gates at every road end */}
       <Wall a={[-X, BACK]} b={[X, BACK]} />
       <Wall a={[-X, BACK]} b={[-X, padA[0]]} />

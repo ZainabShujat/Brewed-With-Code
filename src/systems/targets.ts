@@ -55,19 +55,27 @@ export function nextStep(): { id: Step; text: string } {
   const s = useShop.getState(), w = want(), d = s.drink, p = s.pitcher, inPitcher = p.milk + p.foam
   const fill = s.cup ? filled(s.ml) / CAP[d.size] : 0
   if (!w) return { id: 'wait', text: cafe.line.size ? 'a customer is walking up…' : 'waiting for customers…' }
-  if (!s.cup) return { id: 'glass', text: `grab a ${w.size} glass and drop it on the mat` }
-  if (w.chocolate && !d.chocolate) return { id: 'choc', text: 'chocolate first: drag the sauce onto your glass' }
-  if (d.shots < w.shots && s.shotGlass < 5) return { id: 'pull', text: 'hold the espresso machine… let go on the gold line' }
-  if (d.shots < w.shots) return { id: 'pourShot', text: 'drag the shot glass onto your glass' }
-  if (w.water && !d.water) return { id: 'water', text: 'drag the kettle onto your glass' }
+  if (!s.cup) return { id: 'glass', text: `DRAG a ${w.size} glass onto the mat` }
+  if (w.chocolate && !d.chocolate) return { id: 'choc', text: 'DRAG the chocolate sauce onto your glass' }
+  if (d.shots < w.shots && s.shotGlass < 5) return { id: 'pull', text: 'HOLD the espresso machine · LET GO when the ring turns green' }
+  if (d.shots < w.shots) return { id: 'pourShot', text: 'DRAG the shot glass onto your glass' }
+  if (w.water && !d.water) return { id: 'water', text: 'DRAG the kettle onto your glass' }
   if (w.milk !== 'none' && d.milk === 'none') {
-    if (inPitcher < 20) return { id: 'fillPitcher', text: `hold the ${w.milkType} milk to fill the pitcher` }
-    if (p.at !== 'wand' && p.stretch === 0) return { id: 'pitcherToWand', text: 'drag the pitcher onto the steam wand' }
-    if (p.at === 'wand' && p.stretch < STEAM_ZONES[w.milk][0]) return { id: 'steam', text: 'hold the steam wand till the needle reaches the glowing zone' }
+    if (inPitcher < 20) return { id: 'fillPitcher', text: `HOLD the ${w.milkType} milk carton to fill the pitcher` }
+    if (p.at !== 'wand' && p.stretch === 0) return { id: 'pitcherToWand', text: 'DRAG the pitcher onto the steam wand' }
+    if (p.at === 'wand' && p.stretch < STEAM_ZONES[w.milk][0]) return { id: 'steam', text: 'HOLD the steam wand · LET GO when the ring turns green' }
   }
-  if (w.milk !== 'none' && fill < 0.75) return { id: 'pourMilk', text: 'drag the pitcher over your glass and hold to pour' }
-  if (w.topping !== 'none' && d.topping === 'none') return { id: 'topping', text: w.topping === 'whipped' ? 'drag the cream onto your glass' : `drag the ${w.topping} over your glass and shake` }
-  return { id: 'serve', text: 'drag your glass onto the pass 🔔' }
+  if (w.milk !== 'none' && fill < 0.75) return { id: 'pourMilk', text: 'DRAG the pitcher over your glass and HOLD to pour · LET GO near the top' }
+  if (w.topping !== 'none' && d.topping === 'none') return { id: 'topping', text: w.topping === 'whipped' ? 'DRAG the cream onto your glass' : `DRAG the ${w.topping} over your glass and shake` }
+  return { id: 'serve', text: 'DRAG your glass onto the pass 🔔' }
+}
+/** the whole order as a short list of steps (for the step tracker): icon + short name, in the order you do them */
+// (emoji that exist everywhere: the 'pouring' one shows as an empty box on Windows and older Android)
+export const STEP_LABEL: Record<Step, [string, string]> = { wait: ['⏳', 'wait'], glass: ['🥛', 'glass'], choc: ['🍫', 'chocolate'], pull: ['☕', 'pull shot'], pourShot: ['⬇️', 'shot in'], water: ['💧', 'hot water'],
+  fillPitcher: ['🐄', 'fill milk'], pitcherToWand: ['➡️', 'to wand'], steam: ['♨️', 'steam'], pourMilk: ['⬇️', 'pour milk'], topping: ['✨', 'topping'], serve: ['🔔', 'serve'] }
+export function orderSteps(): Step[] {
+  const w = want(); if (!w) return []
+  return ['glass', ...(w.chocolate ? ['choc'] : []), 'pull', 'pourShot', ...(w.water ? ['water'] : []), ...(w.milk !== 'none' ? ['fillPitcher', 'pitcherToWand', 'steam', 'pourMilk'] : []), ...(w.topping !== 'none' ? ['topping'] : []), 'serve'] as Step[]
 }
 /** which tools this order needs out on the counter (no order: everything) */
 export function needs() {

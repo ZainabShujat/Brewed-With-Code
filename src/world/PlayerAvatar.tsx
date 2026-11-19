@@ -28,7 +28,35 @@ export function AvatarBody({ a, walking }: { a: Avatar; walking: () => boolean }
   const spec = useMemo(() => avatarSpec(a), [a.kind, a.model, a.colour, a.faceSeed]) // eslint-disable-line react-hooks/exhaustive-deps
   if (!spec) return <KozieBody walking={walking} />
   const pose = (): Pose => (walking() ? 'walk' : 'wait')
-  return <group scale={FOLK_SCALE}><Townsperson key={`${a.kind}${a.model}${a.colour}${a.faceSeed}`} spec={spec} getPose={pose} /></group>
+  return <group scale={FOLK_SCALE}><Townsperson key={`${a.kind}${a.model}${a.colour}${a.faceSeed}`} spec={spec} getPose={pose} /><YouMark /></group>
+}
+
+// what makes YOU different from the townsfolk (same as Kozie): two golden circuit antennas on top of the head
+// and three gold "thinking…" dots bouncing above it. It measures the body once, then sits on its top.
+const GOLD = new THREE.MeshStandardMaterial({ color: '#f2c14e', metalness: 0.5, roughness: 0.3 })
+const GLOW = new THREE.MeshBasicMaterial({ color: '#ffd76a' })
+function YouMark() {
+  const g = useRef<THREE.Group>(null), dots = useRef<THREE.Group>(null), top = useRef(-1)
+  const traces = useMemo(() => [[[-0.1, 0, 0], [-0.1, 0.16, 0], [-0.22, 0.24, 0]], [[0.06, 0, 0], [0.06, 0.24, 0], [0.14, 0.31, 0]]].map((pts) => {
+    const c = new THREE.CatmullRomCurve3(pts.map((p) => new THREE.Vector3(...(p as [number, number, number]))), false, 'catmullrom', 0)
+    return { tube: new THREE.TubeGeometry(c, 12, 0.012, 6), end: c.getPoint(1) } }), [])
+  const _b = useMemo(() => new THREE.Box3(), [])
+  useFrame(({ clock }) => {
+    const gr = g.current; if (!gr || !gr.parent) return
+    if (top.current < 0) { // the body's height in this group's units (it has to be built first)
+      gr.visible = false; _b.makeEmpty(); gr.parent.children.forEach((c) => { if (c !== gr) _b.expandByObject(c) })
+      if (_b.isEmpty()) return; const inv = new THREE.Matrix4().copy(gr.parent.matrixWorld).invert(); _b.applyMatrix4(inv); top.current = _b.max.y; gr.visible = true
+    }
+    gr.position.y = top.current
+    const t = clock.elapsedTime
+    dots.current?.children.forEach((d, i) => { const ph = (t * 1.6 - i * 0.25) % 1.5, b = Math.max(0, Math.sin(ph * Math.PI)); d.position.y = 0.36 + b * 0.06; d.scale.setScalar(0.7 + b * 0.5) })
+  })
+  return (
+    <group ref={g} visible={false}>
+      {traces.map((t, i) => <group key={i}><mesh geometry={t.tube} material={GOLD} /><mesh position={t.end} material={GLOW}><sphereGeometry args={[0.035, 12, 10]} /></mesh></group>)}
+      <group ref={dots}>{[0, 1, 2].map((i) => <mesh key={i} position={[-0.11 + i * 0.11, 0.36, 0]} material={GLOW}><sphereGeometry args={[0.035, 12, 10]} /></mesh>)}</group>
+    </group>
+  )
 }
 
 export function PlayerAvatar() {

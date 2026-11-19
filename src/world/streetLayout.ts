@@ -84,6 +84,8 @@ export function walkable(x: number, z: number, r: number) {
 }
 /** solid things inside the park / garden (round: x, z, radius) */
 export const ROUND: [number, number, number][] = [[FOUNTAIN.x, FOUNTAIN.z, FOUNTAIN.r + 0.2]]
+// the four-lantern lamps on the T-junction's corners (Street.tsx): solid posts (trunk-style blockers: radius = r × 0.35)
+for (const k of [-1, 1]) STREET.trees.push([k * (STREET.side.road + 0.8), STREET.padB[0] + 0.8, 1.6])
 // benches along the park railing, facing the street (on the pavement side)
 export const BENCHES: [number, number][] = [[-36, PARK.z0 - 0.9], [-27, PARK.z0 - 0.9], [-18, PARK.z0 - 0.9]]
 export const BUS_STOP = { x: 50, z: STREET.padB[0] + 2.2 }

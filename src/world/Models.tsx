@@ -18,6 +18,11 @@ function Inner({ name, scale = 1, pos = [0, 0, 0], rot = [0, 0, 0], fit }: P) {
   const obj = useMemo(() => {
     const c = scene.clone(true)
     c.traverse((o) => { const m = o as THREE.Mesh; if (m.isMesh) { m.castShadow = BIG.has(name); m.receiveShadow = BIG.has(name) } })
+    // the espresso machine is all metal in its texture, and with no environment map (the game skips it to save the
+    // GPU) metal has nothing to reflect, so it rendered almost black: make it a glossy non-metal, a touch lifted
+    if (name === 'sf:espresso') c.traverse((o) => { const m = o as THREE.Mesh; if (!m.isMesh) return
+      const src = m.material as THREE.MeshStandardMaterial, k = src.clone(); k.metalnessMap = null; k.metalness = 0.15; k.roughness = 0.42
+      k.emissive = new THREE.Color('#3a2a33'); k.emissiveMap = src.map; k.emissiveIntensity = 0.55; m.material = k })
     if (!fit) return c
     // normalise: measure, then wrap so the model is `fit` tall with its base at 0 and centred
     c.updateMatrixWorld(true); _b.setFromObject(c); _b.getSize(_s); _b.getCenter(_c)
