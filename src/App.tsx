@@ -14,6 +14,7 @@ import { Terrain } from './world/Terrain'
 import { SugarGarden, ForestEdge } from './world/Landscape'
 import { Forest, Townships, TreeBelts } from './world/Scenery'
 import { GrassScatter, DistanceCull } from './world/Ground'
+import { LampLights } from './world/LampLights'
 import { Outskirts } from './world/Outskirts'
 import { Keepers } from './world/Keepers'
 import { RR as ROOM_R } from './world/layout'
@@ -83,7 +84,7 @@ export function World() {
       <group scale={WORLD}>
       {/* zone culling (like occlusion culling): rooms you can't see from this view aren't drawn at all.
           Behind the bar or at the cake machine you face a wall, so the whole outdoors is skipped. */}
-      <group visible={REEL || (mode !== 'pov' && mode !== 'cake')}><Exterior showPot={!inside || outro || ((mode === 'walk' || mode === 'fp') && !indoors)} fadeIn={outro} lawn={outro} />{!outro && <><DistanceCull /><group name="p:terrain"><Terrain /></group><group name="p:garden"><SugarGarden /></group><group name="p:edge"><ForestEdge /></group><group name="p:street"><Street /></group><group name="p:neigh"><Neighbours /></group><group name="p:streetlife"><StreetLife /></group><group name="p:park"><ParkLife /></group><group name="p:keepers"><Keepers /></group><group name="p:forest"><Forest /></group><group name="p:belts"><TreeBelts /></group><group name="p:towns"><Townships /></group><group name="p:grass"><GrassScatter /></group><group name="p:outskirts"><Outskirts /></group></>}</group>
+      <group visible={REEL || (mode !== 'pov' && mode !== 'cake')}><Exterior showPot={!inside || outro || ((mode === 'walk' || mode === 'fp') && !indoors)} fadeIn={outro} lawn={outro} />{!outro && <><DistanceCull /><LampLights /><group name="p:terrain"><Terrain /></group><group name="p:garden"><SugarGarden /></group><group name="p:edge"><ForestEdge /></group><group name="p:street"><Street /></group><group name="p:neigh"><Neighbours /></group><group name="p:streetlife"><StreetLife /></group><group name="p:park"><ParkLife /></group><group name="p:keepers"><Keepers /></group><group name="p:forest"><Forest /></group><group name="p:belts"><TreeBelts /></group><group name="p:towns"><Townships /></group><group name="p:grass"><GrassScatter /></group><group name="p:outskirts"><Outskirts /></group></>}</group>
       {inside && SHOW_FOLK && <FolkLineup />}
       {SHOW_FOLK && <FolkGallery />}
       {inside && <Interior cutaway={mode === 'dollhouse' || outro || walkIn} pov={mode === 'pov'} only={REEL ? '' : mode === 'pov' ? 'bar' : mode === 'cake' ? 'kitchen' : ''} />}

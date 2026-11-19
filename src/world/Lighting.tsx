@@ -20,6 +20,12 @@ const glowTex = (() => { if (typeof document === 'undefined') return null
 // shop windows: a warm lit-glass look that brightens after dark (the clock drives it)
 export const shopGlass = new THREE.MeshStandardMaterial({ color: '#f3dfc0', emissive: '#ffcf8a', emissiveIntensity: 0.2, roughness: 0.15 })
 export const nightGlow = new THREE.MeshBasicMaterial({ map: glowTex, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false })
+// lamp light on the ground: a flatter, brighter fall-off than the halo, so each lamp lights a real circle of street
+const poolTex = (() => { if (typeof document === 'undefined') return null
+  const c = document.createElement('canvas'); c.width = c.height = 128; const x = c.getContext('2d')!
+  const g = x.createRadialGradient(64, 64, 0, 64, 64, 64); g.addColorStop(0, 'rgba(255,220,160,1)'); g.addColorStop(0.55, 'rgba(255,200,135,.7)'); g.addColorStop(0.85, 'rgba(255,180,120,.22)'); g.addColorStop(1, 'rgba(255,170,110,0)')
+  x.fillStyle = g; x.fillRect(0, 0, 128, 128); return new THREE.CanvasTexture(c) })()
+export const lampPool = new THREE.MeshBasicMaterial({ map: poolTex, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false })
 const starMat = new THREE.PointsMaterial({ color: '#fff3d6', size: 2.2, sizeAttenuation: false, transparent: true, opacity: 0, depthWrite: false })
 const starGeo = (() => { const g = new THREE.BufferGeometry(), n = 420, p = new Float32Array(n * 3)
   for (let i = 0; i < n; i++) { const u = Math.random(), v = Math.random() * 0.9, th = u * Math.PI * 2, ph = Math.acos(1 - v), r = 160
@@ -60,7 +66,7 @@ export function Lighting() {
     }
     // after dark the bulbs, string lights and the window glow brighter; the arched windows show the sky outside
     const night = 1 - k.day
-    starMat.opacity = Math.max(0, night * 1.2 - 0.2); nightGlow.opacity = night * 0.85
+    starMat.opacity = Math.max(0, night * 1.2 - 0.2); nightGlow.opacity = night * 0.85; lampPool.opacity = night * 0.35 // a soft pool; the real light (LampLights) does the rest
     shopGlass.emissiveIntensity = 0.2 + 1.3 * night
     glow().emissiveIntensity = glow('#ffc4dd').emissiveIntensity = 1 + 1.8 * night
     const win = mat(C.sky, { emissive: '#f4e6ff' }) as THREE.MeshStandardMaterial

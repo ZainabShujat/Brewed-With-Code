@@ -5,10 +5,11 @@ import * as THREE from 'three'
 import { C } from '../data/palette'
 import { mat, glow } from './mats'
 import { RBox } from './Soft'
-import { nightGlow } from './Lighting'
+import { lampPool, nightGlow } from './Lighting'
 import { anim } from '../systems/anim'
 import { useGame } from '../systems/store'
 import { STREET as S } from './streetLayout'
+import { useLampSpot } from './LampLights'
 
 // The street outside the café, at HUMAN scale (1 unit ≈ 1 m, same as the café floor), unlike the 2.95×
 // exterior dressing. A T-shaped street: pavement → road with a zebra crossing → far pavement → a side street,
@@ -100,14 +101,15 @@ function Gate({ at, width, rotY = 0 }: { at: [number, number]; width: number; ro
 
 // a streetlamp on the kerb side; the lantern is a shared glow material, so it brightens at night with the clock
 function Lamp({ x, z }: { x: number; z: number }) {
+  useLampSpot(x, 6, z, 2.6)
   return (
     <group position={[x, 0.16, z]} scale={[2.1, 2.25, 2.1]}>{/* 19 Nov: taller (~9.9 m) and chunkier; the pool of light grows with them */}
       <mesh position={[0, 2.1, 0]} material={ironMat} castShadow><cylinderGeometry args={[0.07, 0.11, 4.2, 10]} /></mesh>
       <mesh position={[0, 0.15, 0]} material={ironMat}><cylinderGeometry args={[0.22, 0.26, 0.3, 12]} /></mesh>
       <mesh position={[0, 4.35, 0]} material={ironMat}><coneGeometry args={[0.36, 0.3, 6]} /></mesh>
       <mesh position={[0, 4.05, 0]} material={glow()}><boxGeometry args={[0.4, 0.46, 0.4]} /></mesh>
-      <Billboard position={[0, 4.05, 0]}><mesh material={nightGlow}><planeGeometry args={[2.6, 2.6]} /></mesh></Billboard>
-      <mesh position={[0, 0.03, 0]} rotation={[-Math.PI / 2, 0, 0]} material={nightGlow}><planeGeometry args={[9, 9]} /></mesh>
+      <Billboard position={[0, 4.05, 0]}><mesh material={nightGlow}><planeGeometry args={[3.4, 3.4]} /></mesh></Billboard>
+      <mesh position={[0, 0.03, 0]} rotation={[-Math.PI / 2, 0, 0]} material={lampPool}><planeGeometry args={[13, 13]} /></mesh>
     </group>
   )
 }
@@ -115,6 +117,7 @@ function Lamp({ x, z }: { x: number; z: number }) {
 // the T-junction's two corners: one tall post, a cross of four arms, a lantern on each pointing N / E / S / W
 // (same iron + glow as the streetlamps, so all four brighten together at dusk)
 function CornerLamp({ x, z }: { x: number; z: number }) {
+  useLampSpot(x, 6, z, 2.6)
   return (
     <group position={[x, 0.16, z]} scale={[2.1, 2.25, 2.1]}>
       <mesh position={[0, 2.25, 0]} material={ironMat} castShadow><cylinderGeometry args={[0.08, 0.13, 4.5, 10]} /></mesh>
@@ -128,7 +131,7 @@ function CornerLamp({ x, z }: { x: number; z: number }) {
           <Billboard position={[0.64, 4.05, 0]}><mesh material={nightGlow}><planeGeometry args={[1.9, 1.9]} /></mesh></Billboard>
         </group>
       ))}
-      <mesh position={[0, 0.03, 0]} rotation={[-Math.PI / 2, 0, 0]} material={nightGlow}><planeGeometry args={[12, 12]} /></mesh>
+      <mesh position={[0, 0.03, 0]} rotation={[-Math.PI / 2, 0, 0]} material={lampPool}><planeGeometry args={[17, 17]} /></mesh>
     </group>
   )
 }
@@ -223,9 +226,10 @@ export function Street() {
       <CafeLights />
       <mesh position={[0, 0.18, padA[0] + 1.6]} rotation={[-Math.PI / 2, 0, 0]} material={nightGlow}><planeGeometry args={[7, 5]} /></mesh>
       {/* streetlamps */}
-      {[-48, -32, -16, 16, 32, 48].map((x) => <Lamp key={`a${x}`} x={x} z={padA[1] - 0.6} />)}
-      {[-40, -20, 20, 40].map((x) => <Lamp key={`b${x}`} x={x} z={padB[0] + 0.6} />)}
-      {[44, 58].map((z) => <Lamp key={`s${z}`} x={side.road + 0.6} z={z} />)}
+      {/* 19 Nov: fewer, brighter lamps (it was 12 + the corners: busy, yet dim) */}
+      {[-44, -22, 22, 44].map((x) => <Lamp key={`a${x}`} x={x} z={padA[1] - 0.6} />)}
+      {[-32, 32].map((x) => <Lamp key={`b${x}`} x={x} z={padB[0] + 0.6} />)}
+      {[52].map((z) => <Lamp key={`s${z}`} x={side.road + 0.6} z={z} />)}
       {[-1, 1].map((k) => <CornerLamp key={`t${k}`} x={k * (side.road + 0.8)} z={padB[0] + 0.8} />)}{/* the T's two corners */}
       {/* the block's brick walls, with closed gates at every road end */}
       <Wall a={[-X, BACK]} b={[X, BACK]} />

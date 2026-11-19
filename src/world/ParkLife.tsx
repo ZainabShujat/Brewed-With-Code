@@ -6,7 +6,8 @@ import { STREET as S, PARK, FOUNTAIN as F, POND, BRIDGE, pondLoop, groundY } fro
 import { RBox } from './Soft'
 import { mat, glow } from './mats'
 import { C } from '../data/palette'
-import { nightGlow } from './Lighting'
+import { nightGlow, lampPool } from './Lighting'
+import { useLampSpot } from './LampLights'
 import { Townsperson, seatHip, type Pose } from './folk/Townsperson'
 import { folk, rng, type FolkSpec } from './folk/specs'
 import { registerTalker, murmurTick } from '../systems/murmur'
@@ -190,6 +191,7 @@ function Planter({ x, z }: { x: number; z: number }) {
 }
 // a park lamp: smaller and fancier than the street ones (glows at night with the same shared material)
 function ParkLamp({ x, z }: { x: number; z: number }) {
+  useLampSpot(x, 3.4, z)
   return (
     <group position={[x, 0, z]}>
       <mesh position={[0, 0.2, 0]} material={mat(C.plum)}><cylinderGeometry args={[0.2, 0.26, 0.4, 10]} /></mesh>
@@ -197,7 +199,7 @@ function ParkLamp({ x, z }: { x: number; z: number }) {
       <mesh position={[0, 3.75, 0]} material={glow()}><sphereGeometry args={[0.32, 14, 10]} /></mesh>
       <mesh position={[0, 4.1, 0]} material={mat(C.plum)}><coneGeometry args={[0.36, 0.3, 8]} /></mesh>
       <Billboard position={[0, 3.75, 0]}><mesh material={nightGlow}><planeGeometry args={[2.2, 2.2]} /></mesh></Billboard>
-      <mesh position={[0, 0.06, 0]} rotation={[-Math.PI / 2, 0, 0]} material={nightGlow}><planeGeometry args={[6, 6]} /></mesh>
+      <mesh position={[0, 0.06, 0]} rotation={[-Math.PI / 2, 0, 0]} material={lampPool}><planeGeometry args={[10, 10]} /></mesh>
     </group>
   )
 }
@@ -282,7 +284,7 @@ const BRIDGE_OUT: [number, number][] = [[FX, POND.z + 3.2], [FX, 61.6]]
 const PLAZA_BENCH = [-55, -125, 55, 125, -160]
 const BACK_BENCH: [number, number][] = [[-31.5, 63.0], [-17.8, 63.0]]
 const PLANTERS = [-112, -68, 68, 112].map((d) => pol(d, 8.3))
-const LAMPS = [[...pol(-32, 8.5)], [...pol(-148, 8.5)], [...pol(36, 8.5)], [...pol(146, 8.5)], [-39.6, 50.5], [-9.4, 50.5], [-37, 62.6], [-12, 62.6]] as [number, number][]
+const LAMPS = [[...pol(-32, 8.5)], [...pol(-148, 8.5)], [...pol(36, 8.5)], [...pol(146, 8.5)]] as [number, number][] // 4 round the plaza (8 was busy)
 const TREES: [number, number, number, number, string?][] = [[-39.6, 36.6, 8.5, 1, '#f2a9c9'], [-40.0, 45.0, 9.5, 2], [-10.2, 45.5, 8.8, 3, '#d7b4ef'], [-9.0, 34.8, 7.5, 4], [-41.0, 61.6, 9, 0], [-8.6, 61.8, 8.6, 2, '#f2a9c9']]
 for (const [x, z] of TREES) S.trees.push([x, z, 2.4])
 
