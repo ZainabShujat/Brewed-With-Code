@@ -2,6 +2,7 @@ import { useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { Model } from './Models'
+import { Prop } from './Scenery'
 import { C } from '../data/palette'
 import { glow, mat, glass } from './mats'
 import { Puck, RBox } from './Soft'
@@ -12,7 +13,12 @@ export function Plant({ pos, s = 1, pot = C.purple }: { pos: V3; s?: number; pot
   // leaves sway gently, each plant on its own rhythm
   const ref = useRef<THREE.Group>(null), ph = pos[0] * 1.7 + pos[2]
   useFrame(({ clock }) => { if (ref.current) { const t = clock.elapsedTime; ref.current.rotation.z = Math.sin(t * 0.9 + ph) * 0.025; ref.current.rotation.x = Math.sin(t * 0.7 + ph * 2) * 0.02 } })
-  return <group position={pos}><group ref={ref}><Model name="potted_plant_01" scale={s * 0.85} /></group></group>
+  // (was a 107k-triangle scanned plant; this light stylised bush in a pot looks the part at a sliver of the cost)
+  return <group position={pos}><group ref={ref} scale={s}>
+    <mesh position={[0, 0.2, 0]} material={mat(pot)} castShadow><cylinderGeometry args={[0.24, 0.18, 0.4, 16]} /></mesh>
+    <mesh position={[0, 0.41, 0]} material={mat('#6b4a3a')}><cylinderGeometry args={[0.22, 0.22, 0.03, 16]} /></mesh>
+    <Prop file="nature/Bush_Common.gltf" pos={[0, 0.38, 0]} fit={0.75} />
+  </group></group>
 }
 
 // Vine trailing down from a shelf: a chain of little leaf blobs

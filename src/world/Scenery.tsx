@@ -5,6 +5,7 @@ import { STREET as S } from './streetLayout'
 import { rng } from './folk/specs'
 import { quality } from '../ui/Menu'
 import { grassMat, Instanced, type Spot } from './Ground'
+import { TownshipsThemed } from './Township'
 
 // The world beyond the street: a forest of stylised trees behind the café's back wall, and the two townships
 // (marshmallow homes to the west, notebook homes to the east) beyond the side walls. CC0 models: Quaternius
@@ -39,13 +40,13 @@ export function NiceTree({ x, z, h = 8, kind = 0, tint }: { x: number; z: number
 export function Forest() {
   const groups = useMemo(() => {
     const r = rng(9091), by = new Map<string, Spot[]>(), add = (f: string, sp: Spot) => { if (!by.has(f)) by.set(f, []); by.get(f)!.push(sp) }
-    const n = quality.high ? 320 : 150
+    const n = quality.high ? 170 : 85
     for (let i = 0; i < n; i++) {
       const depth = Math.pow(r(), 0.8), x = -105 + r() * 210, z = S.BACK - 2.5 - depth * 40
-      const pine = r() < 0.45, file = pine ? PINES[Math.floor(r() * 5)] : TREES[Math.floor(r() * 5)]
+      const pine = r() < 0.6, file = pine ? PINES[Math.floor(r() * 5)] : TREES[Math.floor(r() * 5)]
       add(file, { x, z, h: (pine ? 9 : 7.5) + depth * 8 + r() * 3.5, rot: r() * 6.28 })
     }
-    for (let i = 0; i < (quality.high ? 90 : 40); i++) add(BUSHES[i % 2], { x: -100 + r() * 200, z: S.BACK - 1.5 - r() * 10, h: 1.3 + r() * 1.2, rot: r() * 6.28 })
+    for (let i = 0; i < (quality.high ? 110 : 50); i++) add(BUSHES[i % 2], { x: -100 + r() * 200, z: S.BACK - 1.5 - r() * 14, h: 1.6 + r() * 1.6, rot: r() * 6.28 }) // a dense understorey, cheap
     return [...by.entries()]
   }, [])
   return <group>{groups.map(([file, items]) => <Instanced key={file} file={file} items={items} />)}</group>
@@ -69,13 +70,13 @@ export function Townships() {
     }
     return out
   }, [])
-  const yards = useMemo(() => { const r = rng(77); return Array.from({ length: quality.high ? 36 : 16 }, () => { const side = r() < 0.5 ? -1 : 1; return { x: side * (S.X + 26 + r() * 30), z: -40 + r() * 98, h: 5 + r() * 4, k: Math.floor(r() * 5) } }) }, [])
+  const yards = useMemo(() => { const r = rng(77); return Array.from({ length: quality.high ? 36 : 16 }, () => { const side = r() < 0.5 ? -1 : 1, ave = [24, 52, 80][Math.floor(r() * 3)]; return { x: side * (S.X + ave + (r() < 0.5 ? -4.2 : 4.2)), z: -40 + r() * 98, h: 5 + r() * 4, k: Math.floor(r() * 5) } }) }, [])
   return (
     <group>
       {/* ground for the townships and the forest (the street block's own grass stops at the walls) */}
       <mesh position={[0, -0.02, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow material={TOWN_GRASS}><planeGeometry args={[320, 260]} /></mesh>
-      {[-1, 1].map((side) => <mesh key={side} position={[side * (S.X + 37.5), 0.01, 9]} rotation={[-Math.PI / 2, 0, 0]}><planeGeometry args={[4.5, 104]} /><meshStandardMaterial color="#d9c7b0" /></mesh>)}
-      {homes.map((h, i) => <Prop key={i} file={h.file} pos={[h.x, 0, h.z]} rot={h.rot} fit={h.h} tint={h.tint} tintWhat={/./} />)}
+            {/* (the Kenney houses were replaced by the themed townships: see Township.tsx) */}
+      <TownshipsThemed />
       {yards.map((t, i) => <NiceTree key={'y' + i} x={t.x} z={t.z} h={t.h} kind={t.k} />)}
     </group>
   )

@@ -48,8 +48,7 @@ function TownArch({ x, side }: { x: number; side: -1 | 1 }) {
         <mesh position={[0, 5.0, 0]} material={mat(col)}><sphereGeometry args={[0.55, 16, 12]} /></mesh>
       </group>)}
       <RBox size={[9.2, 0.8, 0.5]} pos={[0, 4.9, 0]} color={col} r={0.15} />
-      <Html transform position={[0, 4.9, 0.3]} distanceFactor={9} zIndexRange={[5, 0]} style={{ pointerEvents: 'none' }}><div className="townsign">{name}</div></Html>
-      <Html transform position={[0, 4.9, -0.3]} rotation={[0, Math.PI, 0]} distanceFactor={9} zIndexRange={[5, 0]} style={{ pointerEvents: 'none' }}><div className="townsign">market ☕</div></Html>
+      <Html position={[0, 5.9, 0]} center distanceFactor={22} zIndexRange={[5, 0]} style={{ pointerEvents: 'none' }}><div className="townsign">{name}</div></Html> {/* one label that faces you */}
     </group>
   )
 }
