@@ -15,7 +15,7 @@ import { quality } from '../ui/Menu'
 type V3 = [number, number, number]
 type Part = { k: 'box' | 'cyl' | 'sph' | 'cone' | 'hex' | 'win'; p: V3; s: V3; r?: V3; c: string }
 const ROAD = '#6f6273', LINE = '#fff6ec'
-export const AVE = [24, 52, 80] // avenue centres, metres outside the market wall
+export const AVE = [34, 64, 96] // a green strip between the outer road and the first homes, then wider blocks // avenue centres, metres outside the market wall
 export const CROSS = [-42, -10, (S.padA[0] + S.padB[1]) / 2, 54] // cross streets (z)
 const ROAD_W = 6
 
@@ -113,7 +113,7 @@ function smoreTower(kit: Kit, x: number, z: number, h: number, r: () => number) 
 // ── layout: blocks between the avenues and cross streets, homes near the market, towers at the back ──
 function buildTown(side: -1 | 1) {
   const kit = new Kit(), r = rng(side < 0 ? 31337 : 4242)
-  const cols: [number, number][] = [[AVE[0] + 4, AVE[1] - 4], [AVE[1] + 4, AVE[2] - 4], [AVE[2] + 4, AVE[2] + 18]]
+  const cols: [number, number][] = [[AVE[0] + 4, AVE[1] - 4], [AVE[1] + 4, AVE[2] - 4], [AVE[2] + 4, AVE[2] + 20]]
   const rows: [number, number][] = [[-62, CROSS[0] - 4], [CROSS[0] + 4, CROSS[1] - 4], [CROSS[1] + 4, CROSS[2] - 5], [CROSS[2] + 5, CROSS[3] - 4], [CROSS[3] + 4, 78]]
   const dense = quality.high ? 1 : 0.6
   cols.forEach(([a0, a1], ci) => rows.forEach(([z0, z1]) => {
@@ -123,12 +123,12 @@ function buildTown(side: -1 | 1) {
       const x = side * a, roll = r()
       if (side > 0) {
         if (ci === 0) bookHouse(kit, x, z, r() < 0.5 ? Math.PI / 2 * -side : (r() < 0.5 ? 0 : Math.PI), r)
-        else if (ci === 1) roll < 0.55 ? spiralTower(kit, x, z, 14 + r() * 14, r) : bookStack(kit, x, z, 12 + r() * 14, r)
-        else roll < 0.22 ? pencil(kit, x, z, 40 + r() * 25, r) : bookStack(kit, x, z, 26 + r() * 34, r)
+        else if (ci === 1) roll < 0.55 ? spiralTower(kit, x, z, 12 + r() * 9, r) : bookStack(kit, x, z, 10 + r() * 10, r)
+        else roll < 0.2 ? pencil(kit, x, z, 30 + r() * 14, r) : bookStack(kit, x, z, 20 + r() * 18, r)
       } else {
         if (ci === 0) mallowHouse(kit, x, z, r() * 6.28, r)
-        else if (ci === 1) mallowTower(kit, x, z, 12 + r() * 14, r)
-        else roll < 0.35 ? smoreTower(kit, x, z, 30 + r() * 30, r) : mallowTower(kit, x, z, 26 + r() * 32, r)
+        else if (ci === 1) mallowTower(kit, x, z, 10 + r() * 10, r)
+        else roll < 0.35 ? smoreTower(kit, x, z, 22 + r() * 16, r) : mallowTower(kit, x, z, 20 + r() * 18, r)
       }
     }
   }))
@@ -160,7 +160,7 @@ function Streets({ side }: { side: -1 | 1 }) {
   const roads = useMemo(() => {
     const out: { p: V3; s: [number, number] }[] = []
     for (const a of AVE) out.push({ p: [side * (S.X + a), 0.035, 8], s: [ROAD_W, 150] })
-    for (const z of CROSS) out.push({ p: [side * (S.X + (AVE[0] + AVE[2] + 18) / 2), 0.036, z], s: [AVE[2] + 18 - AVE[0], ROAD_W] })
+    for (const z of CROSS) out.push({ p: [side * (S.X + (AVE[0] + AVE[2] + 20) / 2), 0.036, z], s: [AVE[2] + 20 - AVE[0], ROAD_W] })
     return out
   }, [side])
   return (

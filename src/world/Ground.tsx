@@ -38,7 +38,7 @@ function onGrass(x: number, z: number) {
   if (z > S.padB[1] && Math.abs(x) < S.side.pad + 1 && z < S.FRONT) return false  // the side street
   if (Math.hypot(x, z) < 17.5) return false                                         // the café (pot + garden lanterns)
   if (Math.abs(Math.abs(x) - (S.X + 14)) < 6.5) return false                       // the outer roads
-  if (Math.abs(x) > S.X + 20) return false                                          // the townships (streets + buildings)
+  if (Math.abs(x) > S.X + 30) return false                                          // the townships (streets + buildings)
   if (Math.abs(x) > S.X && Math.abs(z - (S.padA[0] + S.padB[1]) / 2) < 8 && Math.abs(x) < S.X + 22) return false // the road out + the arch
   if (Math.hypot(x, z + 32) < 9 || (x > 26 && x < 46 && z < -26 && z > -42)) return false // the gazebo lawn, the allotments
   if (x > PARK.x0 - 0.5 && x < PARK.x1 + 0.5 && z > PARK.z0 - 0.5 && z < PARK.z1 + 0.5) return false
