@@ -1,3 +1,4 @@
+import { NiceTree } from './Scenery'
 import { useMemo, useState } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { useGame } from '../systems/store'
@@ -321,13 +322,7 @@ function Park() {
       <mesh position={[(x0 + x1) / 2, 0.06, (z0 + z1) / 2]} rotation={[-Math.PI / 2, 0, 0]} material={mat('#86b86a')} receiveShadow><planeGeometry args={[w, d]} /></mesh>
       {Array.from({ length: Math.round(w / 1.2) + 1 }, (_, i) => x0 + i * (w / Math.round(w / 1.2))).map((x) => <mesh key={x} position={[x, 0.55, z0 + 0.15]} material={mat(C.plum)}><cylinderGeometry args={[0.03, 0.03, 1.1, 6]} /></mesh>)}
       {[0.3, 1.0].map((y) => <mesh key={y} position={[(x0 + x1) / 2, y, z0 + 0.15]} material={mat(C.plum)}><boxGeometry args={[w, 0.06, 0.06]} /></mesh>)}
-      {[[x0 + 3.2, z0 + 3.4, '#e98fa6'], [x0 + 3.4, z0 + 11.2, C.leaf], [x0 + 25, z0 + 11, '#c9a6e6'], [x0 + 24.6, z0 + 3.2, C.leaf]].map(([x, z, c]) => (
-        <group key={String(x)} position={[x as number, 0, z as number]}>
-          <mesh position={[0, 1.5, 0]} material={mat(C.woodDark)} castShadow><cylinderGeometry args={[0.22, 0.32, 3, 10]} /></mesh>
-          <mesh position={[0, 4.0, 0]} material={mat(c as string)} castShadow><sphereGeometry args={[2.0, 18, 14]} /></mesh>
-          <mesh position={[0.9, 4.7, 0.3]} material={mat(c as string)}><sphereGeometry args={[1.3, 14, 10]} /></mesh>
-        </group>
-      ))}
+      {[[x0 + 3.2, z0 + 3.4, '#f2a9c9'], [x0 + 3.4, z0 + 11.2, ''], [x0 + 25, z0 + 11, '#d7b4ef'], [x0 + 24.6, z0 + 3.2, '']].map(([x, z, c], k) => <NiceTree key={k} x={x as number} z={z as number} h={8.5 + k} kind={k + 1} tint={(c as string) || undefined} />)}
       {BENCHES.map(([bx, bz]) => (
         <group key={bx} position={[bx, 0.16, bz]} rotation={[0, Math.PI, 0]}>
           <RBox size={[2.2, 0.12, 0.6]} pos={[0, 0.5, 0]} color={C.wood} r={0.04} />

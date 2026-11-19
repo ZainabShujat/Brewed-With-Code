@@ -1,3 +1,5 @@
+import { grassMat } from './Ground'
+import { NiceTree } from './Scenery'
 import * as THREE from 'three'
 import { useMemo, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
@@ -158,12 +160,8 @@ function Awning() {
 
 function Tree({ x, z, s = 1, c = C.leaf }: { x: number; z: number; s?: number; c?: string }) {
   return (
-    <group position={[x, 0, z]} scale={s}>
-      <mesh position={[0, 0.8, 0]} material={mat(C.woodDark)} castShadow><cylinderGeometry args={[0.22, 0.32, 1.6, 12]} /></mesh>
-      <mesh position={[0, 2.3, 0]} material={mat(c)} castShadow><sphereGeometry args={[1.25, 20, 14]} /></mesh>
-      <mesh position={[0.6, 2.9, 0.3]} material={mat(c)} castShadow><sphereGeometry args={[0.8, 16, 12]} /></mesh>
-      <mesh position={[-0.6, 2.7, -0.2]} material={mat(c)} castShadow><sphereGeometry args={[0.85, 16, 12]} /></mesh>
-    </group>
+    // a stylised tree (Quaternius, CC0) instead of the old ball-on-a-stick; the pink / lilac ones keep their blossom
+    <NiceTree x={x} z={z} h={3.4 * s} kind={Math.abs(Math.round(x * 3 + z))} tint={c === C.leaf || c === C.leafDark ? undefined : c} />
   )
 }
 
@@ -182,10 +180,11 @@ function Flowers() {
   )
 }
 
+const GRASS = grassMat([150, 140])
 export function Exterior({ showPot, fadeIn = false }: { showPot: boolean; fadeIn?: boolean }) {
   return (
     <group>
-      <mesh position={[0, 0, 7]} rotation={[-Math.PI / 2, 0, 0]} material={mat(C.grass)} receiveShadow><planeGeometry args={[150, 140]} /></mesh>
+      <mesh position={[0, 0, 7]} rotation={[-Math.PI / 2, 0, 0]} material={GRASS} receiveShadow><planeGeometry args={[150, 140]} /></mesh>
       {/* everything outside scales so the pot contains the interior */}
       <group scale={OUT_SCALE}>
       {showPot && (fadeIn ? <FadeIn><CoffeePot /></FadeIn> : <CoffeePot />)}
