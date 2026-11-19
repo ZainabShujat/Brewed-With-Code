@@ -5,6 +5,7 @@ import { FontLoader } from 'three/examples/jsm/loaders/FontLoader.js'
 import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js'
 import fontJson from 'three/examples/fonts/helvetiker_bold.typeface.json'
 import { mat, glow } from './mats'
+import { nightGlow } from './Lighting'
 import { useGame } from '../systems/store'
 import { STREET as S } from './streetLayout'
 import { Instanced } from './Ground'
@@ -21,6 +22,10 @@ import { Instanced } from './Ground'
 // 18.24 at 7.5, 18.28 at 8.5; at y 7.5 and x 2.5 it is 18.07, i.e. a horizontal circle of radius ≈ 18.25.
 const Y0 = 8.1   // the sign's centre in modelling space (bend() moves it up to YC on the wall)
 const PLUM = mat('#3d1846'), PURPLE = mat('#5e2a75'), PINK = mat('#f07fa8'), CREAM = mat('#fff1dc', { rough: 0.8 }), GOLD = new THREE.MeshStandardMaterial({ color: '#e8b54a', metalness: 0.55, roughness: 0.35 })
+// night: the board lights itself (a backlit cream panel, gold beads like bulbs, a soft pink rim); dark plum letters stay dark
+const PANEL = new THREE.MeshStandardMaterial({ color: '#fff1dc', roughness: 0.8, emissive: '#ffe2b0', emissiveIntensity: 0 })
+const RIM = new THREE.MeshStandardMaterial({ color: '#f07fa8', roughness: 0.65, emissive: '#ff8fb8', emissiveIntensity: 0 })
+const BEAD = new THREE.MeshStandardMaterial({ color: '#e8b54a', metalness: 0.3, roughness: 0.35, emissive: '#ffd27a', emissiveIntensity: 0 })
 const LEAF = mat('#7cbf7a'), CUP = mat('#fffaf2', { rough: 0.5 })
 
 // measured surface (layout units): height → distance from the pot's axis
@@ -79,9 +84,9 @@ function Plaque() {
   return (
     <group>
       <mesh geometry={g.frame} material={PURPLE} castShadow />
-      <mesh geometry={g.border} material={PINK} />
-      <mesh geometry={g.panel} material={CREAM} />
-      {g.beads.map((b, i) => <mesh key={i} geometry={b} material={GOLD} />)}
+      <mesh geometry={g.border} material={RIM} />
+      <mesh geometry={g.panel} material={PANEL} />
+      {g.beads.map((b, i) => <mesh key={i} geometry={b} material={BEAD} />)}
     </group>
   )
 }
@@ -203,11 +208,15 @@ function DoorPlanters() {
   )
 }
 
+function NightGlow() {
+  useFrame(() => { const n = nightGlow.opacity / 0.85; PANEL.emissiveIntensity = n * 0.75; RIM.emissiveIntensity = n * 0.35; BEAD.emissiveIntensity = n * 1.6 })
+  return null
+}
 export function Signboard() {
   // sign space has its origin on the wall (x 0, the pot's axis R behind it): move it out to the pot's front
   return (
     <group>
-      <Plaque /><Lettering /><CupEmblem /><Garnish /><Medallion /><SignLamps /><Posts /><DoorPlanters />
+      <Plaque /><Lettering /><CupEmblem /><Garnish /><Medallion /><SignLamps /><Posts /><DoorPlanters /><NightGlow />
     </group>
   )
 }
