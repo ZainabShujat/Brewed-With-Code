@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { useFrame } from '@react-three/fiber'
+import { useFrame, type ThreeEvent } from '@react-three/fiber'
 import { Html } from '@react-three/drei'
 import * as THREE from 'three'
 import { C } from '../data/palette'
@@ -104,9 +104,9 @@ export function CakeMachine({ children }: { children: React.ReactNode }) {
 
       {/* ── four dispensers (each its own look) ── */}
       <Head id="tin" name="tin" x={ST.tin} top={H - 0.25} heads={heads} opts={[
-        { label: "round", color: "#cfd3dc", icon: "⚪", fn: () => useCake.getState().setTin("round") },
-        { label: "square", color: "#cfd3dc", icon: "⬜", fn: () => useCake.getState().setTin("square") },
-        { label: "heart", color: "#cfd3dc", icon: "🤍", fn: () => useCake.getState().setTin("heart") }]}>
+        { label: "round", color: "#8ec9e8", shape: 'round', fn: () => useCake.getState().setTin("round") },
+        { label: "square", color: "#f2c66a", shape: 'square', fn: () => useCake.getState().setTin("square") },
+        { label: "heart", color: "#ff8fb5", shape: 'heart', fn: () => useCake.getState().setTin("heart") }]}>
         {/* tin press: a steel block that stamps the tin onto the plate */}
         <RBox size={[0.36, 0.3, 0.3]} pos={[0, 0.25, 0]} color={C.steel} r={0.05} />
         <RBox size={[0.42, 0.05, 0.36]} pos={[0, 0.06, 0]} color={C.plum} r={0.02} />
@@ -149,7 +149,7 @@ export function CakeMachine({ children }: { children: React.ReactNode }) {
       </Head>
 
       {/* ── the order screen: shows the cake to make (then hides it: play from memory) ── */}
-      <OrderScreen x={ST.start + 0.05} y={H - 0.55} />
+      <OrderScreen x={ST.start - 0.35} y={H - 0.55} /> {/* left of the tin dispenser, so it never hides a tin */}
 
       {/* ── the cake carrier riding the belt ── */}
       <group ref={carrier} position={[ST.start, BELT_Y, 0]}>
@@ -161,19 +161,26 @@ export function CakeMachine({ children }: { children: React.ReactNode }) {
   )
 }
 
-type Opt = { color: string; label: string; fn: () => void; icon?: string }
+type Opt = { color: string; label: string; fn: () => void; icon?: string; shape?: 'round' | 'square' | 'heart' }
 function Head({ id, x, top, heads, children, opts, name }: { id: Station; x: number; top: number; heads: React.MutableRefObject<Record<string, THREE.Group | null>>; children: React.ReactNode; opts: Opt[]; name: string }) {
   return (
     <group position={[x, top - 0.75, 0]}>
       {/* the colour bulbs: click one to drop it onto the cake below */}
       <group position={[0, 0.5, 0.3]}>
         {opts.map((o, i) => {
-          const bx = (i - (opts.length - 1) / 2) * 0.135
+          const bx = (i - (opts.length - 1) / 2) * 0.155
+          const pick = (e: ThreeEvent<MouseEvent>) => { e.stopPropagation(); machine.drop(id, o.fn) }
           return (
             <group key={o.label} position={[bx, 0, 0]}>
-              <mesh onClick={(e) => { e.stopPropagation(); machine.drop(id, o.fn) }}
-                onPointerOver={(e) => { e.stopPropagation(); document.body.style.cursor = 'pointer' }} onPointerOut={() => { document.body.style.cursor = '' }}
-                material={mat(o.color, { rough: 0.3 })}><sphereGeometry args={[0.058, 16, 12]} /></mesh>
+              {/* a generous invisible tap area (fingers!), then the bulb or the tin's own shape */}
+              <mesh onClick={pick} visible={false}
+                onPointerOver={(e) => { e.stopPropagation(); document.body.style.cursor = 'pointer' }} onPointerOut={() => { document.body.style.cursor = '' }}>
+                <sphereGeometry args={[0.085, 8, 6]} /></mesh>
+              {o.shape === 'round' ? <mesh rotation={[Math.PI / 2, 0, 0]} material={mat(o.color, { rough: 0.3 })}><cylinderGeometry args={[0.062, 0.062, 0.035, 24]} /></mesh>
+                : o.shape === 'square' ? <mesh material={mat(o.color, { rough: 0.3 })}><boxGeometry args={[0.11, 0.11, 0.035]} /></mesh>
+                : o.shape === 'heart' ? <group>{[-1, 1].map((sd) => <mesh key={sd} position={[sd * 0.028, 0.02, 0]} material={mat(o.color, { rough: 0.3 })}><sphereGeometry args={[0.04, 14, 10]} /></mesh>)}
+                    <mesh position={[0, -0.022, 0]} rotation={[0, 0, Math.PI / 4]} material={mat(o.color, { rough: 0.3 })}><boxGeometry args={[0.068, 0.068, 0.05]} /></mesh></group>
+                : <mesh material={mat(o.color, { rough: 0.3 })}><sphereGeometry args={[0.066, 16, 12]} /></mesh>}
               <mesh position={[0, 0, -0.05]} rotation={[Math.PI / 2, 0, 0]} material={mat(C.steel)}><cylinderGeometry args={[0.03, 0.03, 0.08, 8]} /></mesh>
               {o.icon && <Html position={[0, 0, 0.08]} center zIndexRange={[4, 0]} style={{ pointerEvents: 'none', fontSize: 13 }}><span className="headtag icon">{o.icon}</span></Html>}
             </group>

@@ -1,3 +1,4 @@
+import { TOUCH } from '../systems/CameraRig'
 import { useEffect, useState } from 'react'
 import { useCake } from '../systems/cake'
 import { useGame } from '../systems/store'
@@ -38,7 +39,7 @@ export function CakeHud() {
       </div>
       <div className="beltnav">
         <button className="navbtn" onClick={() => machine.step(-1)}>◀</button>
-        <div className="navstop"><small>cake is at</small>{STOPS[machine.idx]}<small>click a colour on the dispenser above it</small></div>
+        <div className="navstop"><small>cake is at</small>{STOPS[machine.idx]}<small>{TOUCH ? 'tap' : 'click'} a colour or shape on the dispenser above it</small></div>
         <button className="navbtn" onClick={() => machine.step(1)}>▶</button>
         {k.cake.layers.length > 0 && <button className="redo" onClick={() => k.reset()} title="start over">↺</button>}
       </div>
