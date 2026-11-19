@@ -843,3 +843,33 @@ html:not(.phone) .fullscreenbtn { left: auto; right: 14px; top: auto; bottom: 14
 .phone .stepbar { display: block; height: 5px; border-radius: 3px; background: rgba(255,246,238,.18); margin: 0 0 5px; overflow: hidden; }
 .phone .stepbar b { display: block; height: 100%; background: #f2c66a; border-radius: 3px; transition: width .3s; }
 .phone .brew-next .steps { display: none; }
+
+/* title screen: the café's 3D signboard is the logo; the tagline + prompt sit low, on a soft pill */
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+/* the title badge, styled like the café's signboard */
+.logo-board { position: relative; display: inline-block; margin: 0 0 6px; padding: 14px; border-radius: 40px; background: #5e2a75; text-shadow: none;
+  box-shadow: 0 8px 0 #3d1846, 0 18px 40px rgba(0,0,0,.35); mask: none; }
+.logo-board::before { content: ''; position: absolute; inset: -10px; border-radius: 48px; background: radial-gradient(circle at 12px 12px, #5e2a75 11px, transparent 12px) 0 0 / 34px 24px; z-index: -1; } /* scallops round the edge */
+.logo-board .lb-panel { display: block; padding: 16px 44px 20px; border: 8px solid #f07fa8; border-radius: 28px; background: #fff1dc; color: #3d1846; font: 900 64px/1 'Trebuchet MS', 'Segoe UI', sans-serif; letter-spacing: .5px; white-space: nowrap;
+  box-shadow: inset 0 0 0 3px #e8b54a; }
+.logo-board .lb-cup { position: absolute; left: 50%; top: -40px; transform: translateX(-50%); font-size: 40px; background: #5e2a75; border-radius: 30px 30px 0 0; padding: 4px 18px 0; }
+.logo-board .lb-code { position: absolute; left: 50%; bottom: -30px; transform: translateX(-50%); width: 64px; height: 64px; line-height: 58px; border-radius: 50%; background: #5e2a75; border: 4px solid #e8b54a; color: #fff1dc; font: 900 24px 'Trebuchet MS', sans-serif; }
+.logo-board .lb-flower { position: absolute; top: 2px; font-size: 30px; color: #ffd3e2; text-shadow: 0 0 0 #fff; }
+.logo-board .lb-flower.l { left: 14px; } .logo-board .lb-flower.r { right: 14px; }
+.title-screen .tagline { margin-top: 44px; }
+.phone .logo-board { padding: 8px; border-radius: 26px; }
+.phone .logo-board .lb-panel { font-size: 34px; padding: 8px 22px 10px; border-width: 5px; border-radius: 18px; }
+.phone .logo-board .lb-cup { font-size: 24px; top: -26px; padding: 2px 12px 0; }
+.phone .logo-board .lb-code { width: 42px; height: 42px; line-height: 38px; font-size: 16px; bottom: -20px; }
+.phone .logo-board .lb-flower { font-size: 18px; }
+.phone .title-screen .tagline { margin-top: 28px; }
+/* title layout: the badge up in the sky, the café (and its own board) clear in the middle, the prompt at the bottom */
+.title-screen .title-wrap { position: fixed; inset: 0; pointer-events: none; }
+.title-screen .logo-board { position: absolute; left: 50%; top: 7vh; transform: translateX(-50%) scale(.82); transform-origin: top center; }
+.title-screen .tagline, .title-screen .press { position: absolute; left: 50%; transform: translateX(-50%); white-space: nowrap; margin: 0; }
+.title-screen .tagline { bottom: 13vh; background: rgba(42,24,58,.6); padding: 6px 18px 8px; border-radius: 14px; }
+.title-screen .press { bottom: 7vh; }
+.phone .title-screen .logo-board { top: 3vh; transform: translateX(-50%) scale(.75); }
+.phone .title-screen .tagline { bottom: 15vh; } .phone .title-screen .press { bottom: 6vh; }
+/* on the title / menus the world is scenery: no floating chat bubbles or name tags over it */
+.menuidle .chat, .menuidle .obubble, .menuidle .nametag, .menuidle .qtag, .menuidle .headtag { visibility: hidden !important; }

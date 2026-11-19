@@ -6,7 +6,7 @@ import { PriorityQueue } from '../systems/queue'
 import { anim } from '../systems/anim'
 import { mat } from './mats'
 import { useShop } from '../systems/shop'
-import { TABLES, TABLE_SCALE } from './layout'
+import { TABLES, TABLE_SCALE, WORLD, RR } from './layout'
 import { STREET as S } from './streetLayout'
 import { useDay, DAY_LEN } from '../systems/day'
 import { useTutorial } from '../systems/tutorial'
@@ -182,6 +182,12 @@ function Body({ c }: { c: Cust }) {
   useEffect(() => registerTalker(`cust${c.id}`, { get x() { return c.pos.x }, get z() { return c.pos.z }, get kind() { return c.spec.kind === 'mallow' ? 'mallow' : 'paper' }, chatty: () => c.phase === 'sit' || c.phase === 'line' } as never), [c])
   const [, setVer] = useState(c.ver)
   useFrame(() => { if (c.ver !== verSeen.current) { verSeen.current = c.ver; setVer(c.ver) } }) // a new townsperson took this slot
+  // bubbles are HTML drawn over everything: from OUTSIDE the café (street, Outside view, the title screen) the chatter
+  // inside floated through the walls. Show them only when the camera is in the café (or the Dollhouse cut-away).
+  useFrame(({ camera }) => { const el = bubble.current; if (!el) return // (the bubble itself: drei resets its wrapper's display every frame)
+    const mode = useGame.getState().mode, inside = Math.hypot(camera.position.x, camera.position.z) / WORLD < RR + 0.5
+    const show = !(window as unknown as { __menuIdle?: boolean }).__menuIdle && (mode === 'dollhouse' || mode === 'pov' || mode === 'cake' || inside)
+    const v = show ? '' : 'hidden'; if (el.style.visibility !== v) el.style.visibility = v })
   const pose = (): Pose => c.phase === 'sit' ? 'sit' : poseWalk.current ? 'walk' : 'wait'
   return (
     <group ref={ref} visible={false}>

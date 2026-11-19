@@ -74,7 +74,8 @@ export function Menu({ screen, setScreen }: { screen: Screen; setScreen: (s: Scr
     <div className={`gmenu ${screen === 'title' ? 'title-screen' : ''}`} onClick={() => { if (screen === 'title') leaveTitle() }}>
       {screen === 'title' && (
         <div className="title-wrap">
-          <div className="logo">Brewed<br />With Code</div>
+          {/* the title: a badge in the café signboard's style (scalloped purple frame, pink border, cream panel, cup, </> medallion) */}
+          <h1 className="logo-board"><span className="lb-cup">☕</span><span className="lb-flower l">✿</span><span className="lb-flower r">✿</span><span className="lb-panel">Brewed With Code</span><span className="lb-code">&lt;/&gt;</span></h1>
           <div className="tagline">a cosy café you run yourself</div>
           <div className="press">tap or press any key</div>
         </div>

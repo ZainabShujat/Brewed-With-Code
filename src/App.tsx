@@ -126,7 +126,7 @@ export default function App() {
   const [shownFps, setShownFps] = useState(0)
   const [screen, setScreen] = useState<Screen>(SNAP ? 'playing' : 'title')
   const playing = SNAP || screen === 'playing'
-  useEffect(() => { (window as any).__menuIdle = !playing }, [playing]) // menus draw at a calm 20 fps (see startLoop)
+  useEffect(() => { (window as any).__menuIdle = !playing; document.documentElement.classList.toggle('menuidle', !playing) }, [playing]) // menus: a calm 20 fps (see startLoop) and no floating tags
   useEffect(() => {
     const id = setInterval(() => setShownFps(fps), 500)
     const onKey = (e: KeyboardEvent) => { if (!SNAP) return; const m = MODES.find((m) => m.key === e.key); if (m) setMode(m.id) }
