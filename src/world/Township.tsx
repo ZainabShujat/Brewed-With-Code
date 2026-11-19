@@ -123,7 +123,7 @@ function buildTown(side: -1 | 1) {
     const lx = (a1 - a0) / nx, lz = (z1 - z0) / nz, half = Math.min(lx, lz) / 2 - 1.2 // keep a pavement margin
     for (let ix = 0; ix < nx; ix++) for (let iz = 0; iz < nz; iz++) {
       if (r() > dense) continue
-      const a = a0 + lx * (ix + 0.5), z = z0 + lz * (iz + 0.5), x = side * a, roll = r()
+      const a = a0 + lx * (ix + 0.5), z = z0 + lz * (iz + 0.5), x = side * (S.X + a), roll = r() // avenue offsets are measured from the market wall
       const fitsTower = half >= 6.6, fitsMid = half >= 5.2 // (book stacks / s'mores ~6.5 m half-width; spiral + marshmallow towers ~5)
       if (side > 0) {
         if (ci === 0 || !fitsMid) bookHouse(kit, x, z, r() < 0.5 ? Math.PI / 2 * -side : (r() < 0.5 ? 0 : Math.PI), r)
