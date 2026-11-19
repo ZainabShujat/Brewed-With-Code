@@ -6,7 +6,9 @@ export const keys = new Set<string>()
 import { folkSpots } from './murmur'
 // townsfolk are solid: you can't step INTO one (moving away from one you're touching is always fine)
 const FOLK_R = 0.75
-function bumpsFolk(x: number, z: number, fx: number, fz: number) { for (const f of folkSpots()) { const d = Math.hypot(f.x - x, f.z - z); if (d < FOLK_R && d < Math.hypot(f.x - fx, f.z - fz)) return true } return false }
+// …except in the café's doorway, where a customer waiting in the door would otherwise trap you inside (or out)
+const inDoorway = (x: number, z: number) => Math.abs(x) < 2 && z > 10.5 && z < 20.5
+function bumpsFolk(x: number, z: number, fx: number, fz: number) { if (inDoorway(x, z)) return false; for (const f of folkSpots()) { const d = Math.hypot(f.x - x, f.z - z); if (d < FOLK_R && d < Math.hypot(f.x - fx, f.z - fz)) return true } return false }
 if (typeof window !== 'undefined') {
   window.addEventListener('keydown', (e) => keys.add(e.key.toLowerCase()))
   window.addEventListener('keyup', (e) => keys.delete(e.key.toLowerCase()))
@@ -24,7 +26,7 @@ const R = 0.35 // barista radius
 // wings and tree trunks, inside the brick walls.
 export function blocked(x: number, z: number) {
   const r = Math.hypot(x, z)
-  if (Math.abs(x) < 1.15 - R && z > RR - 1.5 && z < S.passage[1] + 1.2) return false               // the doorway passage
+  if (Math.abs(x) < 1.15 - R && z > RR - 1.5 && z < S.potClear + R + 0.3) return false           // the doorway passage (to past the pot's bulge: a seam at ~18.9 used to trap you)
   if (r < RR - 0.5 - R) {                                                                         // inside the café
     if (z < -H + 0.3 + R) return true
     return BLOCKERS.some(([x0, z0, x1, z1]) => x > x0 - R && x < x1 + R && z > z0 - R && z < z1 + R)

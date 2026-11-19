@@ -7,6 +7,7 @@ import { anim } from '../systems/anim'
 import { mat } from './mats'
 import { useShop } from '../systems/shop'
 import { TABLES, TABLE_SCALE } from './layout'
+import { STREET as S } from './streetLayout'
 import { useDay, DAY_LEN } from '../systems/day'
 import { useTutorial } from '../systems/tutorial'
 import { useGame } from '../systems/store'
@@ -224,16 +225,37 @@ function DirtyCups() {
       <mesh position={[0.085, 0.08, 0]} rotation={[0, 0, Math.PI / 2]} material={mat('#fffaf2')}><torusGeometry args={[0.035, 0.01, 6, 10]} /></mesh>
     </group>))}</group>
 }
-// the hanging sign just inside the door: CLOSED until you flip it in the morning, and again at closing time
+// the OPEN / CLOSED sign hangs ON the door (a real board, not a label floating over the wall, 19 Nov): one facing
+// the street on the outer doors, one facing the room just inside, so you can read it from either side
+const SIGN_TEX = new Map<string, THREE.CanvasTexture>()
+function signTex(label: string, open: boolean) {
+  const k = label + open; let t = SIGN_TEX.get(k)
+  if (!t) { const c = document.createElement('canvas'); c.width = 512; c.height = 200; const x = c.getContext('2d')!
+    x.fillStyle = open ? '#7fd6a0' : '#ff9db5'; x.beginPath(); x.roundRect(6, 6, 500, 188, 40); x.fill()
+    x.lineWidth = 12; x.strokeStyle = '#fff6ee'; x.beginPath(); x.roundRect(22, 22, 468, 156, 30); x.stroke()
+    x.fillStyle = '#2a1830'; x.font = '900 104px Trebuchet MS, sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(label, 256, 106)
+    t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; SIGN_TEX.set(k, t) }
+  return t
+}
+function HangingSign({ pos, rotY, label, open, k = 1 }: { pos: [number, number, number]; rotY: number; label: string; open: boolean; k?: number }) {
+  const m = useMemo(() => new THREE.MeshStandardMaterial({ map: signTex(label, open), roughness: 0.6 }), [label, open])
+  return (
+    <group position={pos} rotation={[0, rotY, 0]} scale={k}>
+      {[-0.42, 0.42].map((x) => <mesh key={x} position={[x * 0.6, 0.42, -0.01]} rotation={[0, 0, x > 0 ? -0.55 : 0.55]} material={mat('#3b2a1e')}><cylinderGeometry args={[0.012, 0.012, 0.6, 4]} /></mesh>)}
+      <mesh position={[0, 0.7, -0.02]} material={mat('#f2c66a')}><sphereGeometry args={[0.05, 10, 8]} /></mesh>
+      <mesh position={[0, 0, -0.035]} material={mat('#5e2a75')}><boxGeometry args={[1.12, 0.46, 0.05]} /></mesh>
+      <mesh material={m}><planeGeometry args={[1.05, 0.41]} /></mesh>
+    </group>
+  )
+}
 function DoorSign() {
   const phase = useDay((d) => d.phase), open = phase === 'open' || phase === 'closing'
   const label = phase === 'closing' ? 'CLOSING' : open ? 'OPEN' : 'CLOSED'
   return (
-    <group position={[1.7, 2.5, 11.7]}>
-      <mesh position={[0, 0.55, 0]} material={mat('#3b2a1e')}><cylinderGeometry args={[0.01, 0.01, 0.6, 4]} /></mesh>
-      <mesh material={mat(open ? '#7fd6a0' : '#e98fa6')}><boxGeometry args={[1.2, 0.5, 0.05]} /></mesh>
-      <Html position={[0, 0, 0]} center distanceFactor={6} zIndexRange={[5, 0]} style={{ pointerEvents: 'none' }}><div className={'doorsign' + (open ? ' open' : '')}>{label}</div></Html> {/* always faces you: readable from inside and out */}
-    </group>
+    <>
+      <HangingSign pos={[0, 2.2, S.passage[1] + 0.32]} rotY={0} label={label} open={open} k={1.4} />{/* outside, on the doors */}
+      <HangingSign pos={[0, 2.25, S.passage[0] - 0.25]} rotY={Math.PI} label={label} open={open} />{/* inside, over the doorway */}
+    </>
   )
 }
 if (typeof window !== 'undefined') (window as unknown as { __dirty: typeof dirty }).__dirty = dirty // tests

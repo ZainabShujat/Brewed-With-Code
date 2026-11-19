@@ -60,3 +60,8 @@ test('the garden: in through its gate only', () => {
   for (let z = 31; z <= 36; z += 0.25) assert.equal(blocked(gx, z), false, `garden gate stuck at z=${z}`)
   assert.equal(blocked(50, GARDEN.z0 + 0.2), true)
 })
+
+test('EDGE: walking in through the door at real speed never snags at the mouth of the passage (seam at ~18.9)', () => {
+  // the passage and the pot's outer bulge used to leave a sliver between them that blocked you at the door's mouth
+  for (let z = 24; z > 8; z -= 0.02) for (const x of [0, -0.5, 0.5]) assert.equal(blocked(x, z), false, `blocked at x ${x}, z ${z.toFixed(2)}`)
+})

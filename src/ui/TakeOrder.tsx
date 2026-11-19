@@ -44,17 +44,13 @@ export function TakeOrder() {
   )
 }
 
-// back on your feet after serving, when nobody else is waiting (not during Kozie's tutorial)
+// after serving you STAY at the station (being thrown back into Explore after every order was annoying, 19 Nov);
+// when nobody is waiting, a button lets you step away whenever you like
 export function ServeReturn() {
-  const served = useShop((s) => s.served), cakes = useDay((s) => s.today.cakes)
-  const first = useRef(true)
-  useEffect(() => {
-    if (first.current) { first.current = false; return }
-    const t = setTimeout(() => {
-      const g = useGame.getState()
-      if ((g.mode === 'pov' || g.mode === 'cake') && !frontOrder() && useTutorial.getState().lesson >= 2 && useDay.getState().phase !== 'idle') g.setMode(lastFoot)
-    }, 2200)
-    return () => clearTimeout(t)
-  }, [served, cakes])
-  return null
+  const mode = useGame((g) => g.mode), phase = useDay((d) => d.phase), lesson = useTutorial((t) => t.lesson)
+  const [, tick] = useState(0)
+  useEffect(() => { const id = setInterval(() => tick((n) => n + 1), 400); return () => clearInterval(id) }, [])
+  const atStation = mode === 'pov' || mode === 'cake', s = useShop.getState()
+  if (!atStation || frontOrder() || lesson < 2 || s.cup) return null
+  return <button className="stepaway" onClick={() => useGame.getState().setMode(lastFoot)}>🚶 walk around<small>{phase === 'open' ? 'the bell rings when someone comes' : ''}</small></button>
 }

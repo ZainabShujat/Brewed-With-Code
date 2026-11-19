@@ -822,3 +822,24 @@ html:not(.phone) .fullscreenbtn { left: auto; right: 14px; top: auto; bottom: 14
 .phone .brew-next .steps span { min-width: 30px; padding: 2px 3px; font-size: 13px; }
 .phone .brew-next .steps span small { display: none; }
 .phone .brew-next .steps span.now small { display: block; }
+
+/* at the bar with nobody waiting: step away when YOU want (no more auto-return to Explore) */
+.stepaway { position: fixed; left: 16px; bottom: 22px; z-index: 21; border: 0; border-radius: 14px; padding: 9px 16px 10px; background: #fff6ee; color: #5e2a75; font: 900 16px 'Trebuchet MS', sans-serif; box-shadow: 0 4px 0 #c99bb5; cursor: pointer; display: flex; flex-direction: column; align-items: flex-start; }
+.stepaway small { font-size: 10px; font-weight: 700; opacity: .65; }
+.phone .stepaway { left: 8px; bottom: 8px; padding: 8px 12px; font-size: 14px; }
+
+/* phones: one big view button (bottom right) that steps Explore → First person → Dollhouse */
+.viewcycle { position: fixed; right: 10px; bottom: 10px; z-index: 26; border: 0; border-radius: 18px; padding: 8px 14px 7px; min-width: 132px;
+  background: #fff6ee; color: #5e2a75; box-shadow: 0 5px 0 #b896c8, 0 6px 16px rgba(0,0,0,.25); display: grid; grid-template-columns: auto 1fr; column-gap: 8px; align-items: center; text-align: left; cursor: pointer; }
+.viewcycle .vc-i { grid-row: span 2; font-size: 26px; }
+.viewcycle b { font: 900 15px 'Trebuchet MS', sans-serif; }
+.viewcycle .vc-dots { grid-column: 1 / -1; display: flex; gap: 5px; justify-content: center; margin-top: 3px; }
+.viewcycle .vc-dots i { width: 7px; height: 7px; border-radius: 50%; background: #d9c4e6; } .viewcycle .vc-dots i.on { background: #5e2a75; }
+.viewcycle small { font: 700 10px 'Trebuchet MS', sans-serif; opacity: .7; white-space: nowrap; }
+.viewcycle:active { transform: translateY(3px); box-shadow: 0 2px 0 #b896c8; }
+.viewcycle.spot { animation: popin 1s ease-in-out infinite alternate; }
+/* the step tracker: chips on laptops; on phones just the current step + a thin progress bar (ten chips wrapped into a confusing block) */
+.stepbar { display: none; }
+.phone .stepbar { display: block; height: 5px; border-radius: 3px; background: rgba(255,246,238,.18); margin: 0 0 5px; overflow: hidden; }
+.phone .stepbar b { display: block; height: 100%; background: #f2c66a; border-radius: 3px; transition: width .3s; }
+.phone .brew-next .steps { display: none; }

@@ -1,5 +1,6 @@
 import { useGame, type CamMode } from '../systems/store'
 import { navSpot, useNavTut } from './NavTutorial'
+import { TOUCH } from '../systems/CameraRig'
 
 // Three ways to look at your café, any time (even mid-day): Explore (third person), First person (your own eyes)
 // and the Dollhouse. The camera glides between them. At a station (the bar, the cake bench) there's no bar here:
@@ -20,6 +21,16 @@ export function ViewBar() {
   useNavTut((t) => t.step) // re-render when the tour moves on
   const spot = navSpot()
   if (!VIEWS.some((v) => v.id === mode)) return null
+  if (TOUCH) { // phones: ONE big thumb button that steps through the views (three tiny chips in a corner were hard to hit)
+    const i = VIEWS.findIndex((v) => v.id === mode), cur = VIEWS[i], next = VIEWS[(i + 1) % VIEWS.length]
+    return (
+      <button className={'viewcycle' + (spot && spot !== mode ? ' spot' : '')} onClick={() => { if (next.id !== 'dollhouse') lastFoot = next.id; setMode(next.id) }}>
+        <span className="vc-i">{cur.icon}</span><b>{cur.label}</b>
+        <span className="vc-dots">{VIEWS.map((v) => <i key={v.id} className={v.id === mode ? 'on' : ''} />)}</span>
+        <small>tap: {next.icon} {next.label}</small>
+      </button>
+    )
+  }
   return (
     <div className="viewbar">
       {VIEWS.map((v) => <button key={v.id} className={(v.id === mode ? 'on' : '') + (v.id === spot && v.id !== mode ? ' spot' : '')} onClick={() => { if (v.id !== 'dollhouse') lastFoot = v.id; setMode(v.id) }}>

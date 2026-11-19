@@ -32,4 +32,4 @@ export const BAR = {
   pass: [1.48, TOP + 0.06, BZ] as V3,                // where a finished drink goes (the bell)
 }
 // the barista's camera frames this workstation (not the whole 5.6 m counter)
-export const BAR_VIEW = { x: 0.32, eyeY: 2.55, eyeZ: -9.05, lookY: 1.05, lookZ: -7.3 }
+export const BAR_VIEW = { x: 0.32, eyeY: 2.75, eyeZ: -9.4, lookY: 1.3, lookZ: -6.95 } // 19 Nov: back + up a touch, so the customer you're serving shows over the (lowered) pastry case

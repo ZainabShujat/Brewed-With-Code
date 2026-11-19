@@ -185,10 +185,14 @@ function Zebra({ x, z0, z1 }: { x: number; z0: number; z1: number }) {
 
 // the passage through the teapot's thick wall, so walking out the door never clips into the pot's shell
 function DoorPassage() {
+  // the roof hides while you're under it (the follow camera looks down from behind: it covered you completely)
+  const roof = useRef<THREE.Group>(null)
+  useFrame(() => { const g = roof.current; if (!g) return; const { player: p, mode } = useGame.getState()
+    g.visible = !((mode === 'walk' || mode === 'dollhouse') && Math.abs(p.x) < 2.5 && p.z > S.passage[0] - 1.5 && p.z < S.passage[1] + 1.5) })
   return (
     <group>
       {[-1, 1].map((s) => <RBox key={s} size={[0.3, 3.2, S.passage[1] - S.passage[0]]} pos={[s * 1.3, 1.6, (S.passage[0] + S.passage[1]) / 2]} color={C.plum} r={0.05} />)}
-      <RBox size={[2.9, 0.3, S.passage[1] - S.passage[0]]} pos={[0, 3.3, (S.passage[0] + S.passage[1]) / 2]} color={C.purple} r={0.05} />
+      <group ref={roof}><RBox size={[2.9, 0.3, S.passage[1] - S.passage[0]]} pos={[0, 3.3, (S.passage[0] + S.passage[1]) / 2]} color={C.purple} r={0.05} /></group>
       <Ground x0={-1.15} x1={1.15} z0={S.passage[0]} z1={S.passage[1] + 0.3} m={mat(C.path)} y={0.03} />
     </group>
   )

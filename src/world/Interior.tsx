@@ -140,8 +140,9 @@ function PastryCase({ x, z, w, rot = 0, body = C.wood }: { x: number; z: number;
     <group position={[x, 0, z]} rotation={[0, rot, 0]}>
       <RBox size={[w, 0.95, 0.6]} pos={[0, 0.48, 0]} color={body} r={0.1} />
       <RBox size={[w - 0.1, 0.06, 0.5]} pos={[0, 0.98, 0]} color={C.counterTop} r={0.02} shadow={false} />
-      <RBox size={[w, 0.7, 0.6]} pos={[0, 1.32, 0]} material={glass()} r={0.12} shadow={false} />
-      <RBox size={[w + 0.04, 0.08, 0.64]} pos={[0, 1.7, 0]} color={C.plum} r={0.04} />
+      {/* 19 Nov: a low glass case (it used to stand 0.7 tall and hid the customer you're serving from the bar) */}
+      <RBox size={[w, 0.36, 0.6]} pos={[0, 1.16, 0]} material={glass()} r={0.1} shadow={false} />
+      <RBox size={[w + 0.04, 0.06, 0.64]} pos={[0, 1.36, 0]} color={C.plum} r={0.03} />
       <Treats w={w} y={1.1} />
     </group>
   )
