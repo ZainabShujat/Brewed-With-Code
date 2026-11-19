@@ -272,6 +272,9 @@ function Bridge() {
 // ── paths (points in layout units) ──
 const COBBLE_IN: [number, number][] = [[-5.6, 37.5], [-8.6, 37.7], [-11.6, 38.7], [-14.4, 39.8], [-16.4, 40.3]]
 const LOOP: [number, number][] = [pol(166, 8.6), [-36.4, 47.6], [-39.0, 52.8], [-39.6, 57.4], [-37.4, 61.2], [-31.5, 61.9], [-24.6, 61.9], [-17.5, 61.9], [-11.8, 61.0], [-9.4, 57.2], [-9.6, 52.6], [-11.6, 48.6], pol(22, 8.6)]
+// the walkers' lap: the gravel loop, then back round the plaza's inner ring on the pond side (closing the loop
+// straight would cut through the fountain); r 7.75 sits between the basin's capstone and the benches' fronts
+const WALK_LAP: [number, number][] = [...LOOP, ...[40, 58, 76, 94, 112, 130, 148].map((d) => pol(d, 7.75))]
 const BRIDGE_IN: [number, number][] = [[FX, FZ + F.plaza - 0.4], [FX, POND.z - 3.2]]
 const BRIDGE_OUT: [number, number][] = [[FX, POND.z + 3.2], [FX, 61.6]]
 
@@ -360,8 +363,8 @@ export function ParkLife() {
     // a picnic on the west lawn
     sit(folk('mallow', 71), -38.3, 48.4, face(-38.3, 48.4, -37.4, 47.6), true); sit(folk('paper', 77), -36.5, 46.9, face(-36.5, 46.9, -37.4, 47.6), true)
     // two walkers doing laps of the gravel loop
-    out.push({ spec: folk('paper', 83), x: LOOP[1][0], z: LOOP[1][1], face: 0, pose: 'walk', y: 0, walk: LOOP, speed: 1.0 })
-    out.push({ spec: folk('mallow', 89), x: LOOP[6][0], z: LOOP[6][1], face: 0, pose: 'walk', y: 0, walk: [...LOOP].reverse(), speed: 0.85 })
+    out.push({ spec: folk('paper', 83), x: LOOP[1][0], z: LOOP[1][1], face: 0, pose: 'walk', y: 0, walk: WALK_LAP, speed: 1.0 })
+    out.push({ spec: folk('mallow', 89), x: LOOP[6][0], z: LOOP[6][1], face: 0, pose: 'walk', y: 0, walk: [...WALK_LAP].reverse(), speed: 0.85 })
     return out
   }, [])
   useFrame(({ clock }) => { murmurTick(clock.elapsedTime); ambientTick(clock.elapsedTime) })

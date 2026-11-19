@@ -33,15 +33,15 @@ export function Menu({ screen, setScreen }: { screen: Screen; setScreen: (s: Scr
   const realTime = useClock((st) => st.real)
   const [pending, setPending] = useState<typeof PLAY[number] | null>(null), [firstRun, setFirstRun] = useState(false)
 
-  // title screen: the camera slowly circles the café; any key / click continues
+  // title + menu screens: a still front view of the café (no sway: a moving camera made the menu stutter);
+  // the game also draws at a calmer 20 fps here (see startLoop), so the laptop / phone stays cool. Any key / click continues
   useEffect(() => {
     if (screen !== 'title' && screen !== 'main' && screen !== 'howto' && screen !== 'settings' && screen !== 'credits') return
     setMode('exterior')
-    const t0 = performance.now(); view.zoom = 1.15
-    const id = setInterval(() => { view.yaw = Math.sin((performance.now() - t0) / 9000) * 0.45 }, 16) // a slow sway, never into the trees
+    view.yaw = 0; view.pitch = 0; view.zoom = 1.15
     const go = () => screen === 'title' && leaveTitle()
     window.addEventListener('keydown', go)
-    return () => { clearInterval(id); window.removeEventListener('keydown', go) }
+    return () => window.removeEventListener('keydown', go)
   }, [screen, setMode, setScreen])
 
   // Esc pauses / resumes; Tab hops to the next station while playing

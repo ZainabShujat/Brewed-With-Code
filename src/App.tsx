@@ -113,8 +113,8 @@ function FpsProbe() {
 
 // our own game loop: at most 40 frames a second (30 on Low), so the GPU isn't flat out and the laptop stays cool
 function startLoop(s: { advance: (t: number) => void }) {
-  const cap = 1000 / (quality.high ? 40 : 30); let last = 0
-  const tick = (t: number) => { if (t - last >= cap - 1) { last = t; s.advance(t / 1000) } requestAnimationFrame(tick) } // advance() takes SECONDS (ms made everything shake)
+  const cap = 1000 / (quality.high ? 60 : 30); let last = 0 // even steps of the screen's refresh (40 on a 60 Hz screen juddered)
+  const tick = (t: number) => { if (t - last >= ((window as any).__menuIdle ? 50 : cap) - 1) { last = t; s.advance(t / 1000) } requestAnimationFrame(tick) } // advance() takes SECONDS (ms made everything shake)
   requestAnimationFrame(tick)
 }
 
@@ -125,6 +125,7 @@ export default function App() {
   const [shownFps, setShownFps] = useState(0)
   const [screen, setScreen] = useState<Screen>(SNAP ? 'playing' : 'title')
   const playing = SNAP || screen === 'playing'
+  useEffect(() => { (window as any).__menuIdle = !playing }, [playing]) // menus draw at a calm 20 fps (see startLoop)
   useEffect(() => {
     const id = setInterval(() => setShownFps(fps), 500)
     const onKey = (e: KeyboardEvent) => { if (!SNAP) return; const m = MODES.find((m) => m.key === e.key); if (m) setMode(m.id) }

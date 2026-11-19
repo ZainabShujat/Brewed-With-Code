@@ -59,7 +59,7 @@ export function StreetLife() {
 
 function WalkerBody({ w, i, all, r }: { w: Walker; i: number; all: Walker[]; r: () => number }) {
   const g = useRef<THREE.Group>(null), bubble = useRef<HTMLDivElement>(null)
-  const [ver, setVer] = useState(0)
+  const [ver] = useState(0)
   useEffect(() => registerTalker(`walker${i}`, { get x() { return w.pos.x }, get z() { return w.pos.z }, get kind() { return w.spec.kind === 'mallow' ? 'mallow' : 'paper' }, chatty: () => w.active && (w.sayT > 0 || w.pose === 'sit') } as never), [w, i])
   useFrame((_, dtRaw) => {
     const dt = Math.min(dtRaw, 0.05), el = g.current; if (!el) return
@@ -72,7 +72,7 @@ function WalkerBody({ w, i, all, r }: { w: Walker; i: number; all: Walker[]; r: 
     else {
       const t = w.path[0]
       if (!t) { // home: new townsperson, new errand
-        const kind = w.side < 0 ? 'mallow' : 'paper'; w.spec = folk(kind, Math.floor(r() * 50)); errand(w, r); w.ver++; setVer(w.ver)
+        errand(w, r) // same townsperson, new errand (rebuilding the figure each time caused a visible hitch)
       } else {
         const d = t.clone().sub(w.pos), dist = d.length(), step = 1.9 * dt
         // steer round anything solid just ahead (other folk, the cart, the bus stop, benches), staying on the pavement
