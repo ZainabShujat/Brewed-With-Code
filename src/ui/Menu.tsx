@@ -14,7 +14,9 @@ export type Screen = 'title' | 'main' | 'howto' | 'settings' | 'credits' | 'play
 
 const load = (k: string, d: string) => { try { return localStorage.getItem(k) ?? d } catch { return d } }
 const save = (k: string, v: string) => { try { localStorage.setItem(k, v) } catch { /* private mode */ } }
-export const quality = { high: load('quality', 'high') === 'high' }
+// phones and tablets start on Low (cooler, longer battery); laptops on High. Either can be changed in Settings.
+const COARSE = typeof window !== 'undefined' && matchMedia('(pointer: coarse)').matches
+export const quality = { high: load('quality', COARSE ? 'low' : 'high') === 'high' }
 
 // the places you can play, each with its own camera
 const PLAY: { id: CamMode; title: string; sub: string; shop?: boolean }[] = [

@@ -316,9 +316,10 @@ function Hanger({ h, i }: { h: Hang; i: number }) {
   const me = useMemo(() => ({ x: h.x, z: h.z, kind: (h.spec.kind === 'mallow' ? 'mallow' : 'paper') as 'mallow' | 'paper', chatty: day }), [h])
   const route = useMemo(() => { if (!h.walk) return null; const c = new THREE.CatmullRomCurve3(h.walk.map(([x, z]) => new THREE.Vector3(x, 0, z)), true, 'centripetal'); return { c, len: c.getLength() } }, [h])
   useEffect(() => registerTalker(`park${i}`, me), [me, i])
-  useFrame(({ clock }) => {
+  useFrame(({ clock, camera }) => {
     const gr = g.current; if (!gr) return
-    gr.visible = day()
+    // each figure is ~30 draw calls: skip them when the camera is far away (Dollhouse / Outside overview)
+    gr.visible = day() && Math.hypot(camera.position.x - gr.position.x * 1.2, camera.position.z - gr.position.z * 1.2) < 60; if (!gr.visible) return
     if (route) { const u = ((clock.elapsedTime * (h.speed ?? 1.1)) / route.len + i * 0.37) % 1, p = route.c.getPointAt(u), q = route.c.getPointAt((u + 0.002) % 1)
       gr.position.set(p.x, groundY(p.x, p.z), p.z); gr.rotation.y = Math.atan2(q.x - p.x, q.z - p.z); me.x = p.x; me.z = p.z }
     const b = bubble.current; if (!b) return

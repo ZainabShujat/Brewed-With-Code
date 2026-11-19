@@ -1,3 +1,4 @@
+import { useFrame } from '@react-three/fiber'
 import { Suspense, useMemo } from 'react'
 import { useGLTF } from '@react-three/drei'
 import * as THREE from 'three'
@@ -47,6 +48,33 @@ function onGrass(x: number, z: number) {
   for (const sh of SHOPS) { const z0 = sh.side === 'a' ? S.padA[0] - SHOP_DEPTH : S.padB[1], z1 = sh.side === 'a' ? S.padA[0] : S.padB[1] + SHOP_DEPTH; if (x > sh.x0 - 1 && x < sh.x1 + 1 && z > z0 - 1 && z < z1 + 1) return false }
   return true
 }
+
+// ── instancing that the camera can skip: instances are split into map tiles (CELL units square), each its own
+// InstancedMesh with a real bounding sphere, so three.js culls tiles outside the view. Small things (grass, flowers,
+// pebbles) also hide beyond `far` (world metres) — they are a pixel or two by then and cost as much as a tree.
+const CELL = 24
+const FAR: { m: THREE.Object3D; c: THREE.Vector3; far: number }[] = []
+export function tiled(parts: THREE.Mesh[], mats: THREE.Matrix4[], matFor: (p: THREE.Mesh) => THREE.Material, far = 0) {
+  const cells = new Map<string, THREE.Matrix4[]>(), v = new THREE.Vector3()
+  for (const m of mats) { v.setFromMatrixPosition(m); const k = Math.floor(v.x / CELL) + ':' + Math.floor(v.z / CELL); if (!cells.has(k)) cells.set(k, []); cells.get(k)!.push(m) }
+  const out: THREE.InstancedMesh[] = []
+  for (const list of cells.values()) for (const p of parts) {
+    const im = new THREE.InstancedMesh(p.geometry, matFor(p), list.length)
+    list.forEach((m, i) => im.setMatrixAt(i, m.clone().multiply(p.matrixWorld))); im.instanceMatrix.needsUpdate = true
+    im.computeBoundingSphere(); im.frustumCulled = true
+    if (far) FAR.push({ m: im, c: im.boundingSphere!.center.clone(), far })
+    out.push(im)
+  }
+  return out
+}
+const _w = new THREE.Vector3()
+/** hides far-away small-plant tiles (one loop for the whole world) */
+export function DistanceCull() {
+  useFrame(({ camera }) => {
+    for (const f of FAR) { if (!f.m.parent) continue; _w.copy(f.c).applyMatrix4(f.m.parent.matrixWorld); f.m.visible = _w.distanceTo(camera.position) < f.far }
+  })
+  return null
+}
 function ScatterInner({ file, count, seed, size }: { file: string; count: number; seed: number; size: [number, number] }) {
   const { scene } = useGLTF(`${BASE}assets/${file}`)
   const meshes = useMemo(() => {
@@ -60,12 +88,13 @@ function ScatterInner({ file, count, seed, size }: { file: string; count: number
       const k = (size[0] + r() * (size[1] - size[0])) / h
       mats.push(new THREE.Matrix4().compose(v.set(x, -box.min.y * k, z), q.setFromEuler(e.set(0, r() * 6.28, 0)), sc.set(k, k, k)))
     }
-    return parts.map((p) => { const im = new THREE.InstancedMesh(p.geometry, p.material, mats.length); mats.forEach((m, i) => im.setMatrixAt(i, m.clone().multiply(p.matrixWorld))); im.instanceMatrix.needsUpdate = true; im.frustumCulled = false; return im })
+    return tiled(parts, mats, (p) => p.material as THREE.Material, quality.high ? 90 : 55)
   }, [scene, count, seed, size])
   return <group>{meshes.map((m, i) => <primitive key={i} object={m} />)}</group>
 }
 /** any model, many times, as instanced meshes: one draw call per mesh part (forests, orchards, flower beds) */
 export type Spot = { x: number; z: number; h: number; rot?: number; y?: number }
+const SMALL = /Grass|Clover|Flower|Fern|Pebble|Mushroom|RockPath|Plant_/
 function InstInner({ file, items, tint }: { file: string; items: Spot[]; tint?: string }) {
   const { scene } = useGLTF(`${BASE}assets/${file}`)
   const meshes = useMemo(() => {
@@ -73,9 +102,11 @@ function InstInner({ file, items, tint }: { file: string; items: Spot[]; tint?: 
     const box = new THREE.Box3().setFromObject(scene), h = box.max.y - box.min.y || 1
     const q = new THREE.Quaternion(), e = new THREE.Euler(), v = new THREE.Vector3(), sc = new THREE.Vector3()
     const mats = items.map((it) => { const k = it.h / h; return new THREE.Matrix4().compose(v.set(it.x, (it.y ?? 0) - box.min.y * k, it.z), q.setFromEuler(e.set(0, it.rot ?? 0, 0)), sc.set(k, k, k)) })
-    return parts.map((p) => { let mat = p.material as THREE.Material
-      if (tint && /leaf|leaves/i.test(mat.name)) { mat = (mat as THREE.MeshStandardMaterial).clone(); (mat as THREE.MeshStandardMaterial).color = new THREE.Color(tint) }
-      const im = new THREE.InstancedMesh(p.geometry, mat, mats.length); mats.forEach((m, i) => im.setMatrixAt(i, m.clone().multiply(p.matrixWorld))); im.instanceMatrix.needsUpdate = true; im.frustumCulled = false; return im })
+    const tinted = new Map<THREE.Material, THREE.Material>()
+    return tiled(parts, mats, (p) => { const mat = p.material as THREE.Material
+      if (!tint || !/leaf|leaves/i.test(mat.name)) return mat
+      if (!tinted.has(mat)) { const c = (mat as THREE.MeshStandardMaterial).clone(); c.color = new THREE.Color(tint); tinted.set(mat, c) }
+      return tinted.get(mat)! }, SMALL.test(file) ? (quality.high ? 90 : 55) : 0)
   }, [scene, items, tint])
   return <group>{meshes.map((m, i) => <primitive key={i} object={m} />)}</group>
 }

@@ -59,7 +59,7 @@ export function Forest() {
 export function TreeBelts() {
   const groups = useMemo(() => {
     const r = rng(2468), by = new Map<string, Spot[]>(), add = (f: string, sp: Spot) => { if (!by.has(f)) by.set(f, []); by.get(f)!.push(sp) }
-    for (const side of [-1, 1]) for (let z = -72; z < 82; z += 3.4) for (const row of [0, 1, 2]) {
+    for (const side of [-1, 1]) for (let z = -72; z < 82; z += 3.4) for (const row of (quality.high ? [0, 1, 2] : [0, 1])) {
       if (Math.abs(z - (S.padA[0] + S.padB[1]) / 2) < 6) continue // the road through to the township's arch
       const pine = r() < 0.55, x = side * (S.X + 21 + row * 3.6 + (r() - 0.5) * 2)
       add(pine ? PINES[Math.floor(r() * 5)] : TREES[Math.floor(r() * 5)], { x, z: z + (r() - 0.5) * 2, h: 11 + r() * 6 + row * 1.5, rot: r() * 6.28 })
