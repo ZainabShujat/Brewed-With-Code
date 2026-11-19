@@ -38,8 +38,8 @@ function onGrass(x: number, z: number) {
   if (z > S.padB[1] && Math.abs(x) < S.side.pad + 1 && z < S.FRONT) return false  // the side street
   if (Math.hypot(x, z) < 17.5) return false                                         // the café (pot + garden lanterns)
   if (Math.abs(Math.abs(x) - (S.X + 14)) < 6.5) return false                       // the outer roads
-  if (Math.abs(x) > S.X + 30) return false                                          // the townships (streets + buildings)
-  if (Math.abs(x) > S.X && Math.abs(z - (S.padA[0] + S.padB[1]) / 2) < 8 && Math.abs(x) < S.X + 22) return false // the road out + the arch
+  if (Math.abs(x) > S.X + 58) return false                                          // the townships (streets + buildings)
+  if (Math.abs(x) > S.X && Math.abs(z - (S.padA[0] + S.padB[1]) / 2) < 8 && Math.abs(x) < S.X + 64) return false // the road out + the arch
   if (Math.hypot(x, z + 32) < 9 || (x > 26 && x < 46 && z < -26 && z > -42)) return false // the gazebo lawn, the allotments
   if (x > PARK.x0 - 0.5 && x < PARK.x1 + 0.5 && z > PARK.z0 - 0.5 && z < PARK.z1 + 0.5) return false
   for (const sh of SHOPS) { const z0 = sh.side === 'a' ? S.padA[0] - SHOP_DEPTH : S.padB[1], z1 = sh.side === 'a' ? S.padA[0] : S.padB[1] + SHOP_DEPTH; if (x > sh.x0 - 1 && x < sh.x1 + 1 && z > z0 - 1 && z < z1 + 1) return false }
@@ -53,7 +53,7 @@ function ScatterInner({ file, count, seed, size }: { file: string; count: number
     const r = rng(seed), mats: THREE.Matrix4[] = [], q = new THREE.Quaternion(), e = new THREE.Euler(), v = new THREE.Vector3(), sc = new THREE.Vector3()
     let tries = 0
     while (mats.length < count && tries++ < count * 8) {
-      const x = -100 + r() * 200, z = -90 + r() * 170
+      const x = -125 + r() * 250, z = -90 + r() * 170
       if (!onGrass(x, z)) continue
       const k = (size[0] + r() * (size[1] - size[0])) / h
       mats.push(new THREE.Matrix4().compose(v.set(x, -box.min.y * k, z), q.setFromEuler(e.set(0, r() * 6.28, 0)), sc.set(k, k, k)))

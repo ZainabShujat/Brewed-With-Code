@@ -15,8 +15,8 @@ import { quality } from '../ui/Menu'
 type V3 = [number, number, number]
 type Part = { k: 'box' | 'cyl' | 'sph' | 'cone' | 'hex' | 'win'; p: V3; s: V3; r?: V3; c: string }
 const ROAD = '#6f6273', LINE = '#fff6ec'
-export const AVE = [34, 64, 96] // a green strip between the outer road and the first homes, then wider blocks // avenue centres, metres outside the market wall
-export const CROSS = [-42, -10, (S.padA[0] + S.padB[1]) / 2, 54] // cross streets (z)
+export const AVE = [62, 92, 124] // a green strip between the outer road and the first homes, then wider blocks // avenue centres, metres outside the market wall
+export const CROSS = [-38, -10, (S.padA[0] + S.padB[1]) / 2, 54] // cross streets (z)
 const ROAD_W = 6
 
 class Kit {
@@ -42,7 +42,7 @@ function bookHouse(kit: Kit, x: number, z: number, face: number, r: () => number
 function bookStack(kit: Kit, x: number, z: number, h: number, r: () => number) {
   let y = 0, i = 0
   while (y < h) {
-    const bw = 8 + r() * 4, bd = 6 + r() * 3, th = 2.4 + r() * 1.6, col = COVERS[(i + Math.floor(r() * 3)) % COVERS.length], rot = (r() - 0.5) * 0.5
+    const bw = 8 + r() * 3.5, bd = 6 + r() * 3, th = 2.4 + r() * 1.6, col = COVERS[(i + Math.floor(r() * 3)) % COVERS.length], rot = (r() - 0.5) * 0.5
     kit.add('box', [x, y + 0.15, z], [bw, 0.3, bd], col, [0, rot, 0])
     kit.add('box', [x, y + th / 2, z], [bw - 0.5, th - 0.5, bd - 0.4], PAGE, [0, rot, 0])
     kit.add('box', [x, y + th - 0.15, z], [bw, 0.3, bd], col, [0, rot, 0])
@@ -89,7 +89,7 @@ function mallowHouse(kit: Kit, x: number, z: number, face: number, r: () => numb
   kit.add('box', [x + Math.sin(face) * rad, 1.1, z + Math.cos(face) * rad], [1.2, 2.2, 0.15], '#c46a8a', [0, face, 0]) // door
 }
 function mallowTower(kit: Kit, x: number, z: number, h: number, r: () => number) {
-  let y = 0, rad = 5.2 + r() * 1.5, i = 0
+  let y = 0, rad = 4.6 + r() * 0.6, i = 0
   while (y < h) {
     const seg = 4 + r() * 2, col = PUFF[(i + Math.floor(r() * 2)) % PUFF.length], last = y + seg >= h
     puff(kit, x, y, z, rad, seg, col, last ? TOAST : col)
@@ -99,7 +99,7 @@ function mallowTower(kit: Kit, x: number, z: number, h: number, r: () => number)
 }
 function smoreTower(kit: Kit, x: number, z: number, h: number, r: () => number) {
   let y = 0, i = 0
-  const w = 10 + r() * 2
+  const w = 10 + r() * 1.5
   while (y < h) {
     kit.add('box', [x, y + 0.6, z], [w, 1.2, w], '#c98a4b')            // graham cracker
     kit.add('box', [x, y + 1.5, z], [w - 0.6, 0.6, w - 0.6], '#5a3424') // chocolate
@@ -114,20 +114,24 @@ function smoreTower(kit: Kit, x: number, z: number, h: number, r: () => number) 
 function buildTown(side: -1 | 1) {
   const kit = new Kit(), r = rng(side < 0 ? 31337 : 4242)
   const cols: [number, number][] = [[AVE[0] + 4, AVE[1] - 4], [AVE[1] + 4, AVE[2] - 4], [AVE[2] + 4, AVE[2] + 20]]
-  const rows: [number, number][] = [[-62, CROSS[0] - 4], [CROSS[0] + 4, CROSS[1] - 4], [CROSS[1] + 4, CROSS[2] - 5], [CROSS[2] + 5, CROSS[3] - 4], [CROSS[3] + 4, 78]]
+  const rows: [number, number][] = [[CROSS[0] + 4, CROSS[1] - 4], [CROSS[1] + 4, CROSS[2] - 5], [CROSS[2] + 5, CROSS[3] - 4], [CROSS[3] + 4, 66]] // from just behind the café's depth forward: nothing behind the back wall (that's the forest)
   const dense = quality.high ? 1 : 0.6
   cols.forEach(([a0, a1], ci) => rows.forEach(([z0, z1]) => {
-    const step = ci === 0 ? 8.5 : 13
-    for (let a = a0 + step / 2; a < a1; a += step) for (let z = z0 + step / 2; z < z1; z += step) {
+    const step = ci === 0 ? 9 : 15
+    // lots laid out evenly INSIDE the block, so nothing spills onto a street; each lot's half-size decides what fits
+    const nx = Math.max(1, Math.floor((a1 - a0) / step)), nz = Math.max(1, Math.floor((z1 - z0) / step))
+    const lx = (a1 - a0) / nx, lz = (z1 - z0) / nz, half = Math.min(lx, lz) / 2 - 1.2 // keep a pavement margin
+    for (let ix = 0; ix < nx; ix++) for (let iz = 0; iz < nz; iz++) {
       if (r() > dense) continue
-      const x = side * a, roll = r()
+      const a = a0 + lx * (ix + 0.5), z = z0 + lz * (iz + 0.5), x = side * a, roll = r()
+      const fitsTower = half >= 6.6, fitsMid = half >= 5.2 // (book stacks / s'mores ~6.5 m half-width; spiral + marshmallow towers ~5)
       if (side > 0) {
-        if (ci === 0) bookHouse(kit, x, z, r() < 0.5 ? Math.PI / 2 * -side : (r() < 0.5 ? 0 : Math.PI), r)
-        else if (ci === 1) roll < 0.55 ? spiralTower(kit, x, z, 12 + r() * 9, r) : bookStack(kit, x, z, 10 + r() * 10, r)
-        else roll < 0.2 ? pencil(kit, x, z, 30 + r() * 14, r) : bookStack(kit, x, z, 20 + r() * 18, r)
+        if (ci === 0 || !fitsMid) bookHouse(kit, x, z, r() < 0.5 ? Math.PI / 2 * -side : (r() < 0.5 ? 0 : Math.PI), r)
+        else if (ci === 1 || !fitsTower) roll < 0.6 ? spiralTower(kit, x, z, 12 + r() * 9, r) : pencil(kit, x, z, 18 + r() * 8, r)
+        else roll < 0.25 ? pencil(kit, x, z, 30 + r() * 14, r) : bookStack(kit, x, z, 20 + r() * 18, r)
       } else {
-        if (ci === 0) mallowHouse(kit, x, z, r() * 6.28, r)
-        else if (ci === 1) mallowTower(kit, x, z, 10 + r() * 10, r)
+        if (ci === 0 || !fitsMid) mallowHouse(kit, x, z, r() * 6.28, r)
+        else if (ci === 1 || !fitsTower) mallowTower(kit, x, z, 10 + r() * 10, r)
         else roll < 0.35 ? smoreTower(kit, x, z, 22 + r() * 16, r) : mallowTower(kit, x, z, 20 + r() * 18, r)
       }
     }
@@ -159,8 +163,8 @@ function TownMeshes({ parts }: { parts: Part[] }) {
 function Streets({ side }: { side: -1 | 1 }) {
   const roads = useMemo(() => {
     const out: { p: V3; s: [number, number] }[] = []
-    for (const a of AVE) out.push({ p: [side * (S.X + a), 0.035, 8], s: [ROAD_W, 150] })
-    for (const z of CROSS) out.push({ p: [side * (S.X + (AVE[0] + AVE[2] + 20) / 2), 0.036, z], s: [AVE[2] + 20 - AVE[0], ROAD_W] })
+    for (const a of AVE) out.push({ p: [side * (S.X + a), 0.035, 14], s: [ROAD_W, 110] })
+    for (const z of CROSS.slice(0)) out.push({ p: [side * (S.X + (AVE[0] + AVE[2] + 20) / 2), 0.036, z], s: [AVE[2] + 20 - AVE[0], ROAD_W] })
     return out
   }, [side])
   return (

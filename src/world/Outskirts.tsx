@@ -33,6 +33,7 @@ function OuterRoad({ side }: { side: -1 | 1 }) {
       {Array.from({ length: 30 }, (_, i) => z0 - len / 2 + 2.5 + i * 5).filter((z) => Math.abs(z - STREET_Z) > 5).map((z) => <mesh key={z} position={[rx, 0.05, z]} rotation={[-Math.PI / 2, 0, 0]} material={mat(LINE)}><planeGeometry args={[0.25, 2.2]} /></mesh>)}
       {/* the zebra crossing where you cross into the township */}
       {Array.from({ length: 7 }, (_, i) => <mesh key={i} position={[rx, 0.055, STREET_Z - 3 + i]} rotation={[-Math.PI / 2, 0, 0]} material={mat(LINE)}><planeGeometry args={[RING.w - 0.6, 0.55]} /></mesh>)}
+      <mesh position={[side * (S.X + RING.off + RING.w / 2 + 22), 0.03, STREET_Z]} rotation={[-Math.PI / 2, 0, 0]} material={mat(ROAD)}><planeGeometry args={[44, STREET_W - 3]} /></mesh>
       {/* the township's entrance arch, across the lane on the far side */}
       <TownArch x={rx + side * (RING.w / 2 + 4.5)} side={side} />
     </group>
