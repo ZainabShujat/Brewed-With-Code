@@ -7,6 +7,7 @@ import { CREDITS } from '../data/credits'
 import { useAvatar } from '../systems/avatar'
 import { Creator } from './Creator'
 import { autoFullscreen } from './FullscreenButton'
+import { HowTo } from './HowTo'
 
 // ── The game's front end: title screen → main menu → play, with a pause menu (Esc) ──────────
 export type Screen = 'title' | 'main' | 'howto' | 'settings' | 'credits' | 'playing' | 'paused' | 'creator'
@@ -17,9 +18,9 @@ export const quality = { high: load('quality', 'high') === 'high' }
 
 // the places you can play, each with its own camera
 const PLAY: { id: CamMode; title: string; sub: string; shop?: boolean }[] = [
+  { id: 'walk', title: '▶ Play', sub: 'Step into your café: open up, serve the town, explore the street' },
   { id: 'pov', title: 'Open the Café', sub: 'Stand behind the bar and make drinks for customers', shop: true },
   { id: 'cake', title: 'Bake Cakes', sub: 'Bake, fill, frost and decorate cakes to order', shop: true },
-  { id: 'walk', title: 'Explore', sub: 'Walk around the café and the street as yourself' },
   { id: 'dollhouse', title: 'Café View', sub: 'See the whole café from above, spin it round' },
 ]
 
@@ -28,7 +29,7 @@ export function Menu({ screen, setScreen }: { screen: Screen; setScreen: (s: Scr
   const [sens, set] = useState(view.sens)
   const [hq, setHq] = useState(quality.high)
   const realTime = useClock((st) => st.real)
-  const [pending, setPending] = useState<typeof PLAY[number] | null>(null)
+  const [pending, setPending] = useState<typeof PLAY[number] | null>(null), [firstRun, setFirstRun] = useState(false)
 
   // title screen: the camera slowly circles the café; any key / click continues
   useEffect(() => {
@@ -36,7 +37,7 @@ export function Menu({ screen, setScreen }: { screen: Screen; setScreen: (s: Scr
     setMode('exterior')
     const t0 = performance.now(); view.zoom = 1.15
     const id = setInterval(() => { view.yaw = Math.sin((performance.now() - t0) / 9000) * 0.45 }, 16) // a slow sway, never into the trees
-    const go = () => screen === 'title' && setScreen('main')
+    const go = () => screen === 'title' && leaveTitle()
     window.addEventListener('keydown', go)
     return () => { clearInterval(id); window.removeEventListener('keydown', go) }
   }, [screen, setMode, setScreen])
@@ -50,6 +51,9 @@ export function Menu({ screen, setScreen }: { screen: Screen; setScreen: (s: Scr
     window.addEventListener('keydown', k); return () => window.removeEventListener('keydown', k)
   })
 
+  // first visit: straight from the title to making your character, then into your café (Kozie's tour starts there).
+  // Returning players get the menu.
+  const leaveTitle = () => { autoFullscreen(); if (!useAvatar.getState().made) { setPending(PLAY[0]); setFirstRun(true); setScreen('howto') } else setScreen('main') }
   const start = (p: typeof PLAY[number]) => {
     autoFullscreen()
     if (!useAvatar.getState().made) { setPending(p); setScreen('creator'); return } // first time: make your character
@@ -57,12 +61,15 @@ export function Menu({ screen, setScreen }: { screen: Screen; setScreen: (s: Scr
 
   if (screen === 'creator') return <Creator onDone={() => { const p = pending; setPending(null); if (p) start(p); else setScreen(mode === 'exterior' ? 'main' : 'paused') }} />
 
+  // first visit: how to play (with pictures) → make your character → your café
+  if (screen === 'howto') return <HowTo doneLabel={firstRun ? 'make your character ✨' : 'back to the menu'} onDone={() => { if (firstRun) { setFirstRun(false); setScreen('creator') } else setScreen(mode === 'exterior' ? 'main' : 'paused') }} />
+
   if (screen === 'playing') return (
     <button className="menubtn" onClick={() => setScreen('paused')}>☰ Menu <span>Esc</span></button>
   )
 
   return (
-    <div className={`gmenu ${screen === 'title' ? 'title-screen' : ''}`} onClick={() => { if (screen === 'title') { autoFullscreen(); setScreen('main') } }}>
+    <div className={`gmenu ${screen === 'title' ? 'title-screen' : ''}`} onClick={() => { if (screen === 'title') leaveTitle() }}>
       {screen === 'title' && (
         <div className="title-wrap">
           <div className="logo">Brewed<br />With Code</div>
@@ -99,17 +106,6 @@ export function Menu({ screen, setScreen }: { screen: Screen; setScreen: (s: Scr
             <button onClick={() => { useShop.getState().openShop(false); setScreen('main') }}>Main menu</button>
             <button onClick={() => { useShop.getState().openShop(false); setMode('exterior'); setScreen('title') }}>Title screen</button>
           </div>
-        </div>
-      )}
-
-      {screen === 'howto' && (
-        <div className="panel text">
-          <div className="logo small">How to play</div>
-          <p><b>Café:</b> a customer walks up and their order shows on the ticket. Click a tool to pick it up, then click your glass to use it: a glass from the shelf, chocolate, the shot glass under the machine, the milk pitcher, a topping. Follow the steps at the bottom, then serve.</p>
-          <p><b>Cakes:</b> memorise the order (peek costs 5%). Move the cake along the belt with ◀ ▶ and click a colour on the dispenser above it: tin, sponge, filling, frosting, rosettes, toppings.</p>
-          <p><b>Explore:</b> drag the mouse (or Q / E) to look all the way round, <b>WASD</b> to walk, <b>Shift</b> to run. Walk out the door to the street shops: go inside, press <b>T</b> to chat with the shopkeeper and <b>F</b> at the counter to buy ingredients.</p>
-          <p><b>Keys:</b> <b>Esc</b> pause (or the ☰ Menu button, top-left) · <b>Esc</b> again puts a held tool back.</p>
-          <button onClick={() => setScreen(mode === 'exterior' ? 'main' : 'paused')}>Back</button>
         </div>
       )}
 

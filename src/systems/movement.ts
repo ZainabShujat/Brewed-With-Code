@@ -3,6 +3,10 @@ import { STREET as S, STORE_SHOPS, shopBlocks, inShop } from '../world/streetLay
 
 // Keyboard state for walk mode (WASD / arrows).
 export const keys = new Set<string>()
+import { folkSpots } from './murmur'
+// townsfolk are solid: you can't step INTO one (moving away from one you're touching is always fine)
+const FOLK_R = 0.75
+function bumpsFolk(x: number, z: number, fx: number, fz: number) { for (const f of folkSpots()) { const d = Math.hypot(f.x - x, f.z - z); if (d < FOLK_R && d < Math.hypot(f.x - fx, f.z - fz)) return true } return false }
 if (typeof window !== 'undefined') {
   window.addEventListener('keydown', (e) => keys.add(e.key.toLowerCase()))
   window.addEventListener('keyup', (e) => keys.delete(e.key.toLowerCase()))
@@ -60,8 +64,9 @@ export function step(p: { x: number; z: number; facing: number; moving?: boolean
   const len = Math.hypot(dx, dz), speed = 3.2 * (keys.has('shift') ? 1.8 : 1) * dt * Math.min(1, len) // Shift = sprint
   const nx = p.x + (dx / len) * speed, nz = p.z + (dz / len) * speed
   const ox = p.x, oz = p.z
-  if (!blocked(nx, p.z)) p.x = nx
-  if (!blocked(p.x, nz)) p.z = nz
+  const solid = (x: number, z: number) => blocked(x, z) || bumpsFolk(x, z, ox, oz)
+  if (!solid(nx, p.z)) p.x = nx
+  if (!solid(p.x, nz)) p.z = nz
   if (goTo.on && p.x === ox && p.z === oz) goTo.on = false // walked into a wall/table: stop there
   const target = Math.atan2(dx, dz)
   let d = target - p.facing

@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { Html } from '@react-three/drei'
 import * as THREE from 'three'
@@ -10,6 +10,7 @@ import { TABLES, TABLE_SCALE } from './layout'
 import { useDay, DAY_LEN } from '../systems/day'
 import { useTutorial } from '../systems/tutorial'
 import { useGame } from '../systems/store'
+import { registerTalker } from '../systems/murmur'
 import { WipeFx, useWind } from '../ui/WindDown'
 import { Townsperson, seatHip, type Pose } from './folk/Townsperson'
 import { folk, type FolkSpec } from './folk/specs'
@@ -177,6 +178,7 @@ function Body({ c }: { c: Cust }) {
     }
     if (tag.current) { tag.current.textContent = idx >= 0 ? (c.hurry ? '⚡' : '') + String(idx + 1) : ''; tag.current.style.opacity = EMBED && idx >= 0 ? '1' : '0' }
   })
+  useEffect(() => registerTalker(`cust${c.id}`, { get x() { return c.pos.x }, get z() { return c.pos.z }, get kind() { return c.spec.kind === 'mallow' ? 'mallow' : 'paper' }, chatty: () => c.phase === 'sit' || c.phase === 'line' } as never), [c])
   const [, setVer] = useState(c.ver)
   useFrame(() => { if (c.ver !== verSeen.current) { verSeen.current = c.ver; setVer(c.ver) } }) // a new townsperson took this slot
   const pose = (): Pose => c.phase === 'sit' ? 'sit' : poseWalk.current ? 'walk' : 'wait'

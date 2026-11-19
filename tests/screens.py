@@ -21,7 +21,7 @@ def run(p, tag, vp, mobile):
     shot('title')
     pg.keyboard.press('Space') if not mobile else pg.mouse.click(vp['width'] / 2, vp['height'] / 2)
     pg.wait_for_timeout(1000); shot('menu')
-    pg.get_by_text('Explore', exact=True).first.click(); pg.wait_for_timeout(2500); shot('explore-first-time')
+    pg.get_by_text('▶ Play', exact=True).first.click(); pg.wait_for_timeout(2500); shot('explore-first-time')
     E("window.__navtut && window.__navtut.getState().skip && window.__navtut.getState().skip()")
     shot('explore-closed')
     E("(() => { const p = window.__game.getState().player; p.x = 0; p.z = 10.6 })()"); pg.wait_for_timeout(600); shot('at-the-door')

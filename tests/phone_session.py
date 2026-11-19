@@ -33,7 +33,7 @@ with sync_playwright() as p:
 
     pg.goto(URL); pg.wait_for_function('!!window.__game', timeout=90000); shot('title', 2500)
     tap(W / 2, H / 2); shot('menu')
-    tap_text('Explore'); shot('creator-first-play', 1500)
+    shot('creator-first-play', 1500)  # first visit: the title goes straight to making your character
     tap_text("let's go"); shot('after-creator', 2500)
     shot('tour-step1', 600)
     drag((600, 200), (420, 200)); shot('tour-after-look')

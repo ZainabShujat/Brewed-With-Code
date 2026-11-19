@@ -28,7 +28,7 @@ with sync_playwright() as p:
     pg.add_init_script("localStorage.clear(); localStorage.setItem('bwc.tutorial.done','1'); localStorage.setItem('bwc.navtut.done','1'); localStorage.setItem('brewed-with-code-avatar-v1', JSON.stringify({ made: true, kind: 'kozie', name: 'Tester' }))")
     pg.goto(URL); pg.wait_for_function('window.__game && window.__day && window.game', timeout=60000); pg.wait_for_timeout(1500)
     key(pg, 'Space'); pg.wait_for_timeout(800)
-    pg.get_by_text('Explore', exact=True).first.click(); pg.wait_for_timeout(2500)
+    pg.get_by_text('▶ Play', exact=True).first.click(); pg.wait_for_timeout(2500)
     if J(pg, "!!document.querySelector('.cr-skip')"): pg.click('.cr-skip'); pg.wait_for_timeout(1500)
     check(mode(pg) == 'walk', f'Explore puts you on foot (mode={mode(pg)})')
     check(J(pg, "!!document.querySelector('.viewbar')"), 'the view bar shows on foot')

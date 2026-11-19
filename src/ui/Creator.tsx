@@ -1,4 +1,4 @@
-import { useRef } from 'react'
+import { useEffect, useRef } from 'react'
 import { Canvas, useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { useAvatar, type AvatarKind } from '../systems/avatar'
@@ -13,9 +13,16 @@ const KINDS: { id: AvatarKind; label: string; sub: string }[] = [
   { id: 'mallow', label: '🍡 Marshmallow', sub: 'from the west side of town' },
 ]
 
+// the preview turns on its own (a little faster now); drag it to spin it yourself, it carries on from where you let go
+const spin = { v: 1.4, drag: false, last: 0, dx: 0 }
 function Spin({ children }: { children: React.ReactNode }) {
   const g = useRef<THREE.Group>(null)
-  useFrame((_, dt) => { if (g.current) g.current.rotation.y += dt * 0.6 })
+  useFrame((_, dt) => { if (!g.current) return; if (!spin.drag) { spin.v += (1.4 - spin.v) * Math.min(1, dt * 1.5); g.current.rotation.y += dt * spin.v } })
+  useEffect(() => {
+    const up = () => { spin.drag = false }
+    window.addEventListener('pointerup', up); return () => window.removeEventListener('pointerup', up)
+  }, [])
+  useFrame(() => { if (g.current && spin.drag) { g.current.rotation.y += spin.dx * 0.02; spin.dx = 0 } })
   return <group ref={g}>{children}</group>
 }
 
@@ -27,9 +34,9 @@ export function Creator({ onDone }: { onDone: () => void }) {
   return (
     <div className="creator" onPointerDown={(e) => e.stopPropagation()}>
       <div className="cr-panel">
-        <div className="cr-h">who are you? ☕</div>
+        <div className="cr-h">who are you? ☕</div>{!a.made && <div className="cr-welcome">welcome to your café! make yourself, then Kozie will show you round 📓</div>}
         <div className="cr-grid">
-          <div className="cr-preview">
+          <div className="cr-preview" style={{ touchAction: 'none', cursor: 'grab' }} title="drag to spin" onPointerDown={(e) => { spin.drag = true; spin.last = e.clientX }} onPointerMove={(e) => { if (!spin.drag) return; const dx = e.clientX - spin.last; spin.last = e.clientX; spin.dx += dx; spin.v = dx * 1.2 }}>
             <Canvas camera={{ position: [0, 1.4, 4.2], fov: 35 }} dpr={1}>
               <hemisphereLight args={['#fff3e6', '#5a3a70', 1.6]} />
               <directionalLight position={[3, 4, 5]} intensity={2.2} />

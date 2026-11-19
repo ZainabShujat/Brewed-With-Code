@@ -321,7 +321,7 @@ function Park() {
       <mesh position={[(x0 + x1) / 2, 0.06, (z0 + z1) / 2]} rotation={[-Math.PI / 2, 0, 0]} material={mat('#86b86a')} receiveShadow><planeGeometry args={[w, d]} /></mesh>
       {Array.from({ length: Math.round(w / 1.2) + 1 }, (_, i) => x0 + i * (w / Math.round(w / 1.2))).map((x) => <mesh key={x} position={[x, 0.55, z0 + 0.15]} material={mat(C.plum)}><cylinderGeometry args={[0.03, 0.03, 1.1, 6]} /></mesh>)}
       {[0.3, 1.0].map((y) => <mesh key={y} position={[(x0 + x1) / 2, y, z0 + 0.15]} material={mat(C.plum)}><boxGeometry args={[w, 0.06, 0.06]} /></mesh>)}
-      {[[x0 + 6, z0 + 7, '#e98fa6'], [x0 + 15, z0 + 9.5, C.leaf], [x0 + 23, z0 + 6, '#c9a6e6']].map(([x, z, c]) => (
+      {[[x0 + 3.2, z0 + 3.4, '#e98fa6'], [x0 + 3.4, z0 + 11.2, C.leaf], [x0 + 25, z0 + 11, '#c9a6e6'], [x0 + 24.6, z0 + 3.2, C.leaf]].map(([x, z, c]) => (
         <group key={String(x)} position={[x as number, 0, z as number]}>
           <mesh position={[0, 1.5, 0]} material={mat(C.woodDark)} castShadow><cylinderGeometry args={[0.22, 0.32, 3, 10]} /></mesh>
           <mesh position={[0, 4.0, 0]} material={mat(c as string)} castShadow><sphereGeometry args={[2.0, 18, 14]} /></mesh>
@@ -335,11 +335,7 @@ function Park() {
           {[-0.95, 0.95].map((x) => <mesh key={x} position={[x, 0.25, 0]} material={mat(C.plum)}><boxGeometry args={[0.08, 0.5, 0.5]} /></mesh>)}
         </group>
       ))}
-      <group position={[x0 + 11, 0, z0 + 3.2]}>
-        <RBox size={[2.2, 0.12, 0.6]} pos={[0, 0.5, 0]} color={C.wood} r={0.04} />
-        <RBox size={[2.2, 0.55, 0.1]} pos={[0, 0.85, -0.28]} color={C.wood} r={0.04} />
-        {[-0.95, 0.95].map((x) => <mesh key={x} position={[x, 0.25, 0]} material={mat(C.plum)}><boxGeometry args={[0.08, 0.5, 0.5]} /></mesh>)}
-      </group>
+      {/* (the lone bench moved: benches now ring the fountain, see ParkLife) */}
     </group>
   )
 }

@@ -7,6 +7,7 @@ import { useDay } from '../systems/day'
 import { cafe } from '../world/Customers'
 import { TABLES } from '../world/layout'
 import { sfx } from '../systems/sound'
+import { TOUCH } from '../systems/CameraRig'
 
 // Winding down after closing: you walk the quiet café, a couple of regulars linger over their last cup, and a few
 // small, optional things glow: flip the sign, wipe a table, say goodnight, step out for some air. No score, no clock.
@@ -17,7 +18,7 @@ const CHORES: Chore[] = [
   { id: 'bye', label: 'say goodnight to a guest', how: 'say goodnight', done: 'They waved back. 👋', near: (x, z) => cafe.pool.some((c) => c.phase === 'sit' && Math.hypot(c.pos.x - x, c.pos.z - z) < 2.6) },
   { id: 'air', label: 'step outside', how: 'take a breath of night air', done: 'The lid lights look lovely from out here.', near: (_x, z) => z > 16 },
 ]
-const HOW: Record<string, string> = { bye: 'walk up to a guest with 🌙 over them, then press E (or tap)', wipe: 'stand by any table, press E', air: 'walk out of the front door' }
+const HOW: Record<string, string> = TOUCH ? { bye: 'walk up to a guest with 🌙 over them, then tap the button', wipe: 'stand by any table, tap the button', air: 'walk out of the front door' } : { bye: 'walk up to a guest with 🌙 over them, then press E', wipe: 'stand by any table, press E', air: 'walk out of the front door' }
 type Wind = { on: boolean; done: string[]; say: string; sayT: number; open: boolean; wipe: { x: number; z: number; t: number } | null }
 export const useWind = create<Wind>(() => ({ on: false, done: [], say: '', sayT: 0, open: true, wipe: null }))
 
@@ -64,7 +65,7 @@ export function WindDown() {
         </>}
         <button className="wd-go" onClick={endWind}>Start Day {day + 1} →</button>
       </div>
-      {here && !w.wipe && <div className="wd-prompt">press <b>E</b> to {here.how}</div>}
+      {here && !w.wipe && (TOUCH ? <button className="wd-prompt touch-interact" onClick={() => window.dispatchEvent(new KeyboardEvent('keydown', { key: 'e' }))}>👆 tap to {here.how}</button> : <div className="wd-prompt">press <b>E</b> to {here.how}</div>)}
       {talking && <div className="wd-say" key={w.sayT}><b>Kozie</b>{w.say}</div>}
     </>
   )

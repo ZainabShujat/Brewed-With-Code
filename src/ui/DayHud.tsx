@@ -19,6 +19,7 @@ export function DayHud() {
   const winding = useWind((w) => w.on), navDone = useNavTut((t) => t.done), mode = useGame((s) => s.mode)
   if (winding) return null
   const pl = useGame.getState().player, nearDoor = Math.hypot(pl.x, pl.z - 12.2) < 2.8 // the door's own prompt says it
+  if (d.phase === 'idle' && TOUCH && !navDone) return null // phones: Kozie's tour says it; one card at a time
   if (d.phase === 'idle') return (
     <div className="dayopen">
       <div className="dayopen-top">

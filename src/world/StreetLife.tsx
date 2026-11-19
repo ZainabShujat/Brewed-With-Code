@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { Html } from '@react-three/drei'
 import * as THREE from 'three'
@@ -7,6 +7,8 @@ import { folk, rng, type FolkSpec } from './folk/specs'
 import { SHOPS, shopDoor, STREET, BENCHES } from './streetLayout'
 import { seatHip } from './folk/Townsperson'
 import { hourNow } from '../systems/clock'
+import { registerTalker, folkSpots } from '../systems/murmur'
+import { CART, BUS_STOP } from './streetLayout'
 
 // Street life: townsfolk out and about. Marshmallows come from the WEST end of the street, notebooks from the EAST
 // (that's where they live), window-shop, cross at the zebra, stop to chat in pairs, then head home. Busier at
@@ -21,6 +23,8 @@ type Walker = { bench: number; spec: FolkSpec; side: number; pos: THREE.Vector3;
 const V = (x: number, z: number) => new THREE.Vector3(x, 0, z)
 
 // a little errand: from home along the pavement, maybe cross at the zebra, stop at a shop window, then home again
+// solid things on the pavements to walk round: [x, z, half-width]
+const AVOID: [number, number, number][] = [[CART.x, CART.z, 1.6], [BUS_STOP.x, BUS_STOP.z, 2.4], ...BENCHES.map(([x, z]) => [x, z, 1.3] as [number, number, number])]
 const benchTaken = new Set<number>()
 const BENCH_SPOTS = BENCHES.flatMap(([x, z]) => [[x - 0.5, z], [x + 0.5, z]] as [number, number][])
 function errand(w: Walker, r: () => number) {
@@ -56,6 +60,7 @@ export function StreetLife() {
 function WalkerBody({ w, i, all, r }: { w: Walker; i: number; all: Walker[]; r: () => number }) {
   const g = useRef<THREE.Group>(null), bubble = useRef<HTMLDivElement>(null)
   const [ver, setVer] = useState(0)
+  useEffect(() => registerTalker(`walker${i}`, { get x() { return w.pos.x }, get z() { return w.pos.z }, get kind() { return w.spec.kind === 'mallow' ? 'mallow' : 'paper' }, chatty: () => w.active && (w.sayT > 0 || w.pose === 'sit') } as never), [w, i])
   useFrame((_, dtRaw) => {
     const dt = Math.min(dtRaw, 0.05), el = g.current; if (!el) return
     // how many are out depends on the time of day: everyone at midday, a few in the evening, none at night
@@ -70,6 +75,11 @@ function WalkerBody({ w, i, all, r }: { w: Walker; i: number; all: Walker[]; r: 
         const kind = w.side < 0 ? 'mallow' : 'paper'; w.spec = folk(kind, Math.floor(r() * 50)); errand(w, r); w.ver++; setVer(w.ver)
       } else {
         const d = t.clone().sub(w.pos), dist = d.length(), step = 1.9 * dt
+        // steer round anything solid just ahead (other folk, the cart, the bus stop, benches), staying on the pavement
+        if (dist > 0.6 && w.pose !== 'sit') { const ux = d.x / dist, uz = d.z / dist; let push = 0
+          for (const o of AVOID) { const rx = o[0] - w.pos.x, rz = o[1] - w.pos.z, ahead = rx * ux + rz * uz, side = -rx * uz + rz * ux; if (ahead > 0 && ahead < 2.4 && Math.abs(side) < o[2]) push += (side > 0 ? -1 : 1) * (o[2] - Math.abs(side)) }
+          for (const f of folkSpots()) { if (f.id === `walker${i}`) continue; const rx = f.x - w.pos.x, rz = f.z - w.pos.z, ahead = rx * ux + rz * uz, side = -rx * uz + rz * ux; if (ahead > 0 && ahead < 1.6 && Math.abs(side) < 0.8) push += (side > 0 ? -1 : 1) * (0.8 - Math.abs(side)) }
+          if (push) { const px = -uz * push, pz = ux * push, k = Math.min(1, dt * 3); w.pos.x += px * k; w.pos.z += pz * k } }
         if (dist > 0.05) { w.pos.addScaledVector(d.normalize(), Math.min(step, dist)); w.facing = Math.atan2(d.x, d.z); w.pose = 'walk' }
         else { w.path.shift(); if (w.bench >= 0 && w.path.length === 2) { w.wait = 25 + r() * 30; w.pose = 'sit'; w.facing = Math.PI } else if (w.bench < 0 && w.path.length === 1) w.wait = 3 + r() * 4; if (w.bench >= 0 && w.path.length === 0) { benchTaken.delete(w.bench); w.bench = -1 } } // window-shopping / a sit on the bench
         // bump into a neighbour? stop and chat a moment

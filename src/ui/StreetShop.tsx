@@ -1,3 +1,4 @@
+import { TOUCH } from '../systems/CameraRig'
 import { useEffect, useState } from 'react'
 import { useGame } from '../systems/store'
 import { usePantry } from '../systems/pantry'
@@ -37,11 +38,11 @@ export function StreetShop() {
   return (
     <>
       {talk && <div className="talkbox" onPointerDown={(e) => e.stopPropagation()}>
-        <b>{at.icon} {k.name}</b><span>{k.lines[talk.i % k.lines.length]}</span><small>T: more · Esc: bye</small>
+        <b>{at.icon} {k.name}</b><span>{k.lines[talk.i % k.lines.length]}</span><small>{TOUCH ? 'tap talk again for more' : 'T: more · Esc: bye'}</small>
       </div>}
       <div className="shop-prompt" onPointerDown={(e) => e.stopPropagation()}>
-        <button onClick={() => setTalk((t) => ({ shop: at, i: t ? t.i + 1 : 0 }))}>💬 talk to <b>{k.name}</b> <kbd>T</kbd></button>
-        {at.store && <button onClick={() => setOpen(at)}>🛒 buy <kbd>F</kbd></button>}
+        <button onClick={() => setTalk((t) => ({ shop: at, i: t ? t.i + 1 : 0 }))}>💬 talk to <b>{k.name}</b> {!TOUCH && <kbd>T</kbd>}</button>
+        {at.store && <button onClick={() => setOpen(at)}>🛒 buy {!TOUCH && <kbd>F</kbd>}</button>}
       </div>
     </>
   )
