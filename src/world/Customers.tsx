@@ -8,6 +8,9 @@ import { mat } from './mats'
 import { useShop } from '../systems/shop'
 import { TABLES, TABLE_SCALE, WORLD, RR } from './layout'
 import { STREET as S } from './streetLayout'
+import { signAct } from '../ui/Interact'
+import { bubbleShows, setShown } from '../systems/bubbles'
+import { sfx } from '../systems/sound'
 import { useDay, DAY_LEN } from '../systems/day'
 import { useTutorial } from '../systems/tutorial'
 import { useGame } from '../systems/store'
@@ -184,10 +187,7 @@ function Body({ c }: { c: Cust }) {
   useFrame(() => { if (c.ver !== verSeen.current) { verSeen.current = c.ver; setVer(c.ver) } }) // a new townsperson took this slot
   // bubbles are HTML drawn over everything: from OUTSIDE the café (street, Outside view, the title screen) the chatter
   // inside floated through the walls. Show them only when the camera is in the café (or the Dollhouse cut-away).
-  useFrame(({ camera }) => { const el = bubble.current; if (!el) return // (the bubble itself: drei resets its wrapper's display every frame)
-    const mode = useGame.getState().mode, inside = Math.hypot(camera.position.x, camera.position.z) / WORLD < RR + 0.5
-    const show = !(window as unknown as { __menuIdle?: boolean }).__menuIdle && (mode === 'dollhouse' || mode === 'pov' || mode === 'cake' || inside)
-    const v = show ? '' : 'hidden'; if (el.style.visibility !== v) el.style.visibility = v })
+  useFrame(({ camera }) => setShown(bubble.current, bubbleShows(camera, c.pos.x, c.pos.z))) // never through the café's walls
   const pose = (): Pose => c.phase === 'sit' ? 'sit' : poseWalk.current ? 'walk' : 'wait'
   return (
     <group ref={ref} visible={false}>
@@ -246,7 +246,9 @@ function signTex(label: string, open: boolean) {
 function HangingSign({ pos, rotY, label, open, k = 1 }: { pos: [number, number, number]; rotY: number; label: string; open: boolean; k?: number }) {
   const m = useMemo(() => new THREE.MeshStandardMaterial({ map: signTex(label, open), roughness: 0.6 }), [label, open])
   return (
-    <group position={pos} rotation={[0, rotY, 0]} scale={k}>
+    <group position={pos} rotation={[0, rotY, 0]} scale={k}
+      onClick={(e) => { e.stopPropagation(); const a = signAct(); if (a) a.run(); else sfx.tap() }}
+      onPointerOver={() => { document.body.style.cursor = 'pointer' }} onPointerOut={() => { document.body.style.cursor = '' }}>
       {[-0.42, 0.42].map((x) => <mesh key={x} position={[x * 0.6, 0.42, -0.01]} rotation={[0, 0, x > 0 ? -0.55 : 0.55]} material={mat('#3b2a1e')}><cylinderGeometry args={[0.012, 0.012, 0.6, 4]} /></mesh>)}
       <mesh position={[0, 0.7, -0.02]} material={mat('#f2c66a')}><sphereGeometry args={[0.05, 10, 8]} /></mesh>
       <mesh position={[0, 0, -0.035]} material={mat('#5e2a75')}><boxGeometry args={[1.12, 0.46, 0.05]} /></mesh>

@@ -1,3 +1,4 @@
+import { bubbleShows, setShown } from '../systems/bubbles'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { Html } from '@react-three/drei'
@@ -61,8 +62,9 @@ function WalkerBody({ w, i, all, r }: { w: Walker; i: number; all: Walker[]; r: 
   const g = useRef<THREE.Group>(null), bubble = useRef<HTMLDivElement>(null)
   const [ver] = useState(0)
   useEffect(() => registerTalker(`walker${i}`, { get x() { return w.pos.x }, get z() { return w.pos.z }, get kind() { return w.spec.kind === 'mallow' ? 'mallow' : 'paper' }, chatty: () => w.active && (w.sayT > 0 || w.pose === 'sit') } as never), [w, i])
-  useFrame((_, dtRaw) => {
+  useFrame(({ camera }, dtRaw) => {
     const dt = Math.min(dtRaw, 0.05), el = g.current; if (!el) return
+    setShown(bubble.current, bubbleShows(camera, w.pos.x, w.pos.z))
     // how many are out depends on the time of day: everyone at midday, a few in the evening, none at night
     const h = hourNow(), busy = h > 7 && h < 21 ? (h < 9 || h > 18 ? 0.45 : 1) : 0
     w.active = i < Math.round(N * busy)

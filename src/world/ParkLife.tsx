@@ -7,6 +7,7 @@ import { RBox } from './Soft'
 import { mat, glow } from './mats'
 import { C } from '../data/palette'
 import { nightGlow, lampPool } from './Lighting'
+import { bubbleShows, setShown } from '../systems/bubbles'
 import { useLampSpot } from './LampLights'
 import { Townsperson, seatHip, type Pose } from './folk/Townsperson'
 import { folk, rng, type FolkSpec } from './folk/specs'
@@ -324,10 +325,11 @@ function Hanger({ h, i }: { h: Hang; i: number }) {
   useFrame(({ clock, camera }) => {
     const gr = g.current; if (!gr) return
     // each figure is ~30 draw calls: skip them when the camera is far away (Dollhouse / Outside overview)
-    gr.visible = day() && Math.hypot(camera.position.x - gr.position.x * 1.2, camera.position.z - gr.position.z * 1.2) < 60; if (!gr.visible) return
+    gr.visible = day() && Math.hypot(camera.position.x - gr.position.x * 1.2, camera.position.z - gr.position.z * 1.2) < 60; if (!gr.visible) { setShown(bubble.current, false); return }
     if (route) { const u = ((clock.elapsedTime * (h.speed ?? 1.1)) / route.len + i * 0.37) % 1, p = route.c.getPointAt(u), q = route.c.getPointAt((u + 0.002) % 1)
       gr.position.set(p.x, groundY(p.x, p.z), p.z); gr.rotation.y = Math.atan2(q.x - p.x, q.z - p.z); me.x = p.x; me.z = p.z }
     const b = bubble.current; if (!b) return
+    setShown(b, bubbleShows(camera, gr.position.x, gr.position.z))
     const k = (clock.elapsedTime + i * 2.7) % 9, txt = k < 2.4 && !route ? SAY[(i + Math.floor(clock.elapsedTime / 9)) % SAY.length] : ''
     if (b.textContent !== txt) b.textContent = txt; b.style.opacity = txt ? '1' : '0'
   })

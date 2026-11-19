@@ -1,3 +1,4 @@
+import { bubbleShows, setShown } from '../systems/bubbles'
 import { useMemo, useRef, useEffect } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { Html } from '@react-three/drei'
@@ -114,7 +115,7 @@ const PSAY = ['this is the life 🧺', 'pass the sandwiches?', 'the café latte 
 function PicnicFolk({ spec, x, z, lx, face, i }: { spec: ReturnType<typeof folk>; x: number; z: number; lx: number; face: number; i: number }) {
   const b = useRef<HTMLDivElement>(null)
   useEffect(() => registerTalker(`picnic${i}`, { x: x + lx, z, kind: spec.kind === 'mallow' ? 'mallow' : 'paper', chatty: () => { const t = hourNow(); return t > 8 && t < 20 } }), [x, z, lx, spec, i])
-  useFrame(({ clock }) => { const el = b.current; if (!el) return; const k = (clock.elapsedTime + i * 3.3) % 10, t = k < 2.4 ? PSAY[(i + Math.floor(clock.elapsedTime / 10)) % PSAY.length] : ''; if (el.textContent !== t) el.textContent = t; el.style.opacity = t ? '1' : '0' })
+  useFrame(({ clock, camera }) => { const el = b.current; if (!el) return; setShown(el, bubbleShows(camera, x + lx, z)); const k = (clock.elapsedTime + i * 3.3) % 10, t = k < 2.4 ? PSAY[(i + Math.floor(clock.elapsedTime / 10)) % PSAY.length] : ''; if (el.textContent !== t) el.textContent = t; el.style.opacity = t ? '1' : '0' })
   return (
     <group position={[lx, -seatHip(spec) * 1.95 + 0.3, 0]} rotation={[0, face, 0]}>
       <group scale={1.95}><Townsperson spec={spec} pose="sit" phase={i} /></group>

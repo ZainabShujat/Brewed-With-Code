@@ -12,13 +12,17 @@ import { frontOrder, takeOrder } from './TakeOrder'
 type Act = { label: string; run: () => void }
 const near = (x: number, z: number, r: number) => { const p = useGame.getState().player; return Math.hypot(p.x - x, p.z - z) < r }
 const tip = (n: number) => { useShop.setState((s) => ({ coins: s.coins + n })); useDay.getState().record('tips', n) }
+/** flipping the OPEN / CLOSED sign (E at the door, or click / tap the sign itself) */
+export function signAct(): Act | null {
+  const d = useDay.getState()
+  if (d.phase === 'idle') return { label: 'flip the sign to OPEN', run: () => { useShop.getState().openShop(true); d.start(); cafe.seed(2); cafe._spawnT = cafe.spawnEvery - 6; sfx.bell() } }
+  if (d.phase === 'closing' && cafe.line.size === 0) return { label: 'flip the sign to CLOSED', run: () => { useShop.getState().openShop(false); d.closeUp(); sfx.tap() } }
+  return null
+}
 export function currentAct(): Act | null {
   const g = useGame.getState(); if (!onFoot(g.mode)) return null
   const d = useDay.getState()
-  if (near(0, 12.2, 2.8)) {
-    if (d.phase === 'idle') return { label: 'flip the sign to OPEN', run: () => { useShop.getState().openShop(true); d.start(); cafe.seed(2); cafe._spawnT = cafe.spawnEvery - 6; sfx.bell() } }
-    if (d.phase === 'closing' && cafe.line.size === 0) return { label: 'flip the sign to CLOSED', run: () => { useShop.getState().openShop(false); d.closeUp(); sfx.tap() } }
-  }
+  if (near(0, 12.2, 2.8) || near(0, 19.2, 3)) { const a = signAct(); if (a) return a } // inside the door, or outside it
   if (d.phase === 'open' || d.phase === 'closing') {
     const g2 = cafe.pool.find((c) => c.phase === 'sit' && c.refill === 'ask' && near(c.pos.x, c.pos.z, 2.4))
     if (g2) return { label: 'top up their coffee ☕', run: () => { g2.refill = 'done'; g2.thankT = 3; tip(2); sfx.tap() } }

@@ -879,3 +879,8 @@ html:not(.phone) .fullscreenbtn { left: auto; right: 14px; top: auto; bottom: 14
 .phone .titleboard { width: 52vw; height: 21vw; top: 1vh; }
 .titleboard { width: min(1100px, 88vw); height: min(430px, 36vw); top: 0; }
 .phone .titleboard { width: 70vw; height: 28vw; top: 0; }
+
+/* the bar: a big label on the next thing to use, saying what to do with it */
+.actiontag { white-space: nowrap; font: 900 17px 'Trebuchet MS', sans-serif; color: #2a1830; background: #ffd166; padding: 7px 14px 8px; border-radius: 14px; border: 3px solid #2a1830; box-shadow: 0 4px 0 #2a1830; animation: tagpulse 1.1s ease-in-out infinite; }
+@keyframes tagpulse { 50% { transform: scale(1.07); } }
+.phone .actiontag { font-size: 13px; padding: 5px 10px 6px; }

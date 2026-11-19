@@ -392,7 +392,11 @@ export function Bar() {
       </Grab>}
       {/* espresso machine (pull a shot) */}
       <Hold id="machine" tip="hold to pull a shot (watch the shot glass)" pos={[MACHINE.x, TOP + 0.45, MACHINE.z]} size={[0.5, 0.9, 0.62]}
-        onStart={() => useShop.setState({ pulling: true })} onEnd={() => { useShop.setState({ pulling: false }); judgeShot() }} onHold={(dt) => s().pullTick(dt)} />
+        onStart={() => { pullT0 = performance.now(); useShop.setState({ pulling: true, hint: '' }) }}
+        onEnd={() => { useShop.setState({ pulling: false }); judgeShot()
+          // a quick tap pulls nothing you can see: say so (reviews: people didn't get the espresso machine)
+          if (performance.now() - pullT0 < 450 && s().shotGlass < 8) useShop.setState({ hint: '👆 Hold it down! Keep pressing the machine until the ring turns green ☕', cheer: { text: 'keep holding! 👆', t: performance.now() / 1000, good: false } }) }}
+        onHold={(dt) => s().pullTick(dt)} />
       <SteamWand />
       {/* the shot glass: fills under the machine, then is poured into your glass */}
       <Grab id="shotglass" tip="shot glass: click, then click your glass" pos={SHOT_HOME} size={[0.16, 0.22, 0.16]} drops={{ cup: () => s().pourShotGlass() }}>
@@ -564,6 +568,26 @@ function FillBand() {
   return <mesh ref={ref} position={[0, (yA + yB) / 2, 0]} renderOrder={4}><cylinderGeometry args={[r, glassR(yA) + 0.012, yB - yA, 40, 1, true]} /><meshStandardMaterial color="#ffd166" emissive="#ffb300" emissiveIntensity={0.6} transparent opacity={0.3} side={THREE.DoubleSide} depthWrite={false} /></mesh>
 }
 
+let pullT0 = 0
+// ── the guide: a bouncing arrow over the one thing to do next, a glowing ring where it goes, and a big label
+//    saying what to DO with it (press & hold / drag), so nobody has to guess (19 Nov review) ──
+const ACTION: Partial<Record<Step, string>> = {
+  glass: '✋ DRAG a glass → the mat', choc: '✋ DRAG → your glass', pull: '👆 PRESS & HOLD the machine', pourShot: '✋ DRAG the shot → your glass',
+  water: '✋ DRAG → your glass', fillPitcher: '👆 PRESS & HOLD the milk', pitcherToWand: '✋ DRAG the jug → the steam wand', steam: '👆 PRESS & HOLD to steam',
+  pourMilk: '✋ DRAG the jug → your glass, HOLD to pour', topping: '✋ DRAG → your glass', serve: '✋ DRAG your glass → the pass 🔔',
+}
+function ActionTag() {
+  const pov = useGame((st) => st.mode === 'pov'), g = useRef<THREE.Group>(null)
+  const [label, setLabel] = useState(''), last = useRef('')
+  useFrame(({ clock }) => {
+    const st = useShop.getState(), busy = st.pouringMilk || !!st.shaking || st.pulling || st.steaming || !!st.filling
+    const id = nextStep().id, sp = busy ? null : spotFor(id), txt = sp ? ACTION[id] ?? '' : ''
+    if (txt !== last.current) { last.current = txt; setLabel(txt) }
+    if (sp && g.current) g.current.position.set(sp.at[0], sp.at[1] + sp.top + 0.32 + Math.sin(clock.elapsedTime * 3) * 0.02, sp.at[2])
+  })
+  if (!pov || !label) return null
+  return <group ref={g}><Html center zIndexRange={[6, 0]} style={{ pointerEvents: 'none' }}><div className="actiontag">{label}</div></Html></group>
+}
 // ── the guide: a bouncing arrow over the one thing to do next, and a glowing ring where it goes ──
 const GLOW = new THREE.MeshStandardMaterial({ color: '#ffd166', emissive: '#ffb300', emissiveIntensity: 1.2, transparent: true, opacity: 0.9, depthWrite: false })
 const STACK_I = { small: 0, medium: 1, large: 2 } as const
@@ -604,8 +628,9 @@ function Guide() {
   if (!pov) return null
   return (
     <group>
-      <group ref={arrow}><mesh rotation={[Math.PI, 0, 0]} material={GLOW}><coneGeometry args={[0.045, 0.09, 12]} /></mesh>
-        <mesh position={[0, 0.07, 0]} material={GLOW}><cylinderGeometry args={[0.014, 0.014, 0.08, 8]} /></mesh></group>
+      <group ref={arrow}><mesh rotation={[Math.PI, 0, 0]} material={GLOW}><coneGeometry args={[0.08, 0.16, 14]} /></mesh>
+        <mesh position={[0, 0.13, 0]} material={GLOW}><cylinderGeometry args={[0.025, 0.025, 0.14, 8]} /></mesh></group>
+      <ActionTag />
       <mesh ref={ring} rotation={[-Math.PI / 2, 0, 0]} material={GLOW}><ringGeometry args={[0.13, 0.155, 32]} /></mesh>
       <mesh ref={dest} rotation={[-Math.PI / 2, 0, 0]} material={GLOW}><ringGeometry args={[0.18, 0.2, 32, 1]} /></mesh>
     </group>
