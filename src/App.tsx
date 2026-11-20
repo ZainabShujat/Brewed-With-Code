@@ -15,6 +15,7 @@ import { SugarGarden, ForestEdge } from './world/Landscape'
 import { Forest, Townships, TreeBelts } from './world/Scenery'
 import { GrassScatter, DistanceCull } from './world/Ground'
 import { LampLights } from './world/LampLights'
+import { StationHint } from './ui/StationHint'
 import { Outskirts } from './world/Outskirts'
 import { Keepers } from './world/Keepers'
 import { RR as ROOM_R } from './world/layout'
@@ -152,6 +153,7 @@ export default function App() {
       {playing && <ServeReturn />}
       {playing && <WindDown />}
       {playing && !SNAP && <NavTutorial />}
+      {playing && <StationHint />}
       {playing && !SNAP && <Interact />}
       {playing && mode === 'pov' && <HoldRing />}
       {playing && (mode === 'walk' || mode === 'fp') && <StreetShop />}

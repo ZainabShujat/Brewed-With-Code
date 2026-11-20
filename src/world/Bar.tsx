@@ -319,11 +319,30 @@ function MilkBottle({ x, milk, color, cap }: { x: number; milk: 'whole' | 'oat' 
   )
 }
 
-function Shaker({ x, label, color }: { x: number; label: string; color: string; onClick?: () => void }) {
-  const size = useShop((st) => st.drink.size)
+// a spot on the floor of a drawer's tray, in its OPEN position (counter space; matches Interior's Counter drawers)
+// (20 Nov) the extras live in an open CADDY at the back of the counter: always visible, all in one tidy place, with
+// labelled sections (the drawers sat at the bottom edge of the bar camera, so an open drawer's contents were hidden)
+function inTray(d: 'sprinkles' | 'fillers', dx: number, _y: number): [number, number, number] { return d === 'sprinkles' ? [0.44 + dx * 0.8, TOP + 0.13, RZ] : [dx < 0 ? 1.17 : 0.93, TOP + 0.15, RZ] }
+const WHIP_AT: [number, number, number] = [0.93, TOP + 0.17, RZ], CHOC_AT: [number, number, number] = [1.18, TOP + 0.14, RZ]
+const CADDY = { x0: 0.02, x1: 1.34, z: RZ, d: 0.3 }
+function Caddy() {
+  const w = CADDY.x1 - CADDY.x0, cx = (CADDY.x0 + CADDY.x1) / 2, wood = mat('#c8935e', { rough: 0.8 }), dark = mat('#8a5a34', { rough: 0.8 })
   return (
-    <Grab id={label} tip={`${label}: click, then hold over your glass to shake`} pos={[x, TOP + 0.13, RZ]} size={[0.18, 0.3, 0.18]} drops={{ cup: () => startShake(label as Topping) }} holdDrops={['cup']}>
-      <Flyer kind="sprinkle" tag={label} home={[x, TOP + 0.13, RZ]} act="shake" side={Math.sin(SHAKE_TILT) * SHAKE_MOUTH} above={glassTop(size) + SHAKE_ABOVE}>
+    <group>
+      <mesh position={[cx, TOP + 0.015, CADDY.z]} material={dark} receiveShadow><boxGeometry args={[w, 0.03, CADDY.d]} /></mesh>
+      <mesh position={[cx, TOP + 0.07, CADDY.z + CADDY.d / 2]} material={wood}><boxGeometry args={[w, 0.14, 0.025]} /></mesh>
+      <mesh position={[cx, TOP + 0.04, CADDY.z - CADDY.d / 2]} material={wood}><boxGeometry args={[w, 0.08, 0.025]} /></mesh>
+      {[CADDY.x0, 0.81, CADDY.x1].map((x) => <mesh key={x} position={[x, TOP + 0.07, CADDY.z]} material={wood}><boxGeometry args={[0.025, 0.14, CADDY.d]} /></mesh>)}
+      <Html position={[0.42, TOP + 0.42, CADDY.z + 0.12]} center zIndexRange={[5, 0]} style={{ pointerEvents: 'none' }}><div className="drawertag">🧂 toppings</div></Html>
+      <Html position={[1.08, TOP + 0.48, CADDY.z + 0.12]} center zIndexRange={[5, 0]} style={{ pointerEvents: 'none' }}><div className="drawertag">🍫 sauce · cream</div></Html>
+    </group>
+  )
+}
+function Shaker({ x, label, color, at }: { x: number; label: string; color: string; onClick?: () => void; at?: [number, number, number] }) {
+  const size = useShop((st) => st.drink.size), home: [number, number, number] = at ?? [x, TOP + 0.13, RZ]
+  return (
+    <Grab id={label} tip={`${label}: click, then hold over your glass to shake`} pos={home} size={[0.22, 0.32, 0.22]} drops={{ cup: () => startShake(label as Topping) }} holdDrops={['cup']}>
+      <Flyer kind="sprinkle" tag={label} home={home} act="shake" side={Math.sin(SHAKE_TILT) * SHAKE_MOUTH} above={glassTop(size) + SHAKE_ABOVE}>
         <mesh position={[0, -0.02, 0]} material={glass()}><cylinderGeometry args={[0.06, 0.06, 0.18, 16]} /></mesh>
         <mesh position={[0, -0.04, 0]} material={mat(color)}><cylinderGeometry args={[0.054, 0.054, 0.12, 16]} /></mesh>
         <mesh position={[0, 0.09, 0]} material={mat(C.steel)}><cylinderGeometry args={[0.06, 0.06, 0.05, 16]} /></mesh>
@@ -350,8 +369,8 @@ export function Bar() {
   const milkOut = (m: string) => need.all || need.milkType === m
   const drawer = useDrawers((d) => d.open)
   useFrame((_, dt) => tickDrawers(Math.min(dt, 0.1)))
-  const inDrawer = (t: string) => drawer === DRAWER_OF[t] // the extras live in the drawers: out on the counter only while theirs is open
-  const topOut = (t: string) => (need.all || need.topping === t) && inDrawer(t)
+  const inDrawer = (_t: string) => { void drawer; return true } // (the caddy's extras are always out)
+  const topOut = (t: string) => inDrawer(t) // every topping always in the caddy (the guide highlights the one the order wants)
   return (
     <group>
       {/* ── left → right as the barista sees it ── */}
@@ -383,20 +402,21 @@ export function Bar() {
           <mesh position={[-0.085, 0.1, 0]} rotation={[0, 0, 0.6]} material={mat(C.steel)}><coneGeometry args={[0.025, 0.06, 8]} /></mesh>
         </Flyer>
       </Grab>}
-      {/* toppings (back row) */}
-      {topOut('cocoa') && <Shaker x={BAR.shakers.cocoa} label="cocoa" color="#5b2e1c" />}
-      {topOut('cinnamon') && <Shaker x={BAR.shakers.cinnamon} label="cinnamon" color="#b0602a" />}
-      {topOut('sprinkles') && <Shaker x={BAR.shakers.sprinkles} label="sprinkles" color={C.counter} />}
+      {/* the extras caddy (back row): toppings, sauce, cream */}
+      <Caddy />
+      {topOut('cocoa') && <Shaker x={0} at={inTray('sprinkles', -0.3, 0.39)} label="cocoa" color="#5b2e1c" />}
+      {topOut('cinnamon') && <Shaker x={0} at={inTray('sprinkles', 0, 0.39)} label="cinnamon" color="#b0602a" />}
+      {topOut('sprinkles') && <Shaker x={0} at={inTray('sprinkles', 0.3, 0.39)} label="sprinkles" color={C.counter} />}
       <HandShake />
-      {topOut('whipped') && <Grab id="whipped" tip="whipped cream: click, then click your glass" pos={BAR.whip} size={[0.16, 0.38, 0.16]} onClick={() => { s().top('whipped'); useDrawers.getState().close() }} drops={{ cup: () => { s().top('whipped'); useDrawers.getState().close() } }}>
-        <Flyer kind="whip" home={BAR.whip} act="invert" side={0} above={glassTop(size) + 0.25}>
+      {topOut('whipped') && <Grab id="whipped" tip="whipped cream: pick it up, then your glass" pos={WHIP_AT} size={[0.16, 0.38, 0.16]} onClick={() => { s().top('whipped'); useDrawers.getState().close() }} drops={{ cup: () => { s().top('whipped'); useDrawers.getState().close() } }}>
+        <Flyer kind="whip" home={WHIP_AT} act="invert" side={0} above={glassTop(size) + 0.25}>
           <mesh material={mat(C.white)}><cylinderGeometry args={[0.05, 0.05, 0.26, 16]} /></mesh>
           <mesh position={[0, 0.16, 0]} material={mat(C.steel)}><coneGeometry args={[0.035, 0.07, 10]} /></mesh>
         </Flyer>
       </Grab>}
       {/* chocolate sauce + hot-water kettle */}
-      {need.choc && inDrawer('choc') && <Grab id="choc" tip="chocolate: click, then click your glass" pos={BAR.choc} size={[0.18, 0.32, 0.18]} onClick={() => { s().choc(); useDrawers.getState().close() }} drops={{ cup: () => { s().choc(); useDrawers.getState().close() } }}>
-        <Flyer kind="choc" home={BAR.choc} act="invert" side={0} above={glassTop(size) + CHOC_ABOVE}>
+      {inDrawer('choc') && <Grab id="choc" tip="chocolate sauce: pick it up, then your glass" pos={CHOC_AT} size={[0.18, 0.32, 0.18]} onClick={() => { s().choc(); useDrawers.getState().close() }} drops={{ cup: () => { s().choc(); useDrawers.getState().close() } }}>
+        <Flyer kind="choc" home={CHOC_AT} act="invert" side={0} above={glassTop(size) + CHOC_ABOVE}>
           <mesh material={mat('#5a3424', { rough: 0.3 })}><cylinderGeometry args={[0.055, 0.06, 0.22, 16]} /></mesh>
           <mesh position={[0, 0.14, 0]} material={mat('#3b1d12')}><coneGeometry args={[0.035, 0.07, 10]} /></mesh>
         </Flyer>
@@ -603,8 +623,7 @@ const ACTION: Partial<Record<Step, string>> = {
   water: '✋ DRAG → your glass', fillPitcher: '👆 PRESS & HOLD the milk', pitcherToWand: '✋ DRAG the milk jug → under the steam wand', steam: '👆 HOLD the steam knob',
   pourMilk: '✋ DRAG the jug → your glass, HOLD to pour', topping: '✋ DRAG → your glass', serve: '✋ DRAG your glass → the pass 🔔',
 }
-const drawerLabel = (id: Step) => { const w = want(); const item = id === 'choc' ? 'choc' : id === 'topping' ? w?.topping ?? '' : ''; const d = DRAWER_OF[item]
-  return d && useDrawers.getState().open !== d ? `👆 OPEN the ${d} drawer` : '' }
+const drawerLabel = (_id: Step) => ''
 function ActionTag() {
   const pov = useGame((st) => st.mode === 'pov'), g = useRef<THREE.Group>(null)
   const [label, setLabel] = useState(''), last = useRef('')
@@ -623,7 +642,7 @@ const STACK_I = { small: 0, medium: 1, large: 2 } as const
 type Spot = { at: V3; top: number; to?: V3 }
 type V3 = [number, number, number]
 const cupMat: V3 = [CUP_AT[0], TOP + 0.01, CUP_AT[2]]
-function drawerSpot(item: string): Spot | null { const d = DRAWER_OF[item]; if (!d || useDrawers.getState().open === d) return null; return { at: [DRAWER_X[d], TOP - 0.45, BZ - 0.35], top: 0.05 } }
+function drawerSpot(_item: string): Spot | null { return null }
 function spotFor(id: Step): Spot | null {
   const w = want(), s = useShop.getState(); if (!w) return null
   if (id === 'choc') { const d = drawerSpot('choc'); if (d) return d }
@@ -631,7 +650,7 @@ function spotFor(id: Step): Spot | null {
   const pAt: V3 = s.pitcher.at === 'wand' ? [WAND[0], TOP + 0.12, WAND[2]] : BAR.pitcher
   switch (id) {
     case 'glass': return { at: [BAR.shelf.stacks[STACK_I[w.size]], TOP, RZ + 0.08], top: 0.5, to: cupMat }
-    case 'choc': return { at: BAR.choc, top: 0.25, to: cupMat }
+    case 'choc': return { at: CHOC_AT, top: 0.25, to: cupMat }
     case 'pull': return { at: [MACHINE.x, TOP, MACHINE.z], top: 0.95 }
     case 'pourShot': return { at: SHOT_HOME, top: 0.16, to: cupMat }
     case 'water': return { at: BAR.kettle, top: 0.22, to: cupMat }
@@ -639,7 +658,7 @@ function spotFor(id: Step): Spot | null {
     case 'pitcherToWand': return { at: BAR.pitcher, top: 0.2, to: [WAND[0], TOP + 0.01, WAND[2]] }
     case 'steam': return { at: [WAND[0] - 0.22, TOP + 0.38, WAND[2]], top: 0.08 }
     case 'pourMilk': return { at: pAt, top: 0.2, to: cupMat }
-    case 'topping': return w.topping === 'whipped' ? { at: BAR.whip, top: 0.28, to: cupMat } : { at: [BAR.shakers[w.topping] ?? 0, TOP + 0.13, RZ], top: 0.22, to: cupMat }
+    case 'topping': return w.topping === 'whipped' ? { at: WHIP_AT, top: 0.3, to: cupMat } : { at: inTray('sprinkles', w.topping === 'cocoa' ? -0.3 : w.topping === 'cinnamon' ? 0 : 0.3, 0.39), top: 0.22, to: cupMat }
     case 'serve': return { at: CUP_AT, top: 0.62, to: [BAR.pass[0], TOP + 0.01, BAR.pass[2]] }
     default: return null
   }

@@ -149,6 +149,7 @@ function PastryCase({ x, z, w, rot = 0, body = C.wood }: { x: number; z: number;
   )
 }
 
+const TRAY: Record<string, string> = {} // (drawers are decoration again: the extras moved to a caddy on the counter, see Bar)
 function Counter({ showDrawerTags }: { showDrawerTags: boolean }) {
   const { x0, x1, z, depth, top } = COUNTER
   const w = x1 - x0, cx = (x0 + x1) / 2
@@ -164,9 +165,15 @@ function Counter({ showDrawerTags }: { showDrawerTags: boolean }) {
           onPointerOver={() => { if (useGame.getState().mode === 'pov') document.body.style.cursor = 'pointer' }} onPointerOut={() => { document.body.style.cursor = '' }}><Slide id={label}>
           <RBox size={[1.2, 0.7, 0.08]} color={col} r={0.025} />
           <RBox size={[1.08, 0.58, 0.02]} pos={[0, 0, -0.045]} color={col} r={0.01} shadow={false} />
-          {/* drawer body + contents, seen when it slides open */}
-          <RBox size={[1.1, 0.5, 0.55]} pos={[0, -0.02, 0.3]} color={C.counterTop} r={0.04} shadow={false} />
-          {[-0.3, 0, 0.3].map((dx, i) => <mesh key={dx} position={[dx, 0.25, 0.3]} material={mat([C.counter, C.butter, C.mint, C.lilac][(i + label.length) % 4])}><sphereGeometry args={[0.13, 10, 8]} /></mesh>)}
+          {/* drawer body. The two working drawers are open-topped trays: slide one out and you see what's inside
+              (toppings / sauce + cream sit on its floor, picked straight from there; see Bar's DrawerItems) */}
+          {TRAY[label] ? <group position={[0, -0.02, 0.3]}>
+              <mesh position={[0, -0.24, 0]} material={mat('#f6ece3')} receiveShadow><boxGeometry args={[1.08, 0.03, 0.53]} /></mesh>
+              {[[-0.535, 0, 0.03, 0.5, 0.53], [0.535, 0, 0.03, 0.5, 0.53], [0, 0.265, 1.08, 0.5, 0.03]].map(([x, z, w, h, d], i) => <mesh key={i} position={[x, -0.01, z]} material={mat(col, { rough: 0.8 })}><boxGeometry args={[w, h, d]} /></mesh>)}
+            </group>
+            : <><RBox size={[1.1, 0.5, 0.55]} pos={[0, -0.02, 0.3]} color={C.counterTop} r={0.04} shadow={false} />
+              {[-0.3, 0, 0.3].map((dx, i) => <mesh key={dx} position={[dx, 0.25, 0.3]} material={mat([C.counter, C.butter, C.mint, C.lilac][(i + label.length) % 4])}><sphereGeometry args={[0.13, 10, 8]} /></mesh>)}</>}
+          {TRAY[label] && showDrawerTags && <Html position={[0, -0.05, -0.07]} center zIndexRange={[5, 0]} style={{ pointerEvents: 'none' }}><div className="drawertag">{TRAY[label]}</div></Html>}
           <mesh position={[0, 0.16, -0.08]} rotation={[0, 0, Math.PI / 2]} material={BRASS}>
             <capsuleGeometry args={[0.022, 0.36, 4, 10]} />
           </mesh>

@@ -56,7 +56,7 @@ export function nextStep(): { id: Step; text: string } {
   const fill = s.cup ? filled(s.ml) / CAP[d.size] : 0
   if (!w) return { id: 'wait', text: cafe.line.size ? 'a customer is walking up…' : 'waiting for customers…' }
   if (!s.cup) return { id: 'glass', text: `DRAG a ${w.size} glass onto the mat` }
-  if (w.chocolate && !d.chocolate) return { id: 'choc', text: 'open the fillers drawer, then DRAG the chocolate sauce onto your glass' }
+  if (w.chocolate && !d.chocolate) return { id: 'choc', text: 'DRAG the chocolate sauce onto your glass' }
   if (d.shots < w.shots && s.shotGlass < 5) return { id: 'pull', text: 'HOLD the espresso machine · LET GO on green' }
   if (d.shots < w.shots) return { id: 'pourShot', text: 'DRAG the shot glass onto your glass' }
   if (w.water && !d.water) return { id: 'water', text: 'DRAG the kettle onto your glass' }
@@ -66,7 +66,7 @@ export function nextStep(): { id: Step; text: string } {
     if (p.at === 'wand' && p.stretch < STEAM_ZONES[w.milk][0]) return { id: 'steam', text: 'HOLD the steam knob · LET GO on green' }
   }
   if (w.milk !== 'none' && fill < 0.75) return { id: 'pourMilk', text: 'DRAG the jug onto your glass and HOLD to pour' }
-  if (w.topping !== 'none' && d.topping === 'none') return { id: 'topping', text: w.topping === 'whipped' ? 'open the fillers drawer, then DRAG the cream onto your glass' : `open the sprinkles drawer, then DRAG the ${w.topping} over your glass` }
+  if (w.topping !== 'none' && d.topping === 'none') return { id: 'topping', text: w.topping === 'whipped' ? 'DRAG the cream onto your glass' : `DRAG the ${w.topping} over your glass` }
   return { id: 'serve', text: 'DRAG your glass onto the pass 🔔' }
 }
 /** the whole order as a short list of steps (for the step tracker): icon + short name, in the order you do them */

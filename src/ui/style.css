@@ -895,3 +895,9 @@ html:not(.phone) .fullscreenbtn { left: auto; right: 14px; top: auto; bottom: 14
 .brew-tip { display: none !important; }
 .phone .brew-next { max-width: 70vw !important; padding: 5px 12px 7px !important; }
 .phone .brew-say { font-size: 13px; }
+
+.stationhint { position: fixed; left: 50%; top: 58%; transform: translateX(-50%); z-index: 21; pointer-events: none; background: rgba(42,24,58,.82); color: #fff6ee; font: 900 17px 'Trebuchet MS', sans-serif; padding: 8px 18px 10px; border-radius: 999px; box-shadow: 0 4px 14px rgba(0,0,0,.3); }
+.phone .stationhint { font-size: 14px; top: 62%; }
+
+.drawertag { white-space: nowrap; font: 900 14px 'Trebuchet MS', sans-serif; color: #2a1830; background: #fff6ee; padding: 3px 10px 5px; border-radius: 10px; box-shadow: 0 2px 0 rgba(42,24,48,.35); }
+.phone .drawertag { font-size: 11px; padding: 2px 7px 3px; }

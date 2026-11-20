@@ -38,6 +38,14 @@ const wantLook = new THREE.Vector3()
 // Mouse look: dollhouse = orbit all the way round (drag) + zoom (wheel).
 // Walk / barista / cakes = turn your head (right-drag, or drag on empty space), wheel leans in/out.
 const loadSens = () => { try { return Number(localStorage.getItem('sens')) || 1 } catch { return 1 } }
+/** the station you're standing at, on foot (layout units): the coffee bar or the cake bench */
+export function stationAt(): 'pov' | 'cake' | '' {
+  const p = useGame.getState().player
+  if (p.x > -3.1 && p.x < 3.5 && ((p.z > -6.4 && p.z < -4.4) || (p.z > -10.4 && p.z < -8.0))) return 'pov'
+  if (p.x > -9.2 && p.x < -4.8 && p.z > -10.8 && p.z < -7.2) return 'cake'
+  return ''
+}
+export function enterStation(st: 'pov' | 'cake') { useGame.getState().setMode(st) }
 export const view = { yaw: 0, pitch: 0, zoom: 1, mode: '' as string, sens: loadSens(), looking: false, panX: 0, panZ: 0, spin: 0 }
 export const setSens = (v: number) => { view.sens = v; try { localStorage.setItem('sens', String(v)) } catch { /* private mode */ } }
 const _off = new THREE.Vector3(), _sph = new THREE.Spherical()
@@ -59,6 +67,9 @@ export function useMouseLook() {
       // MOUSE LOOK, like any first-person game: hold the RIGHT button and move the mouse to turn your head.
       // In Walk view a left click on the scene locks the mouse for full look (Esc to let go).
       if (e.pointerType === 'touch') { grabbed = document.body.style.cursor === 'pointer'; tap0 = { t: performance.now(), x: e.clientX, y: e.clientY }; return } // fingers: no pointer lock, just drag to look
+      // on foot at a station (the bar, the cake bench): a left click goes straight in, no Escape needed (playtest 19 Nov:
+      // the click locked the mouse instead, and the Take order button couldn't be clicked until you pressed Escape)
+      if (e.button === 0 && (view.mode === 'walk' || view.mode === 'fp')) { const st = stationAt(); if (st) { if (document.pointerLockElement) document.exitPointerLock(); enterStation(st); return } }
       if (view.mode !== 'dollhouse' && view.mode !== 'exterior' && (e.button === 2 || ((view.mode === 'walk' || view.mode === 'fp') && e.button === 0)) && (view.mode !== 'pov' || e.button === 2)) {
         el.requestPointerLock?.(); view.looking = true; return
       }
@@ -110,7 +121,8 @@ export function useMouseLook() {
     const pu = (e: PointerEvent) => {
       // a quick tap (not a drag) on the floor while on foot: walk there
       if (e.pointerType === 'touch' && pts.size === 1 && (view.mode === 'walk' || view.mode === 'fp') && performance.now() - tap0.t < 320 && Math.hypot(e.clientX - tap0.x, e.clientY - tap0.y) < 14) {
-        const r = el.getBoundingClientRect(); tapAt.x = ((e.clientX - r.left) / r.width) * 2 - 1; tapAt.y = -((e.clientY - r.top) / r.height) * 2 + 1; tapAt.on = true }
+        const st = stationAt(); if (st && !grabbed) enterStation(st) // at the bar / cake bench: a tap steps in
+        else { const r = el.getBoundingClientRect(); tapAt.x = ((e.clientX - r.left) / r.width) * 2 - 1; tapAt.y = -((e.clientY - r.top) / r.height) * 2 + 1; tapAt.on = true } }
       if (e.button === 2 && document.pointerLockElement === el) document.exitPointerLock()
       if (document.pointerLockElement !== el) view.looking = false
       pts.delete(e.pointerId); if (pts.size < 2) { pinch = 0; mid = null } down = -1 }
@@ -198,7 +210,7 @@ export function CameraRig() {
     let cut = false
     // switching between Explore / first person / Dollhouse GLIDES (no cut); going to a station cuts with a fade
     let glide = false
-    if (lastMode !== mode) { glide = GLIDE.has(lastMode) && GLIDE.has(mode); cut = lastMode !== '' && !glide; if (glide) glideT = 1.2; lastMode = mode; if (cut) fadeCut() }
+    if (lastMode !== mode) { glide = GLIDE.has(lastMode) && GLIDE.has(mode); cut = lastMode !== '' && !glide; if (glide) glideT = 1.2; lastMode = mode; if (cut) fadeCut(); if ((mode === 'pov' || mode === 'cake') && document.pointerLockElement) document.exitPointerLock() }
     if (glideT > 0) glideT -= dt
     const asp = (camera as THREE.PerspectiveCamera).aspect
     setFov(camera as THREE.PerspectiveCamera, mode === 'cake' && asp < 1 ? 58 : (mode === 'pov' ? 50 : mode === 'dollhouse' ? 19 : 45) * (asp < 1 ? Math.min(1.7, 1 / asp * 0.95) : 1)) // portrait phone = wider lens // barista view: a slightly wider, human field of view
