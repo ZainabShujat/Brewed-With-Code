@@ -207,7 +207,7 @@ function Tile({ id, o, y }: { id: Station; o: Opt; y: number }) {
     <group ref={g} position={[0, y, 0]} name={`deck:${id}:${o.label}`} onClick={pick}
       onPointerOver={(e) => { e.stopPropagation(); document.body.style.cursor = 'pointer' }} onPointerOut={() => { document.body.style.cursor = '' }}>
       <mesh ref={glow} position={[0, 0, -0.006]} visible={false} material={gm}><boxGeometry args={[0.3, 0.15, 0.02]} /></mesh>
-      <RBox size={[0.27, 0.125, 0.03]} pos={[0, 0, 0]} color="#ffffff" r={0.03} shadow={false} />
+      <RBox size={[0.27, 0.125, 0.03]} pos={[0, 0, 0]} color="#ece0f2" r={0.03} shadow={false} /> {/* soft lilac, so white frosting / rosettes still show */}
       <group position={[0, 0, 0.028]}>
         {id === 'tin' ? (o.shape === 'round' ? <mesh rotation={[Math.PI / 2, 0, 0]} material={mat(c)}><cylinderGeometry args={[0.042, 0.042, 0.016, 22]} /></mesh>
           : o.shape === 'square' ? <mesh material={mat(c)}><boxGeometry args={[0.075, 0.075, 0.016]} /></mesh>
@@ -220,7 +220,15 @@ function Tile({ id, o, y }: { id: Station; o: Opt; y: number }) {
           : o.label === 'strawberries' ? <group>{[-0.03, 0.03].map((dx) => <mesh key={dx} position={[dx, 0, 0]} scale={[1, 1.2, 0.7]} material={mat('#d8344a')}><sphereGeometry args={[0.025, 12, 8]} /></mesh>)}</group>
           : <group>{[-0.03, 0, 0.03].map((dx) => <group key={dx} position={[dx, -0.008, 0]}><mesh material={mat(C.lilac)}><boxGeometry args={[0.012, 0.05, 0.01]} /></mesh>
               <mesh position={[0, 0.033, 0]} material={mat('#f7b733', { emissive: '#f7b733' })}><sphereGeometry args={[0.008, 8, 6]} /></mesh></group>)}</group>)
-        /* sponge / filling / frosting / rosettes: a little layer of that colour, like a slice of the cake */
+        /* frosting: a soft piped swirl, rings narrowing to a peak */
+        : id === 'frost' ? <group position={[0, -0.038, 0]} scale={1.0}>{[[0.05, 0], [0.038, 0.022], [0.026, 0.042], [0.014, 0.058]].map(([r, y], i) =>
+            <mesh key={i} position={[0, y, 0]} rotation={[Math.PI / 2, 0, 0]} material={mat(c, { rough: 0.45 })}><torusGeometry args={[r, 0.014, 10, 24]} /></mesh>)}
+            <mesh position={[0, 0.072, 0]} material={mat(c, { rough: 0.45 })}><coneGeometry args={[0.012, 0.03, 10]} /></mesh></group>
+        /* rosettes: the piped rosette itself, petals round a centre (two, like on the cake) */
+        : id === 'pipe' ? <group>{[-0.055, 0.055].map((dx) => <group key={dx} position={[dx, 0, 0]}>
+            {Array.from({ length: 7 }, (_, k) => { const a = (k / 7) * Math.PI * 2; return <mesh key={k} position={[Math.cos(a) * 0.024, Math.sin(a) * 0.024, 0]} scale={[1, 1, 0.7]} material={mat(c, { rough: 0.45 })}><sphereGeometry args={[0.014, 10, 8]} /></mesh> })}
+            <mesh position={[0, 0, 0.006]} material={mat(c, { rough: 0.45 })}><sphereGeometry args={[0.014, 10, 8]} /></mesh></group>)}</group>
+        /* sponge / filling: a little layer of that colour, like a slice of the cake */
         : <mesh rotation={[0, 0, Math.PI / 2]} material={mat(c, { rough: 0.5 })}><capsuleGeometry args={[0.028, 0.13, 6, 16]} /></mesh>}
       </group>
     </group>
