@@ -1,3 +1,4 @@
+import { Model } from './Models'
 import { useGuide } from '../systems/guide'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useFrame, type ThreeEvent } from '@react-three/fiber'
@@ -40,6 +41,12 @@ export const machine = {
     this.run(at, fn)
   },
   nudge: '' as string, nudgeT: 0,
+  /** the control deck under the machine: roll the cake to that dispenser (if it isn't there already) and drop the choice */
+  choose(at: Station, fn: () => void) {
+    if (this.busy) { sfx.meh(); useCake.setState({ why: { text: "wait, it's still working…", t: performance.now() } }); return }
+    const i = ORDER.indexOf(at); if (i < 0) return
+    this.idx = i; this.target = ST[at]; sfx.tap(); this.run(at, fn)
+  },
 }
 const ORDER: Station[] = ['start', 'tin', 'layer', 'fill', 'frost', 'pipe', 'top', 'star']
 // testing / capture hook: drive the machine exactly like a player (◀ ▶ = step, a bulb = drop)
@@ -88,6 +95,7 @@ export function CakeMachine({ children }: { children: React.ReactNode }) {
   const H = BELT_Y + 2.05 // canopy height
   return (
     <group position={[0, 0, BELT_Z]}>
+      <Deck />
       {/* ── conveyor: dark rounded belt on a pink chassis, with crawling slats ── */}
       <RBox size={[5.6, 0.16, 1.0]} pos={[(ST.start + ST.star) / 2, BELT_Y - 0.1, 0]} color="#3a2a40" r={0.07} />
       <group ref={slats}>{slatList.map((x, i) => <mesh key={i} position={[x, BELT_Y - 0.015, 0]} material={mat('#4d3a55')}><boxGeometry args={[0.04, 0.012, 0.9]} /></mesh>)}</group>
@@ -113,45 +121,38 @@ export function CakeMachine({ children }: { children: React.ReactNode }) {
       <mesh position={[(ST.start + ST.star) / 2, H - 0.25, 0]} rotation={[0, 0, Math.PI / 2]} material={mat(C.steel)}><cylinderGeometry args={[0.03, 0.03, 5.4, 10]} /></mesh>
 
       {/* ── four dispensers (each its own look) ── */}
-      <Head id="tin" name="tin" x={ST.tin} top={H - 0.25} heads={heads} opts={[
-        { label: "round", color: "#8ec9e8", shape: 'round', fn: () => useCake.getState().setTin("round") },
-        { label: "square", color: "#f2c66a", shape: 'square', fn: () => useCake.getState().setTin("square") },
-        { label: "heart", color: "#ff8fb5", shape: 'heart', fn: () => useCake.getState().setTin("heart") }]}>
+      <Head id="tin" name="tin" x={ST.tin} top={H - 0.25} heads={heads} opts={OPTS.tin}>
         {/* tin press: a steel block that stamps the tin onto the plate */}
         <RBox size={[0.36, 0.3, 0.3]} pos={[0, 0.25, 0]} color={C.steel} r={0.05} />
         <RBox size={[0.42, 0.05, 0.36]} pos={[0, 0.06, 0]} color={C.plum} r={0.02} />
         {[-0.12, 0.12].map((x) => <mesh key={x} position={[x, 0.42, 0]} material={mat(C.mint)}><cylinderGeometry args={[0.03, 0.03, 0.1, 10]} /></mesh>)}
       </Head>
-      <Head id="layer" name="sponge" x={ST.layer} top={H - 0.25} heads={heads} opts={(["vanilla", "chocolate", "strawberry"] as const).map((f) => ({ label: f, color: SPONGE_COL[f], fn: () => useCake.getState().addLayer(f) }))}>
+      <Head id="layer" name="sponge" x={ST.layer} top={H - 0.25} heads={heads} opts={OPTS.layer}>
         {/* sponge press: a lilac barrel with mint bands */}
         <mesh position={[0, 0.25, 0]} material={mat(C.lilac, { rough: 0.35 })}><cylinderGeometry args={[0.2, 0.2, 0.42, 24]} /></mesh>
         {[0.1, 0.4].map((y) => <mesh key={y} position={[0, y, 0]} rotation={[Math.PI / 2, 0, 0]} material={mat(C.mint)}><torusGeometry args={[0.205, 0.03, 8, 24]} /></mesh>)}
         <mesh position={[0, -0.02, 0]} rotation={[Math.PI, 0, 0]} material={mat(C.steel)}><coneGeometry args={[0.09, 0.14, 16]} /></mesh>
       </Head>
-      <Head id="fill" name="filling" x={ST.fill} top={H - 0.25} heads={heads} opts={(["cream", "jam"] as const).map((f) => ({ label: f, color: FILL_COL[f], fn: () => useCake.getState().addFilling(f) }))}>
+      <Head id="fill" name="filling" x={ST.fill} top={H - 0.25} heads={heads} opts={OPTS.fill}>
         {/* filling pump: a mint squeeze bottle with a butter cap */}
         <mesh position={[0, 0.26, 0]} material={mat(C.mint, { rough: 0.35 })}><capsuleGeometry args={[0.13, 0.22, 6, 18]} /></mesh>
         <mesh position={[0, 0.48, 0]} material={mat(C.butter)}><cylinderGeometry args={[0.08, 0.1, 0.06, 16]} /></mesh>
         <mesh position={[0, 0.02, 0]} rotation={[Math.PI, 0, 0]} material={mat(C.plum)}><coneGeometry args={[0.05, 0.16, 12]} /></mesh>
       </Head>
-      <Head id="frost" name="frosting" x={ST.frost} top={H - 0.25} heads={heads} opts={(["pink", "white", "chocolate", "lavender"] as const).map((f) => ({ label: f, color: FROST_COL[f], fn: () => useCake.getState().frost(f) }))}>
+      <Head id="frost" name="frosting" x={ST.frost} top={H - 0.25} heads={heads} opts={OPTS.frost}>
         {/* frosting fountain: a pink dome bowl that tips a nozzle */}
         <mesh position={[0, 0.25, 0]} material={mat(C.counter, { rough: 0.3 })}><sphereGeometry args={[0.26, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2]} /></mesh>
         <mesh position={[0, 0.25, 0]} rotation={[Math.PI, 0, 0]} material={mat(C.butter)}><cylinderGeometry args={[0.26, 0.12, 0.18, 24]} /></mesh>
         <mesh position={[0, 0.06, 0]} rotation={[Math.PI, 0, 0]} material={mat(C.plum)}><coneGeometry args={[0.07, 0.16, 14]} /></mesh>
         {[0, 1, 2, 3, 4, 5].map((i) => <mesh key={i} position={[Math.cos(i) * 0.24, 0.3, Math.sin(i) * 0.24]} material={mat(C.plum)}><sphereGeometry args={[0.025, 8, 6]} /></mesh>)}
       </Head>
-      <Head id="pipe" name="rosettes" x={ST.pipe} top={H - 0.25} heads={heads} opts={(["white", "pink", "chocolate"] as const).map((p) => ({ label: p, color: PIPE_COL[p], fn: () => useCake.getState().pipe(p) }))}>
+      <Head id="pipe" name="rosettes" x={ST.pipe} top={H - 0.25} heads={heads} opts={OPTS.pipe}>
         {/* piping arm: a cream cone wrapped in pink rings, steel star tip */}
         <mesh position={[0, 0.22, 0]} rotation={[Math.PI, 0, 0]} material={mat('#fff6ee', { rough: 0.4 })}><coneGeometry args={[0.2, 0.5, 24]} /></mesh>
         {[0.32, 0.2, 0.08].map((y, i) => <mesh key={y} position={[0, y, 0]} rotation={[Math.PI / 2, 0, 0]} material={mat(C.counter)}><torusGeometry args={[0.17 - i * 0.05, 0.02, 8, 24]} /></mesh>)}
         <mesh position={[0, -0.05, 0]} rotation={[Math.PI, 0, 0]} material={mat(C.steel)}><coneGeometry args={[0.035, 0.08, 6]} /></mesh>
       </Head>
-      <Head id="top" name="toppings" x={ST.top} top={H - 0.25} heads={heads} opts={[
-        { label: "sprinkles", color: C.butter, fn: () => useCake.getState().topWith("sprinkles") },
-        { label: "cherries", color: "#b3122e", fn: () => useCake.getState().topWith("cherries") },
-        { label: "strawberries", color: "#d8344a", fn: () => useCake.getState().topWith("strawberries") },
-        { label: "candles", color: C.lilac, fn: () => useCake.getState().topWith("candles") }]}>
+      <Head id="top" name="toppings" x={ST.top} top={H - 0.25} heads={heads} opts={OPTS.top}>
         {/* topping hopper: a glass bowl full of colourful bits on a purple funnel */}
         <mesh position={[0, 0.28, 0]} material={glass()}><sphereGeometry args={[0.22, 20, 12]} /></mesh>
         {Array.from({ length: 14 }, (_, i) => <mesh key={i} position={[Math.cos(i * 2.4) * 0.12 * ((i % 3) / 3 + 0.3), 0.18 + (i % 4) * 0.04, Math.sin(i * 2.4) * 0.1]} material={mat([C.counter, C.mint, C.butter, C.lilac][i % 4])}><sphereGeometry args={[0.035, 6, 4]} /></mesh>)}
@@ -171,7 +172,84 @@ export function CakeMachine({ children }: { children: React.ReactNode }) {
   )
 }
 
+// every dispenser's choices (the bulbs on the machine AND the buttons on the deck below read this)
+const OPTS: Record<string, Opt[]> = {
+  tin: [
+        { label: "round", color: "#8ec9e8", shape: 'round', fn: () => useCake.getState().setTin("round") },
+        { label: "square", color: "#f2c66a", shape: 'square', fn: () => useCake.getState().setTin("square") },
+        { label: "heart", color: "#ff8fb5", shape: 'heart', fn: () => useCake.getState().setTin("heart") }],
+  layer: (["vanilla", "chocolate", "strawberry"] as const).map((f) => ({ label: f, color: SPONGE_COL[f], fn: () => useCake.getState().addLayer(f) })),
+  fill: (["cream", "jam"] as const).map((f) => ({ label: f, color: FILL_COL[f], fn: () => useCake.getState().addFilling(f) })),
+  frost: (["pink", "white", "chocolate", "lavender"] as const).map((f) => ({ label: f, color: FROST_COL[f], fn: () => useCake.getState().frost(f) })),
+  pipe: (["white", "pink", "chocolate"] as const).map((p) => ({ label: p, color: PIPE_COL[p], fn: () => useCake.getState().pipe(p) })),
+  top: [
+        { label: "sprinkles", color: C.butter, fn: () => useCake.getState().topWith("sprinkles") },
+        { label: "cherries", color: "#b3122e", fn: () => useCake.getState().topWith("cherries") },
+        { label: "strawberries", color: "#d8344a", fn: () => useCake.getState().topWith("strawberries") },
+        { label: "candles", color: C.lilac, fn: () => useCake.getState().topWith("candles") }],
+}
 type Opt = { color: string; label: string; fn: () => void; icon?: string; shape?: 'round' | 'square' | 'heart' }
+const SHAPE: Record<string, string> = {
+  round: '<circle cx="8" cy="8" r="6.2"/>', square: '<rect x="2" y="2" width="12" height="12" rx="2"/>',
+  heart: '<path d="M8 14 C2 10 1 6 3.5 3.8 C5.5 2 7.5 3.2 8 4.6 C8.5 3.2 10.5 2 12.5 3.8 C15 6 14 10 8 14z"/>' }
+/** one picture button in a machine's panel: a white rounded key showing the choice itself */
+function Tile({ id, o, y }: { id: Station; o: Opt; y: number }) {
+  const g = useRef<THREE.Group>(null), glow = useRef<THREE.Mesh>(null)
+  const gm = useMemo(() => mat('#ff7fb6').clone() as THREE.MeshStandardMaterial, [])
+  useFrame(() => {
+    const gd = cakeGuide(), want = gd.at === id && useGuide.getState().on && gd.want === o.label, t = performance.now() / 160
+    if (glow.current) { glow.current.visible = want; gm.emissive.set('#ff4f9a'); gm.emissiveIntensity = 0.35 + Math.sin(t) * 0.25 }
+    if (g.current) g.current.scale.setScalar(want ? 1.05 + Math.sin(t) * 0.03 : 1)
+  })
+  const pick = (e: ThreeEvent<MouseEvent>) => { e.stopPropagation(); machine.choose(id, o.fn) }
+  const c = o.color
+  return (
+    <group ref={g} position={[0, y, 0]} name={`deck:${id}:${o.label}`} onClick={pick}
+      onPointerOver={(e) => { e.stopPropagation(); document.body.style.cursor = 'pointer' }} onPointerOut={() => { document.body.style.cursor = '' }}>
+      <mesh ref={glow} position={[0, 0, -0.006]} visible={false} material={gm}><boxGeometry args={[0.3, 0.15, 0.02]} /></mesh>
+      <RBox size={[0.27, 0.125, 0.03]} pos={[0, 0, 0]} color="#ffffff" r={0.03} shadow={false} />
+      <group position={[0, 0, 0.028]}>
+        {id === 'tin' ? (o.shape === 'round' ? <mesh rotation={[Math.PI / 2, 0, 0]} material={mat(c)}><cylinderGeometry args={[0.042, 0.042, 0.016, 22]} /></mesh>
+          : o.shape === 'square' ? <mesh material={mat(c)}><boxGeometry args={[0.075, 0.075, 0.016]} /></mesh>
+          : <group>{[-1, 1].map((sd) => <mesh key={sd} position={[sd * 0.019, 0.012, 0]} material={mat(c)}><sphereGeometry args={[0.026, 12, 8]} /></mesh>)}
+              <mesh position={[0, -0.013, 0]} rotation={[0, 0, Math.PI / 4]} material={mat(c)}><boxGeometry args={[0.044, 0.044, 0.018]} /></mesh></group>)
+        : id === 'top' ? (o.label === 'sprinkles' ? <group>{[[-0.05, 0.015, '#f07fa8'], [-0.015, 0.02, '#7fc8a9'], [0.02, 0.0, '#f7dd77'], [0.05, 0.018, '#a47fe0'], [-0.03, -0.02, '#f07fa8'], [0.035, -0.022, '#7fc8a9']].map(([dx, dy, col], i) =>
+              <mesh key={i} position={[dx as number, dy as number, 0]} rotation={[0, 0, i * 0.9]} material={mat(col as string)}><boxGeometry args={[0.03, 0.009, 0.009]} /></mesh>)}</group>
+          : o.label === 'cherries' ? <group>{[-0.024, 0.024].map((dx) => <mesh key={dx} position={[dx, -0.008, 0]} material={mat('#b3122e')}><sphereGeometry args={[0.024, 12, 8]} /></mesh>)}
+              <mesh position={[0, 0.022, 0]} rotation={[0, 0, 0]} material={mat('#3a7a4a')}><boxGeometry args={[0.05, 0.006, 0.006]} /></mesh></group>
+          : o.label === 'strawberries' ? <group>{[-0.03, 0.03].map((dx) => <mesh key={dx} position={[dx, 0, 0]} scale={[1, 1.2, 0.7]} material={mat('#d8344a')}><sphereGeometry args={[0.025, 12, 8]} /></mesh>)}</group>
+          : <group>{[-0.03, 0, 0.03].map((dx) => <group key={dx} position={[dx, -0.008, 0]}><mesh material={mat(C.lilac)}><boxGeometry args={[0.012, 0.05, 0.01]} /></mesh>
+              <mesh position={[0, 0.033, 0]} material={mat('#f7b733', { emissive: '#f7b733' })}><sphereGeometry args={[0.008, 8, 6]} /></mesh></group>)}</group>)
+        /* sponge / filling / frosting / rosettes: a little layer of that colour, like a slice of the cake */
+        : <mesh rotation={[0, 0, Math.PI / 2]} material={mat(c, { rough: 0.5 })}><capsuleGeometry args={[0.028, 0.13, 6, 16]} /></mesh>}
+      </group>
+    </group>
+  )
+}
+/** the counter front under the belt: one tall panel per machine, right below it, its choices stacked as picture
+ *  buttons. Press one: the cake rolls to that machine and it drops it. The next machine's panel lights up. */
+function Panel({ id }: { id: Station }) {
+  const fm = useMemo(() => mat(C.lilac).clone() as THREE.MeshStandardMaterial, [])
+  useFrame(() => { const gd = cakeGuide(), next = gd.at === id, done = STEP_IDX[id] < STEP_IDX[gd.at]
+    fm.color.set(next ? '#ff7fb6' : done ? '#c9b8d8' : C.lilac) })
+  const os = OPTS[id], step = 0.145
+  return (
+    <group position={[ST[id], 0, 0]} scale={1.22}>
+      <mesh position={[0, 0, -0.03]} material={fm}><boxGeometry args={[0.36, 0.66, 0.03]} /></mesh>
+      <RBox size={[0.31, 0.61, 0.03]} pos={[0, 0, -0.01]} color="#fde6ef" r={0.04} shadow={false} />
+      {os.map((o, i) => <Tile key={o.label} id={id} o={o} y={((os.length - 1) / 2 - i) * step} />)}
+    </group>
+  )
+}
+function Deck() {
+  return (
+    <group position={[0, BELT_Y - 0.56, 0.6]}>
+      {/* the counter's front face the panels are set into */}
+      <RBox size={[ST.star - ST.start + 1.3, 0.92, 0.05]} pos={[(ST.start + ST.star) / 2, 0, -0.06]} color="#3a2a40" r={0.04} shadow={false} />
+      {(['tin', 'layer', 'fill', 'frost', 'pipe', 'top'] as Station[]).map((id) => <Panel key={id} id={id} />)}
+    </group>
+  )
+}
 function HeadTag({ id, name }: { id: Station; name: string }) {
   const ref = useRef<HTMLDivElement>(null)
   useFrame(() => { const el = ref.current; if (!el) return
@@ -209,7 +287,7 @@ function Head({ id, x, top, heads, children, opts, name }: { id: Station; x: num
                     <mesh position={[0, -0.022, 0]} rotation={[0, 0, Math.PI / 4]} material={mat(o.color, { rough: 0.3 })}><boxGeometry args={[0.068, 0.068, 0.05]} /></mesh></group>
                 : <mesh material={mat(o.color, { rough: 0.3 })}><sphereGeometry args={[0.066, 16, 12]} /></mesh>}
               <mesh position={[0, 0, -0.05]} rotation={[Math.PI / 2, 0, 0]} material={mat(C.steel)}><cylinderGeometry args={[0.03, 0.03, 0.08, 8]} /></mesh>
-              <OptTag id={id} label={o.label} i={i} />
+
             </group>
           )
         })}
@@ -226,10 +304,11 @@ function OrderScreen({ x, y }: { x: number; y: number }) {
   const [, tick] = useState(0)
   useEffect(() => { const id = setInterval(() => tick((n) => n + 1), 400); return () => clearInterval(id) }, [])
   return (
-    <group position={[x, y, 0.42]} rotation={[-0.15, 0.25, 0]}>
+    <group position={[x, y, 0.42]} rotation={[-0.15, 0.25, 0]} onClick={(e) => { e.stopPropagation(); if (performance.now() >= until) useCake.getState().peek() }}
+      onPointerOver={() => { if (performance.now() >= until) document.body.style.cursor = 'pointer' }} onPointerOut={() => { document.body.style.cursor = '' }}>
       <RBox size={[0.8, 0.72, 0.07]} color={C.plum} r={0.06} />
       <Html transform position={[0, 0, 0.045]} scale={0.15} zIndexRange={[5, 0]} className="headtag screen">
-        <div className="screen3d">{performance.now() < until ? <div><div dangerouslySetInnerHTML={{ __html: cakeSvg(order.want, 220) }} /><div className="screen-tin">{order.want.tin} tin</div></div> : <div className="screen-q">?</div>}</div>
+        <div className="screen3d">{performance.now() < until ? <div><div dangerouslySetInnerHTML={{ __html: cakeSvg(order.want, 220) }} /><div className="screen-tin">{order.want.tin} tin</div></div> : <div className="screen-q">?<small>tap to peek</small></div>}</div>
       </Html>
     </group>
   )

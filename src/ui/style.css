@@ -1153,3 +1153,34 @@ html:not(.phone) .fullscreenbtn { left: auto; right: 14px; top: auto; bottom: 14
 .cc-dots { display: flex; gap: 4px; } .cc-dots i { width: 9px; height: 9px; border-radius: 50%; background: #ead2df; display: block; }
 .cc-dots i.on { background: #4caf74; } .cc-dots i.now { background: #ff7fb6; box-shadow: 0 0 0 3px rgba(255,127,182,.3); }
 .cc-mini .chip { margin: 0 !important; padding: 3px 9px !important; font-size: 11px !important; }
+
+/* the (i) recipe button must not jump on hover (a global button hover nudged it out from under the mouse) */
+.tm-item .tm-peek, .tm-item .tm-peek:hover, .tm-item .tm-peek:active { transition: none !important; transform: translateY(-50%) !important; }
+.tm-item .tm-peek { display: grid !important; place-items: center; width: 24px; height: 24px; line-height: normal !important; }
+.phone .tm-item .tm-peek { width: 28px; height: 28px; }
+
+/* ── the cake machine's control deck (21 Nov): under each dispenser, its choices as labelled buttons ── */
+.deck { width: 108px; display: flex; flex-direction: column; gap: 3px; padding: 5px 5px 6px; background: rgba(255,246,238,.94); border-radius: 12px; box-shadow: 0 3px 0 #c4528a, 0 6px 14px rgba(0,0,0,.18); font-family: 'Trebuchet MS', sans-serif; user-select: none; }
+.deck-h { display: flex; align-items: center; gap: 5px; font: 900 12px 'Trebuchet MS', sans-serif; color: #5e2a75; }
+.deck-h b { width: 17px; height: 17px; border-radius: 50%; display: grid; place-items: center; background: #ead2df; font-size: 10px; }
+.deck.done { opacity: .6; } .deck.done .deck-h b { background: #4caf74; color: #fff; font-size: 0; } .deck.done .deck-h b::after { content: '✓'; font-size: 10px; }
+.deck.next { outline: 3px solid #ff7fb6; box-shadow: 0 3px 0 #c4528a, 0 0 0 7px rgba(255,127,182,.25); }
+.deck.next .deck-h b { background: #ff7fb6; color: #fff; }
+.deck-opts { display: flex; flex-direction: column; gap: 2px; }
+.dopt { display: flex; align-items: center; gap: 5px; border: 0; border-radius: 8px; padding: 3px 5px; background: #fff; box-shadow: 0 1px 0 #ead2df; font: 700 11px 'Trebuchet MS', sans-serif; color: #3d1846; cursor: pointer; text-transform: capitalize; text-align: left; }
+.dopt:hover { background: #fff0f6; } .dopt:active { transform: translateY(1px); }
+.dopt i { width: 13px; height: 13px; border-radius: 4px; border: 1.3px solid #3d1846; display: inline-block; flex: none; }
+.dopt svg { flex: none; }
+.dopt.want { background: #ff7fb6; color: #fff; animation: otagpulse 1s ease-in-out infinite; }
+.deck.done .dopt { pointer-events: auto; }
+.phone .deck { width: 86px; padding: 3px 3px 4px; gap: 2px; border-radius: 9px; }
+.phone .deck-h { font-size: 9px; gap: 3px; } .phone .deck-h b { width: 13px; height: 13px; font-size: 8px; }
+.phone .dopt { font-size: 9px; padding: 3px 4px; gap: 3px; min-height: 18px; } .phone .dopt i { width: 10px; height: 10px; }
+/* deck: compact cards (2-column choices) so neighbours never overlap and the whole deck fits under the belt */
+.deck { width: 96px; padding: 4px; gap: 3px; }
+.deck-opts { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; }
+.dopt { flex-direction: column; gap: 1px; padding: 3px 2px 2px; font-size: 9.5px; line-height: 1.05; justify-content: center; text-align: center; min-width: 0; }
+.dopt span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dopt i { width: 14px; height: 14px; }
+.phone .deck { width: 78px; } .phone .dopt { font-size: 8px; padding: 2px 1px; } .phone .dopt i { width: 11px; height: 11px; }
+.screen-q small { display: block; font-size: 22px; opacity: .7; }

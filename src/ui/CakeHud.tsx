@@ -53,24 +53,10 @@ export function CakeHud() {
   // the ONE thing to do now
   const tap = TOUCH ? 'Tap' : 'Click'
   const doNow = machine.busy ? 'Working…'
-    : at === goal ? (g.at === 'star' ? `${tap} ▶ to box it and serve` : `${tap} ${CHOOSE[g.at]} on the ${NAME[g.at]} dispenser`)
-    : g.at === 'star' ? 'All done: roll it ▶ to the star to serve'
-    : `Roll the cake ${goal > at ? '▶' : '◀'} to ${STEP_NO[g.at]} · ${NAME[g.at]}`
+    : g.at === 'star' ? (at === goal ? `${tap} ▶ to box it and serve` : 'All done: roll it ▶ to the star to serve')
+    : `${STEP_NO[g.at]} · ${NAME[g.at]}: ${tap.toLowerCase()} ${CHOOSE[g.at]} on the buttons below it`
   return (
     <>
-      <div className={`cake-card ${showing ? '' : 'mini'}`}>
-        <div className="tk-h">Cake order</div>
-        {showing ? <>
-          <div className="cc-pic" dangerouslySetInnerHTML={{ __html: cakeSvg(k.order.want, TOUCH ? 110 : 150) }} />
-          <Checklist want={k.order.want} done={goal - 1} />
-          <div className="tk-note">Remember it: the card hides in a moment</div>
-        </> : <>
-          {/* from memory: no colours given away, just how far you are, and a peek */}
-          <div className="cc-mini"><span className="cc-name">From memory</span>
-            <span className="cc-dots">{[1, 2, 3, 4, 5, 6].map((n) => <i key={n} className={n <= goal - 1 ? 'on' : n === goal ? 'now' : ''} />)}</span>
-            <button className="chip" onClick={() => k.peek()}>Peek (−5%)</button></div>
-        </>}
-      </div>
       <div className="beltnav">
         <button className="navbtn" onClick={() => machine.step(-1)} aria-label="roll the cake left">◀</button>
         <div className="navstop"><small>cake at: {STOPS[machine.idx]}</small><span className="donow">{doNow}</span></div>
