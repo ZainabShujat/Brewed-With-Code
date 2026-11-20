@@ -929,3 +929,36 @@ html:not(.phone) .fullscreenbtn { left: auto; right: 14px; top: auto; bottom: 14
 .rotate.install .rot-steps b { font-size: 15px; color: #f2c66a; }
 .rotate.install .rot-skip { background: none; border: 0; color: #f6e7f0; opacity: .7; text-decoration: underline; font-size: 13px; margin-top: 6px; }
 .rotate.install { background: #291830 !important; }
+
+/* S1 title menu + save slots: same cream-and-plum buttons as the rest of the menu */
+.gmenu .title-menu { width: min(360px, calc(100vw - 32px)); }
+.gmenu .slots-panel { width: min(760px, calc(100vw - 32px)); max-height: none; overflow: visible; }
+.slots { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.slot { position: relative; display: flex; flex-direction: column; gap: 3px; background: #fff6ee; color: #3d1846; border-radius: 16px; padding: 12px 12px 10px; box-shadow: 0 4px 0 #c4528a; min-height: 168px; }
+.slot.empty { background: #f3dfe9; box-shadow: 0 4px 0 rgba(196,82,138,.5); outline: 2px dashed #d9a3c2; outline-offset: -8px; }
+.slot.pick { cursor: pointer; } .slot.pick:hover { transform: translateY(-3px); }
+.slot-h { font: 900 13px 'Trebuchet MS', sans-serif; color: #c4528a; text-transform: uppercase; letter-spacing: 1px; display: flex; justify-content: space-between; }
+.slot-now { background: #ff7fb6; color: #fff; border-radius: 8px; padding: 0 6px; font-size: 10px; letter-spacing: 0; }
+.slot-name { font: 900 20px 'Trebuchet MS', sans-serif; color: #5e2a75; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.slot-mode { font-weight: 800; font-size: 13px; } .slot-mode.none { color: #8a6a7e; font-style: italic; font-weight: 700; }
+.slot-prog { font-weight: 700; font-size: 13px; } .slot-prog.bad { color: #b23a48; }
+.slot-dates { font-size: 11px; color: #7a5a6e; line-height: 1.35; }
+.slot-free { flex: 1; display: flex; align-items: center; justify-content: center; font: 900 18px 'Trebuchet MS', sans-serif; color: #a07a92; }
+.slot-btns { display: flex; gap: 6px; margin-top: auto; padding-top: 6px; }
+.slot-btns button { flex: 1; padding: 6px 8px !important; font-size: 12px !important; box-shadow: 0 3px 0 #c4528a !important; }
+.gmenu .slot button:hover { transform: none; }
+.gmenu button.danger { background: #ffe1e6; color: #b23a48; box-shadow: 0 3px 0 #b23a48; }
+.gmenu button:disabled { opacity: .45; cursor: not-allowed; }
+.modes { display: flex; flex-direction: column; gap: 10px; }
+.slot-confirm { position: absolute; inset: 0; z-index: 2; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; background: rgba(42,24,48,.82); border-radius: 18px; padding: 20px; color: #fff6ee; text-align: center; font-weight: 700; }
+.slots-panel { position: relative; }
+.slot-confirm p { max-width: 440px; margin: 0; line-height: 1.4; }
+@media (max-height: 520px) {
+  .slots { gap: 6px; }
+  .slot { min-height: 0; padding: 7px 8px 6px; gap: 1px; border-radius: 12px; }
+  .slot-name { font-size: 15px; } .slot-mode, .slot-prog { font-size: 11px; } .slot-dates { font-size: 9.5px; } .slot-h { font-size: 10px; }
+  .slot-free { font-size: 14px; min-height: 60px; }
+  .slot-btns button { padding: 4px 6px !important; font-size: 11px !important; }
+  .modes { gap: 6px; }
+  .slot-confirm p { font-size: 12px; }
+}
