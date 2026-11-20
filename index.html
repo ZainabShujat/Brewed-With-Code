@@ -29,6 +29,37 @@
     <meta name="twitter:image" content="https://brewed-with-code.vercel.app/og.jpg" />
   </head>
   <body>
+    <!-- loading screen (plain HTML: shows while the game's code downloads; fades out once the 3D world is running) -->
+    <style>
+      #boot { position: fixed; inset: 0; z-index: 9999; background: #291830; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 22px; padding: 24px; transition: opacity .6s ease; font-family: 'Trebuchet MS', system-ui, sans-serif; }
+      #boot img { width: min(620px, 86vw); height: auto; animation: bootbob 3s ease-in-out infinite; }
+      #boot .fact { max-width: min(560px, 86vw); text-align: center; color: #f6e7f0; font-size: clamp(14px, 2.2vw, 18px); line-height: 1.45; }
+      #boot .fact b { display: block; color: #f2c66a; font-size: .8em; letter-spacing: .14em; margin-bottom: 6px; }
+      #boot .brewing { color: #e98fa6; font-weight: 800; font-size: 14px; letter-spacing: .1em; animation: bootpulse 1.4s ease-in-out infinite; }
+      @keyframes bootbob { 50% { transform: translateY(-6px) } }
+      @keyframes bootpulse { 50% { opacity: .35 } }
+    </style>
+    <div id="boot">
+      <img src="./title-board.webp" alt="Brewed With Code" />
+      <div class="fact"><b>☕ FUN FACT</b><span id="bootfact"></span></div>
+      <div class="brewing">BREWING YOUR CAFÉ…</div>
+    </div>
+    <script>
+      (function () {
+        if (/embed|snap/.test(location.search)) { document.getElementById('boot').remove(); return }
+        var F = [
+          'Coffee beans are really the seeds of a bright red fruit called a coffee cherry.',
+          'Espresso isn’t a kind of bean. It’s a way of brewing: hot water pushed hard through finely ground coffee.',
+          'The cappuccino is named after the Capuchin friars, whose robes were a similar coffee-and-milk brown.',
+          'Every townsperson’s face here is rolled from a number, like dice. Same number, same face.',
+          'Marshmallows live on the west side of town, notebooks on the east.',
+          'Your café is a teapot. And yes, you can walk right inside it.',
+          'This whole game runs in your browser: no download, no install.',
+          'A latte is mostly milk. Steaming it right gives that silky, glossy texture.'
+        ]
+        document.getElementById('bootfact').textContent = F[Math.floor(Math.random() * F.length)]
+      })()
+    </script>
     <!-- embedded in a notes-brain video page (the game tour): borrow its frame-stepped clock -->
     <script>
       if (location.search.includes('embed') && window.parent !== window) {
