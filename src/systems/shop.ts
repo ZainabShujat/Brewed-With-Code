@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { useTutorial, tutorialOrder } from './tutorial'
-import { cakeOrder } from './orders'
+import { menuOrder } from './orders'
 import { stationStars, EMPTY, randomOrder, score, craft as craftScore, CAP, SHOT_ML, NO_CONTENTS, filled, type Contents, type Drink, type MilkType, type Order, type Topping } from '../data/recipes'
 import { cafe } from '../world/Customers'
 import { useDay } from './day'
@@ -167,7 +167,7 @@ export const useShop = create<Shop>((set, get) => ({
   // every frame: give the customer at the front an order once they reach the counter
   tick: () => {
     const s = get(), front = cafe.line.peek()
-    if (front && front.phase === 'line' && !s.orders[front.id]) set({ orders: { ...s.orders, [front.id]: tutorialOrder() ?? (useDay.getState().day >= 7 && Math.random() < 0.25 ? cakeOrder() : randomOrder()) } })
+    if (front && front.phase === 'line' && !s.orders[front.id]) set({ orders: { ...s.orders, [front.id]: tutorialOrder() ?? menuOrder() } })
     // finished pour animations are tidied away (a hold-to-pour stays until it's released and done)
     const keep = (p: Pour) => now() - p.t0 < 3 + (p.dur === undefined ? 0 : Number.isFinite(p.dur) ? p.dur : 1e9)
     if (s.pours.length && !keep(s.pours[0])) set({ pours: s.pours.filter(keep) })

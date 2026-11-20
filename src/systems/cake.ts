@@ -21,10 +21,13 @@ export const FILL_COL: Record<Filling, string> = { cream: '#fff6ec', jam: '#c232
 export const FROST_COL: Record<Exclude<Frosting, 'none'>, string> = { pink: '#f4b6c8', white: '#fbf6ef', chocolate: '#5a3424', lavender: '#cdb8e6' }
 export const PIPE_COL: Record<Exclude<Pipe, 'none'>, string> = { white: '#fffaf3', pink: '#ef93b1', chocolate: '#4a2a1c' }
 
+// the flavours on Today's Menu (set by systems/orders to avoid an import loop)
+let spongesOnMenu: () => Sponge[] = () => []
+export const setCakeMenu = (f: () => Sponge[]) => { spongesOnMenu = f }
 const pick = <T,>(a: readonly T[]) => a[Math.floor(Math.random() * a.length)]
 export function randomCakeOrder(): CakeOrder {
   const n = pick([2, 3, 3])
-  const sponge = pick(['vanilla', 'chocolate', 'strawberry'] as const)
+  const onMenu = spongesOnMenu(), sponge = pick(onMenu.length ? onMenu : (['vanilla', 'chocolate', 'strawberry'] as const))
   const tin = pick(['round', 'square', 'heart'] as const)
   const want: Cake = {
     tin,

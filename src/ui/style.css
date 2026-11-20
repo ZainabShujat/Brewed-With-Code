@@ -962,3 +962,48 @@ html:not(.phone) .fullscreenbtn { left: auto; right: 14px; top: auto; bottom: 14
   .modes { gap: 6px; }
   .slot-confirm p { font-size: 12px; }
 }
+
+/* Today's Menu + Recipe Book (one recipe source, data/menu.ts): cream card, plum ink, pink accents */
+.tmenu { position: fixed; inset: 0; z-index: 60; display: flex; align-items: center; justify-content: center; background: rgba(42,24,48,.55); font-family: 'Trebuchet MS', sans-serif; }
+.tm-panel { width: min(860px, calc(100vw - 24px)); max-height: calc(100vh - 24px); display: flex; flex-direction: column; gap: 10px; background: #fff6ee; color: #3d1846; border-radius: 22px; padding: 16px 18px; box-shadow: 0 6px 0 #c4528a, 0 20px 50px rgba(0,0,0,.35); }
+.tm-top { display: flex; justify-content: space-between; align-items: flex-start; }
+.tm-h { font: 900 24px 'Trebuchet MS', sans-serif; color: #5e2a75; } .tm-sub { font-size: 13px; color: #8a6a7e; font-weight: 700; }
+.tm-x { border: 0; background: #f3dfe9; color: #5e2a75; border-radius: 10px; width: 32px; height: 32px; font-weight: 900; cursor: pointer; }
+.tm-list { overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding-right: 4px; }
+.tm-cat { font-weight: 900; font-size: 13px; color: #c4528a; text-transform: uppercase; letter-spacing: 1px; margin: 2px 0 4px; }
+.tm-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 8px; }
+.tm-item { border-radius: 14px; background: #fff; box-shadow: 0 3px 0 #ead2df; padding: 6px; display: flex; flex-direction: column; gap: 4px; border: 2px solid transparent; }
+.tm-item.on { border-color: #ff7fb6; background: #fff0f6; } .tm-item.locked { opacity: .55; }
+.tm-pick { display: flex; align-items: center; gap: 8px; border: 0; background: none; cursor: pointer; font: 800 15px 'Trebuchet MS', sans-serif; color: #3d1846; text-align: left; padding: 2px; }
+.tm-pick:disabled { cursor: not-allowed; }
+.tm-icon { font-size: 24px; } .tm-name { flex: 1; } .tm-tick { width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; background: #f3dfe9; color: #5e2a75; font-weight: 900; }
+.tm-item.on .tm-tick { background: #ff7fb6; color: #fff; }
+.tm-row { display: flex; justify-content: space-between; align-items: center; gap: 6px; }
+.tm-tag { font-size: 11px; font-weight: 800; border-radius: 8px; padding: 1px 6px; } .tm-tag.ok { background: #e2f5e6; color: #2f7a43; } .tm-tag.low { background: #fff1d6; color: #9a5b00; } .tm-tag.lock { background: #eee; color: #777; }
+.tm-peek, .tm-presets button, .tm-foot button, .book-index button { border: 0; border-radius: 10px; padding: 5px 10px; font: 800 12px 'Trebuchet MS', sans-serif; background: #f3dfe9; color: #5e2a75; cursor: pointer; }
+.tm-presets { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; } .tm-presets .ghost { background: none; border: 2px dashed #d9a3c2; }
+.tm-name-in { display: inline-flex; gap: 4px; } .tm-name-in input { border: 2px solid #d9a3c2; border-radius: 10px; padding: 4px 8px; font: 700 12px 'Trebuchet MS', sans-serif; width: 120px; }
+.tm-foot { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.tm-count { font-weight: 800; font-size: 13px; color: #7a5a6e; }
+.tm-foot .tm-go { background: #ff7fb6; color: #fff; font-size: 15px; padding: 10px 16px; box-shadow: 0 4px 0 #c4528a; } .tm-foot .tm-go:disabled { opacity: .45; cursor: not-allowed; }
+.rv { display: flex; flex-direction: column; gap: 10px; overflow-y: auto; }
+.rv-h { display: flex; gap: 12px; align-items: center; } .rv-icon { font-size: 44px; }
+.rv-h b { display: block; font-size: 22px; color: #5e2a75; } .rv-h span { display: block; font-size: 13px; font-weight: 700; color: #7a5a6e; } .rv-meta { color: #c4528a !important; }
+.rv-cols { display: grid; grid-template-columns: 1fr 1.3fr; gap: 14px; }
+.rv-sub { font-weight: 900; font-size: 13px; color: #c4528a; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; } .rv-sub small { text-transform: none; letter-spacing: 0; color: #a08a96; }
+.rv-ing { display: flex; flex-direction: column; gap: 4px; }
+.rv-line { display: flex; align-items: center; gap: 8px; border: 0; background: #fff; border-radius: 10px; padding: 5px 8px; cursor: pointer; font: 700 13px 'Trebuchet MS', sans-serif; color: #3d1846; box-shadow: 0 2px 0 #ead2df; text-align: left; }
+.rv-line.on { background: #fff0f6; outline: 2px solid #ff7fb6; } .rv-i { font-size: 20px; } .rv-n { flex: 1; } .rv-q { font-weight: 900; color: #5e2a75; }
+.rv-focus { display: grid; grid-template-columns: auto 1fr; gap: 0 10px; background: #fff0f6; border-radius: 12px; padding: 8px 10px; align-items: center; }
+.rv-focus span { grid-row: span 3; font-size: 54px; } .rv-focus b { font-size: 16px; } .rv-focus em { font-style: normal; font-weight: 900; color: #c4528a; } .rv-focus p { margin: 0; font-size: 12px; font-weight: 700; color: #7a5a6e; }
+.rv-steps { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 700; }
+.rv-steps small { color: #a08a96; } .rv-st { display: inline-block; font-size: 10px; font-weight: 900; text-transform: uppercase; border-radius: 6px; padding: 0 5px; margin-right: 6px; color: #fff; background: #8a6a7e; }
+.rv-st.bar { background: #8b5a3c; } .rv-st.kitchen { background: #6aa36f; } .rv-st.cake { background: #e07aa8; }
+.book-cols { display: grid; grid-template-columns: 210px 1fr; gap: 14px; min-height: 0; overflow: hidden; }
+.book-index { display: flex; flex-direction: column; gap: 4px; overflow-y: auto; } .book-index button { text-align: left; font-size: 13px; padding: 7px 10px; } .book-index button.on { background: #ff7fb6; color: #fff; }
+@media (max-height: 520px) {
+  .tm-panel { padding: 8px 12px; gap: 6px; border-radius: 16px; } .tm-h { font-size: 17px; } .tm-sub { font-size: 11px; }
+  .tm-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 5px; } .tm-pick { font-size: 13px; } .tm-icon { font-size: 18px; }
+  .rv-icon { font-size: 30px; } .rv-h b { font-size: 17px; } .rv-cols { gap: 8px; } .rv-line { padding: 3px 6px; font-size: 12px; } .rv-steps { font-size: 12px; gap: 3px; }
+  .book-cols { grid-template-columns: 150px 1fr; }
+}

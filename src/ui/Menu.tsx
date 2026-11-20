@@ -9,6 +9,8 @@ import { Creator } from './Creator'
 import { autoFullscreen } from './FullscreenButton'
 import { HowTo } from './HowTo'
 import { TitleBoard } from './TitleBoard'
+import { useBook } from './TodaysMenu'
+import { useTodayMenu } from '../systems/todaymenu'
 import { NewGame, LoadGame, continueGame, takeBoot, modeLabel } from './SaveMenu'
 import { latest, listSlots } from '../systems/saves'
 
@@ -119,6 +121,8 @@ export function Menu({ screen, setScreen }: { screen: Screen; setScreen: (s: Scr
           <div className="row">
             <button onClick={() => setScreen('creator')}>Your character</button>
             <button onClick={() => setScreen('howto')}>How to play</button>
+            <button data-act="book" onClick={() => useBook.getState().show()}>📖 Recipe Book</button>
+            <button data-act="todaymenu" onClick={() => useTodayMenu.getState().ask(() => {})}>🗒 Today's Menu</button>
             <button onClick={() => setScreen('settings')}>Settings</button>
             <button onClick={() => { useShop.getState().openShop(false); setScreen('main') }}>Main menu</button>
             <button onClick={() => { useShop.getState().openShop(false); setMode('exterior'); setScreen('title') }}>Title screen</button>

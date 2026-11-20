@@ -1,3 +1,4 @@
+import { TodaysMenu, RecipeBook } from './ui/TodaysMenu'
 import { WORLD } from './world/layout'
 import { Canvas, useFrame } from '@react-three/fiber'
 import { useEffect, useRef, useState } from 'react'
@@ -169,6 +170,7 @@ export default function App() {
       {!SNAP && <FullscreenButton />}
       {!SNAP && <Landscape />}
       {!SNAP && <Menu screen={screen} setScreen={setScreen} />}
+      {!SNAP && <TodaysMenu />}{!SNAP && <RecipeBook />}
       {SHOW_FPS && <div className="fps">{shownFps} fps</div>}
     </>
   )
