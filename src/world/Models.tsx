@@ -8,7 +8,8 @@ import * as THREE from 'three'
 // centred in x/z (Sketchfab models arrive in all sorts of units and offsets).
 type V3 = [number, number, number]
 const BASE = (import.meta as unknown as { env: { BASE_URL: string } }).env.BASE_URL
-const url = (n: string) => n.startsWith('sf:') ? `${BASE}assets/sketchfab/${n.slice(3)}/scene.gltf` : `${BASE}assets/${n}/model.gltf`
+// fk:<name> = Kenney Food Kit (CC0, public/assets/foodkit): tiny low-poly props sharing one 512 px palette texture
+const url = (n: string) => n.startsWith('sf:') ? `${BASE}assets/sketchfab/${n.slice(3)}/scene.gltf` : n.startsWith('fk:') ? `${BASE}assets/foodkit/${n.slice(3)}.glb` : `${BASE}assets/${n}/model.gltf`
 const BIG = new Set(['coffee_table_round_01', 'bar_chair_round_01', 'potted_plant_01', 'sf:espresso', 'sf:table'])
 const _b = new THREE.Box3(), _s = new THREE.Vector3(), _c = new THREE.Vector3()
 

@@ -30,12 +30,19 @@ with sync_playwright() as p:
         pg.click('[data-flavour="vanilla"]'); pg.wait_for_timeout(200)
         tap = (lambda xy: pg.touchscreen.tap(*xy)) if dev == 'phone' else (lambda xy: pg.mouse.click(*xy))
         for part in ('flour', 'sugar', 'eggs', 'butter'):
-            for _ in range(3): tap(W(f'kitchen:{part}')); pg.wait_for_timeout(120)
+            for i in range(3):
+                tap(W(f'kitchen:{part}'))
+                if i == 0: pg.wait_for_timeout(480); pg.screenshot(path=f'{OUT}/kitchen-pour-{part}-{dev}.png'); pg.wait_for_timeout(520)
+                else: pg.wait_for_timeout(1000)
         added = S("window.__kitchen.getState().bowl.added")
         check(all(added[k] == 3 for k in ('flour', 'sugar', 'eggs', 'butter')), f'{dev}: clicking the jars adds scoops {added}')
         pg.screenshot(path=f'{OUT}/kitchen-bowl-{dev}.png')
         w = W('kitchen:whisk')
-        pg.mouse.move(*w); pg.mouse.down(); pg.wait_for_timeout(1300); pg.screenshot(path=f'{OUT}/kitchen-stir-{dev}.png'); pg.wait_for_timeout(1700); pg.mouse.up(); pg.wait_for_timeout(400)
+        pg.mouse.move(*w); pg.mouse.down(); pg.wait_for_timeout(1300); pg.screenshot(path=f'{OUT}/kitchen-stir-{dev}.png')
+        for _ in range(60):  # keep holding until the bowl is done (slow test renderers stir per frame)
+            if S("window.__kitchen.getState().batter.vanilla") >= 3: break
+            pg.wait_for_timeout(100)
+        pg.mouse.up(); pg.wait_for_timeout(400)
         check(S("window.__kitchen.getState().batter.vanilla") == 3, f'{dev}: holding the whisk makes 3 layers of vanilla batter')
         pg.screenshot(path=f'{OUT}/kitchen-done-{dev}.png')
         # the cake bench pours it

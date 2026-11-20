@@ -29,17 +29,19 @@ const load = (): Saved => {
   return { bowl: EMPTY_BOWL(), batter: { vanilla: 0, chocolate: 0, strawberry: 0 } }
 }
 type K = Saved & {
-  stirring: boolean; msg: { text: string; t: number; good?: boolean } | null
+  stirring: boolean; pour: { part: Part; t: number } | null; msg: { text: string; t: number; good?: boolean } | null
   choose: (f: Flavour) => void; add: (p: Part) => void; setStirring: (on: boolean) => void; stirBy: (dt: number) => void
   ready: () => boolean; takeLayer: (f: Flavour) => boolean; tip: () => void
 }
 const persist = (s: Saved) => { try { localStorage.setItem(KEY, JSON.stringify({ bowl: s.bowl, batter: s.batter })) } catch { /* private mode */ } }
+const now = () => (typeof performance !== 'undefined' ? performance.now() : Date.now())
+export const POUR_MS = 900 // how long one scoop's pour animation takes
 const say = (text: string, good = false) => ({ msg: { text, t: performance.now(), good } })
 export const STIR_SECONDS = 2.5
 
 export const useKitchen = create<K>((set, get) => ({
   ...(typeof localStorage === 'undefined' ? { bowl: EMPTY_BOWL(), batter: { vanilla: 0, chocolate: 0, strawberry: 0 } } : load()),
-  stirring: false, msg: null,
+  stirring: false, pour: null, msg: null,
   choose: (f) => { const b = get().bowl
     if (b.flavour && b.flavour !== f && PARTS.some((p) => b.added[p] > 0)) return set(say(`this bowl is already ${b.flavour}: finish it (or tip it out) first`))
     const bowl = { ...b, flavour: f }; set({ bowl }); persist({ ...get(), bowl }); play('tap') },
@@ -49,11 +51,12 @@ export const useKitchen = create<K>((set, get) => ({
     if (!need) return set(say(`${b.flavour} batter doesn't need that`))
     if (b.added[p] >= need) return set(say(`that's enough ${p === 'extra' ? 'of that' : p}`))
     if (b.stir > 0) return set(say("you've started stirring: it's all in"))
+    const pr = get().pour; if (pr && now() - pr.t < POUR_MS) return // still pouring the last scoop
     const sc = scoop(b.flavour, p)!
     if (!usePantry.getState().useAll([sc])) return set(say(`out of ${sc[0]}: buy more in town`))
-    const bowl = { ...b, added: { ...b.added, [p]: b.added[p] + 1 } }; set({ bowl }); persist({ ...get(), bowl }); play('tap') },
+    const bowl = { ...b, added: { ...b.added, [p]: b.added[p] + 1 } }; set({ bowl, pour: { part: p, t: now() } }); persist({ ...get(), bowl }); play('tap') },
   ready: () => { const b = get().bowl; return !!b.flavour && PARTS.every((p) => b.added[p] >= needs(b.flavour!, p)) },
-  setStirring: (on) => { if (on && !get().ready()) { set({ stirring: false, ...say(get().bowl.flavour ? 'add everything before you stir' : 'pick a flavour first') }); return } set({ stirring: on }) },
+  setStirring: (on) => { if (on && !get().ready()) { set({ stirring: false, ...say(get().bowl.flavour ? 'add everything before you stir' : 'pick a flavour first') }); return } set(on ? { stirring: true, msg: null } : { stirring: false }) },
   stirBy: (dt) => { const s = get(); if (!s.stirring || !s.ready()) return
     const stir = Math.min(1, s.bowl.stir + dt / STIR_SECONDS)
     if (stir < 1) { set({ bowl: { ...s.bowl, stir } }); return }
