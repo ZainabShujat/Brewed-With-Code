@@ -624,7 +624,7 @@ const ACTION: Partial<Record<Step, string>> = {
 }
 const drawerLabel = (_id: Step) => ''
 function ActionTag() {
-  const pov = useGame((st) => st.mode === 'pov') && useGuide((gd) => gd.on), g = useRef<THREE.Group>(null)
+  const atBar = useGame((st) => st.mode === 'pov'), guideOn = useGuide((gd) => gd.on), pov = atBar && guideOn, g = useRef<THREE.Group>(null)
   const [label, setLabel] = useState(''), last = useRef('')
   useFrame(({ clock }) => {
     const st = useShop.getState(), busy = st.pouringMilk || !!st.shaking || st.pulling || st.steaming || !!st.filling
@@ -663,7 +663,7 @@ function spotFor(id: Step): Spot | null {
   }
 }
 function Guide() {
-  const pov = useGame((st) => st.mode === 'pov') && useGuide((g) => g.on)
+  const atBar = useGame((st) => st.mode === 'pov'), guideOn = useGuide((g) => g.on), pov = atBar && guideOn // both hooks every render (a short-circuit here crashed the bar)
   const arrow = useRef<THREE.Group>(null), ring = useRef<THREE.Mesh>(null), dest = useRef<THREE.Mesh>(null)
   useFrame(({ clock }) => {
     const a = arrow.current, r = ring.current, d = dest.current; if (!a || !r || !d) return
