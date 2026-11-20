@@ -59,6 +59,7 @@ type CakeState = {
   spin: boolean
   orderUntil: number   // the order screen shows the cake until this time (ms), then you work from memory
   peeks: number
+  why: { text: string; t: number } | null // why the last dispenser did nothing
   peek: () => void
   showFor: () => void
   setTin: (t: Exclude<Tin, 'none'>) => void
@@ -72,26 +73,40 @@ type CakeState = {
   newOrder: () => void
 }
 
+const no = (set: (p: Partial<CakeState>) => void, text: string) => set({ why: { text, t: performance.now() } })
 export const useCake = create<CakeState>((set, get) => ({
-  cake: { ...EMPTY }, order: randomCakeOrder(), t: {}, coins: 0, last: null, spin: true, orderUntil: 0, peeks: 0,
+  cake: { ...EMPTY }, order: randomCakeOrder(), t: {}, coins: 0, last: null, spin: true, orderUntil: 0, peeks: 0, why: null,
   showFor: () => set({ orderUntil: performance.now() + 8000 }),
   peek: () => set((s) => ({ orderUntil: performance.now() + 2500, peeks: s.peeks + 1 })),
   // the tin comes first: it decides the cake's shape
   setTin: (tin) => { const c = get().cake; if (c.layers.length) return; set({ cake: { ...c, tin }, t: { ...get().t, tin: now() } }) },
   // a sponge can only go on bare cake or on a filling (fillings sit *between* layers)
-  addLayer: (s) => { const c = get().cake; if (c.tin === 'none' || c.frosting !== 'none' || c.layers.length >= 4 || c.layers.length > c.fillings.length) return
+  addLayer: (s) => { const c = get().cake
+    if (c.tin === 'none') return no(set, 'pick a tin first ⚪')
+    if (c.frosting !== 'none') return no(set, "it's frosted: no more sponge on top")
+    if (c.layers.length >= 4) return no(set, "that's the tallest cake the machine makes (4 tiers)")
+    if (c.layers.length > c.fillings.length) return no(set, 'add a filling before the next sponge')
     const ex = USE.spongeExtra[s]; if (!use([['flour', USE.layer.flour], ['sugar', USE.layer.sugar], ['eggs', USE.layer.eggs], ['butter', USE.layer.butter], ...(ex ? [ex] : [])])) return
     set({ cake: { ...c, layers: [...c.layers, s] }, t: { ...get().t, [`L${c.layers.length}`]: now() } }) },
-  addFilling: (f) => { const c = get().cake; if (c.frosting !== 'none' || !c.layers.length || c.fillings.length >= c.layers.length) return
+  addFilling: (f) => { const c = get().cake
+    if (!c.layers.length) return no(set, 'add a sponge first 🍰')
+    if (c.frosting !== 'none') return no(set, "it's frosted already")
+    if (c.fillings.length >= c.layers.length) return no(set, 'add a sponge on top of that filling (or frost it)')
     if (!use([USE.filling[f]])) return
     set({ cake: { ...c, fillings: [...c.fillings, f] }, t: { ...get().t, [`F${c.fillings.length}`]: now() } }) },
-  frost: (f) => { const c = get().cake; if (!c.layers.length || c.frosting !== 'none' || c.fillings.length >= c.layers.length) return
+  frost: (f) => { const c = get().cake
+    if (!c.layers.length) return no(set, 'add a sponge first 🍰')
+    if (c.frosting !== 'none') return no(set, 'already frosted ✨')
     if (!use([['sugar', USE.frosting.sugar], ['butter', USE.frosting.butter]])) return
     set({ cake: { ...c, frosting: f }, t: { ...get().t, frost: now() } }) },
-  pipe: (p) => { const c = get().cake; if (c.frosting === 'none' || c.piping !== 'none') return
+  pipe: (p) => { const c = get().cake
+    if (c.frosting === 'none') return no(set, 'frost the cake first, then rosettes')
+    if (c.piping !== 'none') return no(set, 'it has rosettes already')
     if (!use([['sugar', USE.piping.sugar], ['cream', USE.piping.cream]])) return
     set({ cake: { ...c, piping: p }, t: { ...get().t, pipe: now() } }) },
-  topWith: (tp) => { const c = get().cake; if (c.frosting === 'none' || c.top !== 'none') return
+  topWith: (tp) => { const c = get().cake
+    if (c.frosting === 'none') return no(set, 'frost the cake first, then toppings')
+    if (c.top !== 'none') return no(set, 'it has toppings already')
     if (!use([USE.cakeTop[tp]])) return
     set({ cake: { ...c, top: tp }, t: { ...get().t, top: now() } }) },
   box: () => { const s = get(); if (!s.cake.layers.length) return

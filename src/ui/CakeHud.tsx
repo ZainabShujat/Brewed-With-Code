@@ -23,6 +23,7 @@ export function CakeHud() {
   }, [mode])
   if (mode !== 'cake') return null
   const fresh = k.last && performance.now() / 1000 - k.last.t < 3.5
+  const why = k.why && performance.now() - k.why.t < 2600 ? k.why.text : ''
   return (
     <>
       <div className="cake-card">
@@ -43,6 +44,7 @@ export function CakeHud() {
         <button className="navbtn" onClick={() => machine.step(1)}>▶</button>
         {k.cake.layers.length > 0 && <button className="redo" onClick={() => k.reset()} title="start over">↺</button>}
       </div>
+      {why && <div className="cheer off" key={k.why!.t}>{why}</div>}
       {fresh && k.last && <div className="result">{k.last.pct === 100 ? '🎂' : k.last.pct >= 60 ? '🙂' : '😐'} {k.last.pct}% · +{k.last.coins}💰{k.last.misses.length ? <small>wanted: {k.last.misses.join(', ')}</small> : <small>perfect cake!</small>}</div>}
     </>
   )
