@@ -47,6 +47,7 @@ function nearestTarget(world: THREE.Vector3, accepts: string[]) {
 // click the glass (or another target) to use it there. Click anywhere else, or press Esc, to put it back.
 // DRAG AND DROP works too: press on a tool, drag it over the target and let go. Pours and shakes (holdDrops) start the
 // moment you drag over your glass with the button still down, and stop when you let go, like a real pour.
+const dwell = { on: '', t: 0 }
 const held = { id: '', drops: null as Record<string, () => void> | null, hold: [] as string[], pressed: false, moved: false, x: 0, y: 0 }
 export function putBack() { held.id = ''; held.drops = null; held.hold = []; held.pressed = false; held.moved = false; drag.active = ''; drag.over = ''; document.body.style.cursor = '' }
 function use(t: string) { const d = held.drops; putBack(); if (t && d?.[t]) d[t]() }
@@ -62,7 +63,8 @@ if (typeof window !== 'undefined') {
   window.addEventListener('pointermove', (e) => {
     if (!held.id || !held.pressed) return
     if (!held.moved && Math.hypot(e.clientX - held.x, e.clientY - held.y) > 12) held.moved = true
-    if (held.moved && drag.over && held.hold.includes(drag.over)) use(drag.over) // a pour starts over the glass, button still down
+    // (a pour starts over the glass with the button still down, but only after a short pause there: see Grab's frame loop.
+    //  Passing over the glass on the way to the steam wand used to start a pour and the jug never reached the wand.)
   })
   window.addEventListener('pointerup', () => {
     if (!held.id || !held.pressed) return
@@ -89,6 +91,9 @@ export function Grab({ id, pos, size, children, tip, onClick, drops, holdDrops =
         // the drop spot is where the cursor meets the COUNTER (targets sit on it), not the carry plane above it
         _plane.constant = -(_w.y - 0.1)
         if (raycaster.ray.intersectPlane(_plane, _p)) drag.over = drops ? nearestTarget(_p, Object.keys(drops)) : ''
+        // dwell to pour: hovering a hold-target (your glass) for ~0.22 s with the button down starts the pour
+        if (drag.over !== dwell.on) { dwell.on = drag.over; dwell.t = performance.now() }
+        else if (held.pressed && held.moved && drag.over && held.hold.includes(drag.over) && performance.now() - dwell.t > 220) use(drag.over)
       }
       return
     }

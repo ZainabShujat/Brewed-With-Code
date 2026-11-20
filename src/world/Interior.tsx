@@ -1,3 +1,4 @@
+import { useDrawers, type DrawerId } from '../systems/drawers'
 import { BAR } from './barLayout'
 import { useMemo } from 'react'
 import { HQ } from './Lighting'
@@ -158,7 +159,9 @@ function Counter({ showDrawerTags }: { showDrawerTags: boolean }) {
       <RBox size={[w + 0.15, 0.1, depth + 0.15]} pos={[cx, top + 0.04, z]} color={C.counterTop} r={0.02} />
       {/* drawers on the barista side = the customisation menu */}
       {drawers.map(([label, x, col]) => (
-        <group key={label} position={[x, 0.55, z - depth / 2 - 0.03]}><Slide id={label}>
+        <group key={label} position={[x, 0.55, z - depth / 2 - 0.03]}
+          onClick={(e) => { if (useGame.getState().mode !== 'pov') return; e.stopPropagation(); useDrawers.getState().toggle(label as DrawerId) }}
+          onPointerOver={() => { if (useGame.getState().mode === 'pov') document.body.style.cursor = 'pointer' }} onPointerOut={() => { document.body.style.cursor = '' }}><Slide id={label}>
           <RBox size={[1.2, 0.7, 0.08]} color={col} r={0.025} />
           <RBox size={[1.08, 0.58, 0.02]} pos={[0, 0, -0.045]} color={col} r={0.01} shadow={false} />
           {/* drawer body + contents, seen when it slides open */}

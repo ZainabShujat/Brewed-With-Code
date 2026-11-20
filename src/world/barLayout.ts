@@ -17,7 +17,7 @@ const HEAD_Z = MACHINE.z - 0.275                      // the front brew head (ne
 
 export const BAR = {
   machine: [MACHINE.x, TOP, MACHINE.z] as V3,
-  grinder: [MACHINE.x - 0.5, TOP, MACHINE.z + 0.3] as V3,
+  grinder: [MACHINE.x - 0.85, TOP, MACHINE.z + 0.05] as V3, // beside the machine with a gap (it used to peek out from behind it and the two read as one shape)
   shot: [MACHINE.x, TOP + 0.06, HEAD_Z] as V3,        // the shot glass, right under the front brew head
   wand: [MACHINE.x + 0.36, TOP, MACHINE.z - 0.2] as V3, // the steam wand off the machine's side; the pitcher sits under it
   cup: [-0.1, TOP + 0.06, COUNTER.z - 0.3] as V3,     // your glass on its coaster

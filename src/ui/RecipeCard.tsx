@@ -59,7 +59,6 @@ export function RecipeCard() {
       <div className="coins">💰 {s.coins} · served {s.served}</div>
       <div className={'brew-next' + (ready ? ' ready' : '')}>
         {at >= 0 && <div className="stepbar"><b style={{ width: `${(at / Math.max(1, steps.length - 1)) * 100}%` }} /></div>}
-        {at >= 0 && <div className="steps">{steps.map((id, i) => <span key={id} className={i < at ? 'done' : i === at ? 'now' : ''}>{STEP_LABEL[id][0]}<small>{STEP_LABEL[id][1]}</small></span>)}</div>}
         {!tutOn && <div className="brew-say">{at >= 0 && <em>step {at + 1} of {steps.length} · </em>}{words}</div>}
         {!tutOn && hoverTip.text && <div className="brew-tip">👆 {hoverTip.text}</div>}
       </div>

@@ -1,3 +1,4 @@
+import { useDrawers, tickDrawers, DRAWER_OF, DRAWER_X } from '../systems/drawers'
 import { useMemo, useRef, useState, type ReactNode } from 'react'
 import { useFrame, type ThreeEvent } from '@react-three/fiber'
 import * as THREE from 'three'
@@ -338,6 +339,7 @@ export function Bar() {
   const size = useShop((st) => st.drink.size)
   const hasCup = useShop((st) => st.cup)
   const pAt = useShop((st) => st.pitcher.at)
+  const steamed = useShop((st) => st.pitcher.stretch > 0)
   const pHome: [number, number, number] = pAt === 'wand' ? [WAND[0], TOP + 0.12, WAND[2]] : BAR.pitcher
   // only the tools this order needs are out on the counter (unmounted, not just hidden: invisible meshes still catch clicks)
   const [need, setNeed] = useState(needs), needKey = useRef(JSON.stringify(need))
@@ -346,7 +348,10 @@ export function Bar() {
     const n = needs(), k = JSON.stringify(n); if (k !== needKey.current) { needKey.current = k; setNeed(n) }
   })
   const milkOut = (m: string) => need.all || need.milkType === m
-  const topOut = (t: string) => need.all || need.topping === t
+  const drawer = useDrawers((d) => d.open)
+  useFrame((_, dt) => tickDrawers(Math.min(dt, 0.1)))
+  const inDrawer = (t: string) => drawer === DRAWER_OF[t] // the extras live in the drawers: out on the counter only while theirs is open
+  const topOut = (t: string) => (need.all || need.topping === t) && inDrawer(t)
   return (
     <group>
       {/* ── left → right as the barista sees it ── */}
@@ -367,7 +372,7 @@ export function Bar() {
       {milkOut('oat') && <MilkBottle x={BAR.milks[1]} milk="oat" color="#eedcb8" cap="#c9a24a" />}
       {milkOut('almond') && <MilkBottle x={BAR.milks[2]} milk="almond" color="#f2e6d2" cap="#9a6a4a" />}
       {/* steel pitcher: steam the milk */}
-      {need.milk && <Grab id="milk" tip="milk pitcher: put it on the steam wand, or hold it over your glass to pour" pos={pHome} size={[0.26, 0.3, 0.26]} drops={{ cup: startMilkPour, wand: () => s().placePitcher('wand'), pitcherHome: () => s().placePitcher('home') }} holdDrops={['cup']}>
+      {need.milk && <Grab id="milk" tip="milk jug: pick it up (drag it under the steam wand, or over your glass to pour)" pos={pHome} size={[0.36, 0.36, 0.36]} drops={{ cup: startMilkPour, wand: () => s().placePitcher('wand'), pitcherHome: () => s().placePitcher('home') }} holdDrops={steamed ? ['cup'] : []}>{/* only steamed milk auto-pours: carrying it to the wand past your glass mustn't start a pour */}
         <Flyer kind="milk" home={pHome} act="tilt" side={SPOUT.milk.side} above={pourAbove(size)}>
           <PitcherLevel />
           <SteamGauge />
@@ -383,14 +388,14 @@ export function Bar() {
       {topOut('cinnamon') && <Shaker x={BAR.shakers.cinnamon} label="cinnamon" color="#b0602a" />}
       {topOut('sprinkles') && <Shaker x={BAR.shakers.sprinkles} label="sprinkles" color={C.counter} />}
       <HandShake />
-      {topOut('whipped') && <Grab id="whipped" tip="whipped cream: click, then click your glass" pos={BAR.whip} size={[0.16, 0.38, 0.16]} onClick={() => s().top('whipped')} drops={{ cup: () => s().top('whipped') }}>
+      {topOut('whipped') && <Grab id="whipped" tip="whipped cream: click, then click your glass" pos={BAR.whip} size={[0.16, 0.38, 0.16]} onClick={() => { s().top('whipped'); useDrawers.getState().close() }} drops={{ cup: () => { s().top('whipped'); useDrawers.getState().close() } }}>
         <Flyer kind="whip" home={BAR.whip} act="invert" side={0} above={glassTop(size) + 0.25}>
           <mesh material={mat(C.white)}><cylinderGeometry args={[0.05, 0.05, 0.26, 16]} /></mesh>
           <mesh position={[0, 0.16, 0]} material={mat(C.steel)}><coneGeometry args={[0.035, 0.07, 10]} /></mesh>
         </Flyer>
       </Grab>}
       {/* chocolate sauce + hot-water kettle */}
-      {need.choc && <Grab id="choc" tip="chocolate: click, then click your glass" pos={BAR.choc} size={[0.18, 0.32, 0.18]} onClick={() => s().choc()} drops={{ cup: () => s().choc() }}>
+      {need.choc && inDrawer('choc') && <Grab id="choc" tip="chocolate: click, then click your glass" pos={BAR.choc} size={[0.18, 0.32, 0.18]} onClick={() => { s().choc(); useDrawers.getState().close() }} drops={{ cup: () => { s().choc(); useDrawers.getState().close() } }}>
         <Flyer kind="choc" home={BAR.choc} act="invert" side={0} above={glassTop(size) + CHOC_ABOVE}>
           <mesh material={mat('#5a3424', { rough: 0.3 })}><cylinderGeometry args={[0.055, 0.06, 0.22, 16]} /></mesh>
           <mesh position={[0, 0.14, 0]} material={mat('#3b1d12')}><coneGeometry args={[0.035, 0.07, 10]} /></mesh>
@@ -403,8 +408,9 @@ export function Bar() {
           <mesh position={[-0.12, 0.05, 0]} rotation={[0, 0, 0.9]} material={mat(C.steel)}><cylinderGeometry args={[0.01, 0.012, 0.2, 8]} /></mesh>
         </Flyer>
       </Grab>}
-      {/* espresso machine (pull a shot) */}
-      <Hold id="machine" tip="hold to pull a shot (watch the shot glass)" pos={[MACHINE.x, TOP + 0.45, MACHINE.z]} size={[0.5, 0.9, 0.62]}
+      {/* espresso machine (pull a shot). Its hold box starts ABOVE the shot glass: it used to swallow clicks on the glass under it, so
+          trying to pick up the shot pulled more espresso instead (playtest 19 Nov) */}
+      <Hold id="machine" tip="espresso machine: hold to pull a shot" pos={[MACHINE.x - 0.05, TOP + 0.62, MACHINE.z]} size={[0.4, 0.7, 0.62]}
         onStart={() => { pullT0 = performance.now(); useShop.setState({ pulling: true, hint: '' }) }}
         onEnd={() => { useShop.setState({ pulling: false }); judgeShot()
           // a quick tap pulls nothing you can see: say so (reviews: people didn't get the espresso machine)
@@ -412,7 +418,7 @@ export function Bar() {
         onHold={(dt) => s().pullTick(dt)} />
       <SteamWand />
       {/* the shot glass: fills under the machine, then is poured into your glass */}
-      <Grab id="shotglass" tip="shot glass: click, then click your glass" pos={SHOT_HOME} size={[0.16, 0.22, 0.16]} drops={{ cup: () => s().pourShotGlass() }}>
+      <Grab id="shotglass" tip="shot glass: pick it up, then your glass" pos={SHOT_HOME} size={[0.26, 0.28, 0.3]} drops={{ cup: () => s().pourShotGlass() }}>
         <Flyer kind="shot" home={SHOT_HOME} act="tilt" side={SPOUT.shot.side} above={pourAbove(size, 'shot')}>
           <mesh material={glass()}><cylinderGeometry args={[0.04, 0.034, 0.1, 16, 1, true]} /></mesh>
           <mesh position={[0, -0.05, 0]} material={glass()}><cylinderGeometry args={[0.034, 0.034, 0.008, 16]} /></mesh>
@@ -470,23 +476,31 @@ function HandPour() {
   return null
 }
 // a steel steam wand beside the machine: put the pitcher under it and HOLD to steam (foam rises, steam puffs)
+const KNOB = new THREE.MeshStandardMaterial({ color: '#5e2a75', emissive: '#ffb300', emissiveIntensity: 0 })
 function SteamWand() {
   const puffs = useRef<THREE.Group>(null)
   const seeds = useMemo(() => Array.from({ length: 8 }, (_, i) => ({ x: Math.cos(i * 2.1) * 0.05, z: Math.sin(i * 2.1) * 0.05, d: i / 8 })), [])
   useFrame(() => {
     const g = puffs.current; if (!g) return
     const on = useShop.getState().steaming, t = nowS()
+    KNOB.emissiveIntensity = nextStep().id === 'steam' && !on ? 0.4 + Math.sin(t * 5) * 0.3 : 0 // the knob glows when it's time to steam
     g.children.forEach((c, i) => { const k = ((t * 0.9 + seeds[i].d) % 1); c.visible = on; c.position.set(seeds[i].x * (1 + k), 0.35 + k * 0.45, seeds[i].z * (1 + k)); c.scale.setScalar(0.5 + k * 1.4) })
   })
   return (
-    <Hold id="wand" tip="steam wand: put the pitcher here, then hold to steam" pos={[WAND[0], TOP + 0.03, WAND[2]]} size={[0.3, 0.4, 0.3]}
-      onStart={() => useShop.setState({ steaming: useShop.getState().pitcher.at === 'wand' })} onEnd={() => { useShop.setState({ steaming: false }); judgeSteam() }} onHold={(dt) => useShop.getState().steamTick(dt)}>
-      {/* arm out of the machine's side, an elbow, and the pipe down into the pitcher */}
-      <mesh position={[-0.08, 0.27, 0]} rotation={[0, 0, Math.PI / 2]} material={mat(C.steel, { rough: 0.25 })}><cylinderGeometry args={[0.013, 0.013, 0.17, 8]} /></mesh>
-      <mesh position={[0, 0.27, 0]} material={mat(C.steel)}><sphereGeometry args={[0.02, 10, 8]} /></mesh>
-      <mesh position={[0, 0.13, 0]} material={mat(C.steel, { rough: 0.25 })}><cylinderGeometry args={[0.01, 0.012, 0.28, 8]} /></mesh>
-      <mesh position={[-0.16, 0.27, 0]} material={mat(C.plum)}><sphereGeometry args={[0.03, 10, 8]} /></mesh>
-      <group ref={puffs}>{seeds.map((_, i) => <mesh key={i} visible={false} material={mat('#ffffff', { opacity: 0.45 })}><sphereGeometry args={[0.035, 8, 6]} /></mesh>)}</group>
+    // the steam KNOB is what you hold (its own spot, above and beside the jug); the jug itself is only ever picked up.
+    // They used to share one spot under the wand, so the same click sometimes steamed and sometimes grabbed the jug.
+    <Hold id="wand" tip="steam knob: hold to steam the milk in the jug" pos={[WAND[0] - 0.22, TOP + 0.38, WAND[2]]} size={[0.16, 0.16, 0.16]}
+      onStart={() => useShop.setState({ steaming: useShop.getState().pitcher.at === 'wand', hint: useShop.getState().pitcher.at === 'wand' ? '' : 'put the milk jug under the steam wand first ↓' })} onEnd={() => { useShop.setState({ steaming: false }); judgeSteam() }} onHold={(dt) => useShop.getState().steamTick(dt)}>
+      <group position={[0.22, -0.35, 0]}>
+        {/* arm out of the machine's side, an elbow, and the pipe down into the pitcher */}
+        <mesh position={[-0.08, 0.27, 0]} rotation={[0, 0, Math.PI / 2]} material={mat(C.steel, { rough: 0.25 })}><cylinderGeometry args={[0.013, 0.013, 0.17, 8]} /></mesh>
+        <mesh position={[0, 0.27, 0]} material={mat(C.steel)}><sphereGeometry args={[0.02, 10, 8]} /></mesh>
+        <mesh position={[0, 0.13, 0]} material={mat(C.steel, { rough: 0.25 })}><cylinderGeometry args={[0.01, 0.012, 0.28, 8]} /></mesh>
+        {/* the knob: bigger, and glowing gold when it's time to steam */}
+        <mesh position={[-0.19, 0.31, 0]} rotation={[0, 0, 0.9]} material={mat(C.steel)}><cylinderGeometry args={[0.012, 0.012, 0.09, 8]} /></mesh>
+        <mesh position={[-0.22, 0.35, 0]} material={KNOB}><sphereGeometry args={[0.05, 14, 10]} /></mesh>{/* up and out, clear of the jug's top */}
+        <group ref={puffs}>{seeds.map((_, i) => <mesh key={i} visible={false} material={mat('#ffffff', { opacity: 0.45 })}><sphereGeometry args={[0.035, 8, 6]} /></mesh>)}</group>
+      </group>
     </Hold>
   )
 }
@@ -586,17 +600,19 @@ let pullT0 = 0
 //    saying what to DO with it (press & hold / drag), so nobody has to guess (19 Nov review) ──
 const ACTION: Partial<Record<Step, string>> = {
   glass: '✋ DRAG a glass → the mat', choc: '✋ DRAG → your glass', pull: '👆 PRESS & HOLD the machine', pourShot: '✋ DRAG the shot → your glass',
-  water: '✋ DRAG → your glass', fillPitcher: '👆 PRESS & HOLD the milk', pitcherToWand: '✋ DRAG the jug → the steam wand', steam: '👆 PRESS & HOLD to steam',
+  water: '✋ DRAG → your glass', fillPitcher: '👆 PRESS & HOLD the milk', pitcherToWand: '✋ DRAG the milk jug → under the steam wand', steam: '👆 HOLD the steam knob',
   pourMilk: '✋ DRAG the jug → your glass, HOLD to pour', topping: '✋ DRAG → your glass', serve: '✋ DRAG your glass → the pass 🔔',
 }
+const drawerLabel = (id: Step) => { const w = want(); const item = id === 'choc' ? 'choc' : id === 'topping' ? w?.topping ?? '' : ''; const d = DRAWER_OF[item]
+  return d && useDrawers.getState().open !== d ? `👆 OPEN the ${d} drawer` : '' }
 function ActionTag() {
   const pov = useGame((st) => st.mode === 'pov'), g = useRef<THREE.Group>(null)
   const [label, setLabel] = useState(''), last = useRef('')
   useFrame(({ clock }) => {
     const st = useShop.getState(), busy = st.pouringMilk || !!st.shaking || st.pulling || st.steaming || !!st.filling
-    const id = nextStep().id, sp = busy ? null : spotFor(id), txt = sp ? ACTION[id] ?? '' : ''
+    const id = nextStep().id, sp = busy ? null : spotFor(id), txt = sp ? drawerLabel(id) || (ACTION[id] ?? '') : ''
     if (txt !== last.current) { last.current = txt; setLabel(txt) }
-    if (sp && g.current) g.current.position.set(sp.at[0], sp.at[1] + sp.top + 0.32 + Math.sin(clock.elapsedTime * 3) * 0.02, sp.at[2])
+    if (sp && g.current) g.current.position.set(sp.at[0] + (sp.at[0] < -0.4 ? 0.45 : 0), sp.at[1] + sp.top + 0.32 + Math.sin(clock.elapsedTime * 3) * 0.02, sp.at[2]) // (the machine side is screen-right: nudge its label inwards)
   })
   if (!pov || !label) return null
   return <group ref={g}><Html center zIndexRange={[6, 0]} style={{ pointerEvents: 'none' }}><div className="actiontag">{label}</div></Html></group>
@@ -607,8 +623,11 @@ const STACK_I = { small: 0, medium: 1, large: 2 } as const
 type Spot = { at: V3; top: number; to?: V3 }
 type V3 = [number, number, number]
 const cupMat: V3 = [CUP_AT[0], TOP + 0.01, CUP_AT[2]]
+function drawerSpot(item: string): Spot | null { const d = DRAWER_OF[item]; if (!d || useDrawers.getState().open === d) return null; return { at: [DRAWER_X[d], TOP - 0.45, BZ - 0.35], top: 0.05 } }
 function spotFor(id: Step): Spot | null {
   const w = want(), s = useShop.getState(); if (!w) return null
+  if (id === 'choc') { const d = drawerSpot('choc'); if (d) return d }
+  if (id === 'topping') { const d = drawerSpot(w.topping); if (d) return d }
   const pAt: V3 = s.pitcher.at === 'wand' ? [WAND[0], TOP + 0.12, WAND[2]] : BAR.pitcher
   switch (id) {
     case 'glass': return { at: [BAR.shelf.stacks[STACK_I[w.size]], TOP, RZ + 0.08], top: 0.5, to: cupMat }
@@ -618,7 +637,7 @@ function spotFor(id: Step): Spot | null {
     case 'water': return { at: BAR.kettle, top: 0.22, to: cupMat }
     case 'fillPitcher': { const i = w.milkType === 'oat' ? 1 : w.milkType === 'almond' ? 2 : 0; return { at: [BAR.milks[i], TOP + 0.2, BZ], top: 0.28, to: pAt } }
     case 'pitcherToWand': return { at: BAR.pitcher, top: 0.2, to: [WAND[0], TOP + 0.01, WAND[2]] }
-    case 'steam': return { at: [WAND[0], TOP + 0.12, WAND[2]], top: 0.42 }
+    case 'steam': return { at: [WAND[0] - 0.22, TOP + 0.38, WAND[2]], top: 0.08 }
     case 'pourMilk': return { at: pAt, top: 0.2, to: cupMat }
     case 'topping': return w.topping === 'whipped' ? { at: BAR.whip, top: 0.28, to: cupMat } : { at: [BAR.shakers[w.topping] ?? 0, TOP + 0.13, RZ], top: 0.22, to: cupMat }
     case 'serve': return { at: CUP_AT, top: 0.62, to: [BAR.pass[0], TOP + 0.01, BAR.pass[2]] }
@@ -653,7 +672,7 @@ function Guide() {
 // ── numbered station mats: the bar reads left to right in the order you work ──
 const MATS: { n: number; label: string; at: V3; steps: Step[] }[] = [
   { n: 1, label: 'glasses', at: [BAR.shelf.x, TOP + 0.58, RZ + 0.08], steps: ['glass'] },
-  { n: 2, label: 'espresso', at: [MACHINE.x, TOP + 0.02, BZ - 0.16], steps: ['pull', 'pourShot'] },
+  { n: 2, label: 'espresso', at: [MACHINE.x, TOP + 0.02, BZ - 0.42], steps: ['pull', 'pourShot'] }, // in front of the shot glass, not over it
   { n: 3, label: 'milk', at: [0.83, TOP + 0.02, BZ - 0.16], steps: ['fillPitcher', 'pitcherToWand', 'steam', 'pourMilk'] },
   { n: 4, label: 'your glass', at: [CUP_AT[0], TOP + 0.02, BZ - 0.16], steps: [] },
   { n: 5, label: 'extras', at: [0.3, TOP + 0.36, RZ + 0.05], steps: ['choc', 'water', 'topping'] },

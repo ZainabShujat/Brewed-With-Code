@@ -884,3 +884,14 @@ html:not(.phone) .fullscreenbtn { left: auto; right: 14px; top: auto; bottom: 14
 .actiontag { white-space: nowrap; font: 900 17px 'Trebuchet MS', sans-serif; color: #2a1830; background: #ffd166; padding: 7px 14px 8px; border-radius: 14px; border: 3px solid #2a1830; box-shadow: 0 4px 0 #2a1830; animation: tagpulse 1.1s ease-in-out infinite; }
 @keyframes tagpulse { 50% { transform: scale(1.07); } }
 .phone .actiontag { font-size: 13px; padding: 5px 10px 6px; }
+
+/* 20 Nov: the step panel is one slim bar (the chip grid read as clutter: emoji boxes, crossed-out steps, three lines) */
+.brew-next { padding: 8px 18px 10px !important; max-width: min(620px, 80vw) !important; border-radius: 16px; }
+.stepbar { display: block !important; height: 5px; border-radius: 3px; background: rgba(255,246,238,.15); margin: 0 0 7px; overflow: hidden; }
+.stepbar b { display: block; height: 100%; background: #f2c66a; border-radius: 3px; transition: width .3s; }
+.brew-say { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.brew-say em { font-size: .8em; opacity: .6; }
+.verb { padding: 0 6px 1px; border-radius: 6px; font-size: .9em; }
+.brew-tip { display: none !important; }
+.phone .brew-next { max-width: 70vw !important; padding: 5px 12px 7px !important; }
+.phone .brew-say { font-size: 13px; }

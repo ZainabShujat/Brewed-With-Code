@@ -31,7 +31,8 @@ export function HoldRing() {
   const p = Math.max(0, Math.min(1, prog)), a = mark === null ? 0 : mark * 2 * Math.PI - Math.PI / 2
   // the moment to let go, said in words (and a colour), not just a tick on a ring
   const raw = Math.max(0, prog), over = raw > overAt, inZone = !!zone && !over && raw >= zone[0] && raw <= zone[1]
-  if (inZone) label = 'LET GO!'; else if (over) label = 'too much!'; else label = 'keep holding… ' + label
+  const nearEnd = inZone && zone && raw > zone[1] - (zone[1] - zone[0]) * 0.3 && label === 'steam'
+  if (nearEnd) label = 'almost… LET GO!'; else if (inZone) label = 'LET GO!'; else if (over) label = 'too much!'; else label = 'keep holding… ' + label
   // phones: your finger would cover a ring under it, so it sits big at the top of the screen
   const where = TOUCH ? { left: '50%', top: '26%' } : { left: pos![0], top: pos![1] }
   return (
