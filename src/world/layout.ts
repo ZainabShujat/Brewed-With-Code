@@ -24,6 +24,8 @@ export const BLOCKERS: Box[] = [
   [3.7 + FRIDGE_DX, -4.6 + FRIDGE_DZ, 4.6 + FRIDGE_DX, -3.4 + FRIDGE_DZ], // fridge
   [-H, -2.5 + KITCHEN_DZ, -3.3 + KITCHEN_DX, -2.3 + KITCHEN_DZ],          // kitchen partition (doorway after it)
   [-2.7 + KITCHEN_DX, -2.5 + KITCHEN_DZ, -2.6 + KITCHEN_DX, -2.3 + KITCHEN_DZ], // partition stub
+  // the prep kitchen (21 Nov, world/KitchenRoom): back counter, batter shelf, curtains with a doorway at x 7.0-8.0
+  [4.6, -10, 8.8, -9.0], [4.6, -9.0, 5.3, -7.4], [4.2, -6.9, 7.0, -6.6], [8.0, -6.9, 8.9, -6.6], [4.2, -10, 4.5, -6.6],
 ]
 // Tables (x, z); each gets two stools. ~5 m apart so you can walk between them.
 // window seats follow the curve under the three windows; a centre cluster; a group corner on the right

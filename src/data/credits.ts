@@ -3,6 +3,7 @@ export const CREDITS: { what: string; title: string; author: string; license: st
   { what: 'tables, stools, plants, lamps, clocks, pastries, trees', title: 'Poly Haven models', author: 'Poly Haven artists', license: 'CC0', url: 'https://polyhaven.com/models' },
   // Sketchfab (CC BY 4.0): added as each one is dropped into public/assets/sketchfab/
   { what: 'café radio (8 jazz tracks)', title: 'Jazz Brunch, Bossa Antigua, Backbay Lounge, Cool Vibes, Sidewalk Shade, Long Stroll, Casa Bossa Nova, George Street Shuffle', author: 'Kevin MacLeod (incompetech.com)', license: 'CC BY 4.0', url: 'https://incompetech.com/music/royalty-free/' },
+  { what: 'kitchen props (bowl, whisk, flour sack, eggs, tools, bread and pastries)', title: 'Food Kit', author: 'Kenney', license: 'CC0', url: 'https://kenney.nl/assets/food-kit' },
   { what: 'espresso machine', title: 'Willoughsby Espresso Machine', author: 'KWojcik', license: 'CC BY 4.0', url: 'https://sketchfab.com/3d-models/221f20f292144abebf748f837931388c' },
   { what: 'cups', title: 'Cup and Saucer', author: 'stealth86', license: 'CC BY 4.0', url: 'https://sketchfab.com/3d-models/c87d04d6099340f1851360a5ba22b3dd' },
   { what: 'syrup bottles', title: 'Coffee Syrup', author: 'oparaskos', license: 'CC BY 4.0', url: 'https://sketchfab.com/3d-models/e317dd0031794072a86e1e9fb7fb0f3d' },

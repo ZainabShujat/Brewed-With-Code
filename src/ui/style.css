@@ -962,3 +962,260 @@ html:not(.phone) .fullscreenbtn { left: auto; right: 14px; top: auto; bottom: 14
   .modes { gap: 6px; }
   .slot-confirm p { font-size: 12px; }
 }
+
+/* Today's Menu + Recipe Book (one recipe source, data/menu.ts): cream card, plum ink, pink accents */
+.tmenu { position: fixed; inset: 0; z-index: 60; display: flex; align-items: center; justify-content: center; background: rgba(42,24,48,.55); font-family: 'Trebuchet MS', sans-serif; }
+.tm-panel { width: min(860px, calc(100vw - 24px)); max-height: calc(100vh - 24px); display: flex; flex-direction: column; gap: 10px; background: #fff6ee; color: #3d1846; border-radius: 22px; padding: 16px 18px; box-shadow: 0 6px 0 #c4528a, 0 20px 50px rgba(0,0,0,.35); }
+.tm-top { display: flex; justify-content: space-between; align-items: flex-start; }
+.tm-h { font: 900 24px 'Trebuchet MS', sans-serif; color: #5e2a75; } .tm-sub { font-size: 13px; color: #8a6a7e; font-weight: 700; }
+.tm-x { border: 0; background: #f3dfe9; color: #5e2a75; border-radius: 10px; width: 32px; height: 32px; font-weight: 900; cursor: pointer; }
+.tm-list { overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding-right: 4px; }
+.tm-cat { font-weight: 900; font-size: 13px; color: #c4528a; text-transform: uppercase; letter-spacing: 1px; margin: 2px 0 4px; }
+.tm-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 8px; }
+.tm-item { border-radius: 14px; background: #fff; box-shadow: 0 3px 0 #ead2df; padding: 6px; display: flex; flex-direction: column; gap: 4px; border: 2px solid transparent; }
+.tm-item.on { border-color: #ff7fb6; background: #fff0f6; } .tm-item.locked { opacity: .55; }
+.tm-pick { display: flex; align-items: center; gap: 8px; border: 0; background: none; cursor: pointer; font: 800 15px 'Trebuchet MS', sans-serif; color: #3d1846; text-align: left; padding: 2px; }
+.tm-pick:disabled { cursor: not-allowed; }
+.tm-icon { font-size: 24px; } .tm-name { flex: 1; } .tm-tick { width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; background: #f3dfe9; color: #5e2a75; font-weight: 900; }
+.tm-item.on .tm-tick { background: #ff7fb6; color: #fff; }
+.tm-row { display: flex; justify-content: space-between; align-items: center; gap: 6px; }
+.tm-tag { font-size: 11px; font-weight: 800; border-radius: 8px; padding: 1px 6px; } .tm-tag.ok { background: #e2f5e6; color: #2f7a43; } .tm-tag.low { background: #fff1d6; color: #9a5b00; } .tm-tag.lock { background: #eee; color: #777; }
+.tm-peek, .tm-presets button, .tm-foot button, .book-index button { border: 0; border-radius: 10px; padding: 5px 10px; font: 800 12px 'Trebuchet MS', sans-serif; background: #f3dfe9; color: #5e2a75; cursor: pointer; }
+.tm-presets { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; } .tm-presets .ghost { background: none; border: 2px dashed #d9a3c2; }
+.tm-name-in { display: inline-flex; gap: 4px; } .tm-name-in input { border: 2px solid #d9a3c2; border-radius: 10px; padding: 4px 8px; font: 700 12px 'Trebuchet MS', sans-serif; width: 120px; }
+.tm-foot { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.tm-count { font-weight: 800; font-size: 13px; color: #7a5a6e; }
+.tm-foot .tm-go { background: #ff7fb6; color: #fff; font-size: 15px; padding: 10px 16px; box-shadow: 0 4px 0 #c4528a; } .tm-foot .tm-go:disabled { opacity: .45; cursor: not-allowed; }
+.rv { display: flex; flex-direction: column; gap: 10px; overflow-y: auto; }
+.rv-h { display: flex; gap: 12px; align-items: center; } .rv-icon { font-size: 44px; }
+.rv-h b { display: block; font-size: 22px; color: #5e2a75; } .rv-h span { display: block; font-size: 13px; font-weight: 700; color: #7a5a6e; } .rv-meta { color: #c4528a !important; }
+.rv-cols { display: grid; grid-template-columns: 1fr 1.3fr; gap: 14px; }
+.rv-sub { font-weight: 900; font-size: 13px; color: #c4528a; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; } .rv-sub small { text-transform: none; letter-spacing: 0; color: #a08a96; }
+.rv-ing { display: flex; flex-direction: column; gap: 4px; }
+.rv-line { display: flex; align-items: center; gap: 8px; border: 0; background: #fff; border-radius: 10px; padding: 5px 8px; cursor: pointer; font: 700 13px 'Trebuchet MS', sans-serif; color: #3d1846; box-shadow: 0 2px 0 #ead2df; text-align: left; }
+.rv-line.on { background: #fff0f6; outline: 2px solid #ff7fb6; } .rv-i { font-size: 20px; } .rv-n { flex: 1; } .rv-q { font-weight: 900; color: #5e2a75; }
+.rv-focus { display: grid; grid-template-columns: auto 1fr; gap: 0 10px; background: #fff0f6; border-radius: 12px; padding: 8px 10px; align-items: center; }
+.rv-focus span { grid-row: span 3; font-size: 54px; } .rv-focus b { font-size: 16px; } .rv-focus em { font-style: normal; font-weight: 900; color: #c4528a; } .rv-focus p { margin: 0; font-size: 12px; font-weight: 700; color: #7a5a6e; }
+.rv-steps { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 700; }
+.rv-steps small { color: #a08a96; } .rv-st { display: inline-block; font-size: 10px; font-weight: 900; text-transform: uppercase; border-radius: 6px; padding: 0 5px; margin-right: 6px; color: #fff; background: #8a6a7e; }
+.rv-st.bar { background: #8b5a3c; } .rv-st.kitchen { background: #6aa36f; } .rv-st.cake { background: #e07aa8; }
+.book-cols { display: grid; grid-template-columns: 210px 1fr; gap: 14px; min-height: 0; overflow: hidden; }
+.book-index { display: flex; flex-direction: column; gap: 4px; overflow-y: auto; } .book-index button { text-align: left; font-size: 13px; padding: 7px 10px; } .book-index button.on { background: #ff7fb6; color: #fff; }
+@media (max-height: 520px) {
+  .tm-panel { padding: 8px 12px; gap: 6px; border-radius: 16px; } .tm-h { font-size: 17px; } .tm-sub { font-size: 11px; }
+  .tm-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 5px; } .tm-pick { font-size: 13px; } .tm-icon { font-size: 18px; }
+  .rv-icon { font-size: 30px; } .rv-h b { font-size: 17px; } .rv-cols { gap: 8px; } .rv-line { padding: 3px 6px; font-size: 12px; } .rv-steps { font-size: 12px; gap: 3px; }
+  .book-cols { grid-template-columns: 150px 1fr; }
+}
+
+/* the prep kitchen's panel: the same cream card as the recipe card, top-left, out of the way of the counter */
+.khud { position: fixed; left: 12px; top: 64px; z-index: 25; width: 250px; display: flex; flex-direction: column; gap: 6px; background: #fff6ee; color: #3d1846; border-radius: 16px; padding: 10px 12px; box-shadow: 0 4px 0 #c4528a, 0 10px 24px rgba(0,0,0,.2); font-family: 'Trebuchet MS', sans-serif; }
+.kh-h { font-weight: 900; font-size: 15px; color: #5e2a75; }
+.kh-fl { display: flex; gap: 4px; } .kh-fl button, .kh-row button { border: 0; border-radius: 10px; padding: 5px 7px; font: 800 12px 'Trebuchet MS', sans-serif; background: #f3dfe9; color: #5e2a75; cursor: pointer; }
+.kh-fl button.on { background: #ff7fb6; color: #fff; }
+.kh-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+.kh-list li { display: flex; justify-content: space-between; font-size: 13px; font-weight: 700; padding: 2px 6px; border-radius: 8px; background: #fff; }
+.kh-list li.done { background: #e2f5e6; color: #2f7a43; }
+.kh-tip { font-size: 12px; font-weight: 700; color: #8a6a7e; } .kh-tip:empty { display: none; }
+.kh-msg { font-size: 12px; font-weight: 800; background: #fff1d6; color: #9a5b00; border-radius: 8px; padding: 4px 8px; } .kh-msg.good { background: #e2f5e6; color: #2f7a43; }
+.kh-shelf { font-size: 12px; font-weight: 800; display: flex; gap: 6px; flex-wrap: wrap; align-items: center; } .kh-shelf small { color: #a08a96; }
+.kh-row { display: flex; gap: 6px; justify-content: flex-end; } .kh-row .ghost { background: none; border: 2px dashed #d9a3c2; }
+.phone .khud { top: 44px; left: 8px; width: 210px; padding: 6px 8px; gap: 3px; border-radius: 12px; }
+.phone .kh-h { font-size: 12px; } .phone .kh-list li { font-size: 11px; padding: 1px 5px; } .phone .kh-fl button, .phone .kh-row button { font-size: 10px; padding: 4px 5px; }
+.phone .kh-tip, .phone .kh-shelf, .phone .kh-msg { font-size: 10px; }
+
+/* phones (playtest 21 Nov): the Day panel sits small in the top-right corner, not across the bottom of the game */
+.phone .dayopen { left: auto; right: 8px; top: 8px; bottom: auto; transform: none; align-items: flex-end; text-align: right;
+  gap: 3px; padding: 5px 9px; border-radius: 12px; max-width: min(44vw, 300px); }
+.phone .dayopen-top { gap: 6px; justify-content: flex-end; }
+.phone .dayopen .dayno { font-size: 14px; }
+.phone .dayopen .daybank { font-size: 10px; padding: 1px 6px; }
+.phone .dayopen .dayhint { font-size: 10px; padding: 2px 6px; margin: 0; }
+.phone .dayopen .daygo-btn { padding: 3px 10px; font-size: 11px; box-shadow: 0 2px 0 #c4528a; }
+
+/* ── kitchen panel v2 (21 Nov): illustrations, no emoji; a slim rail on phones ── */
+.khud { width: 210px; gap: 7px; padding: 10px 12px; }
+.kh-h { display: flex; align-items: center; gap: 6px; font-size: 14px; }
+.kh-fl { display: flex; gap: 4px; }
+.kh-fl button { display: flex; align-items: center; gap: 5px; flex: 1; justify-content: center; padding: 4px 4px; background: #fff; box-shadow: 0 2px 0 #ead2df; text-transform: capitalize; font-size: 11px; }
+.kh-fl button i { width: 14px; height: 14px; border-radius: 50%; display: inline-block; border: 1.5px solid #3d1846; }
+.kh-fl button.on { background: #fff0f6; outline: 2px solid #ff7fb6; color: #5e2a75; }
+.kh-list { display: flex; flex-direction: column; gap: 3px; }
+.kh-row { display: flex; align-items: center; gap: 7px; padding: 3px 6px; border-radius: 9px; background: #fff; font-size: 12px; font-weight: 700; text-transform: capitalize; }
+.kh-row.done { background: #e9f7ee; }
+.kh-n { flex: 1; }
+.kh-pips { display: flex; gap: 3px; } .kh-pips i { width: 8px; height: 8px; border-radius: 50%; background: #ead2df; display: block; } .kh-pips i.on { background: #ff7fb6; }
+.kh-row.done .kh-pips i.on { background: #4caf74; }
+.kh-bar { flex: 1; height: 7px; border-radius: 4px; background: #ead2df; overflow: hidden; min-width: 40px; } .kh-bar b { display: block; height: 100%; background: linear-gradient(90deg, #ff7fb6, #c4528a); }
+.kh-tip { font-size: 11px; color: #8a6a7e; }
+.kh-shelf { display: flex; gap: 8px; font-size: 12px; font-weight: 800; color: #5e2a75; }
+.kh-shelf span { display: flex; align-items: center; gap: 3px; } .kh-shelf i { width: 11px; height: 11px; border-radius: 50%; display: inline-block; border: 1.5px solid #3d1846; }
+.kh-foot { display: flex; justify-content: space-between; align-items: center; }
+.kh-foot .link { background: none; border: 0; padding: 0; font: 700 11px 'Trebuchet MS', sans-serif; color: #a07a92; text-decoration: underline; cursor: pointer; }
+.kh-back { display: inline-flex; align-items: center; gap: 4px; margin-left: auto; border: 0; border-radius: 10px; padding: 5px 10px; font: 800 12px 'Trebuchet MS', sans-serif; background: #f3dfe9; color: #5e2a75; cursor: pointer; }
+.kh-toast { position: fixed; left: 50%; top: 10px; transform: translateX(-50%); z-index: 26; max-width: 70vw; font: 800 12px 'Trebuchet MS', sans-serif; background: #fff1d6; color: #9a5b00; border-radius: 10px; padding: 5px 12px; box-shadow: 0 2px 8px rgba(0,0,0,.15); pointer-events: none; }
+.kh-toast.good { background: #e2f5e6; color: #2f7a43; }
+.kh-toast.quiet { background: rgba(42,24,58,.72); color: #fff6ee; font-weight: 700; }
+.kh-msg, .kh-row button { display: none; }
+/* phones: a slim rail on the left, pictures only */
+.phone .khud.rail { left: 6px; top: 50%; transform: translateY(-50%); width: auto; padding: 6px 5px; gap: 5px; border-radius: 14px; align-items: center; }
+.phone .khud.rail .kh-fl { flex-direction: row; gap: 3px; }
+.phone .khud.rail .kh-fl button { padding: 3px; flex: none; box-shadow: none; background: transparent; }
+.phone .khud.rail .kh-fl button i { width: 15px; height: 15px; }
+.phone .khud.rail .kh-fl button.on { outline: 2px solid #ff7fb6; border-radius: 50%; }
+.phone .khud.rail .kh-list { gap: 3px; }
+.phone .khud.rail .kh-row { flex-direction: column; gap: 1px; padding: 2px 4px; }
+.phone .khud.rail .kh-pips i { width: 5px; height: 5px; } .phone .khud.rail .kh-pips { gap: 2px; }
+.phone .khud.rail .kh-bar { width: 28px; min-width: 0; height: 5px; flex: none; }
+.phone .khud.rail .kh-shelf { flex-direction: column; gap: 1px; font-size: 10px; }
+.phone .khud.rail .kh-shelf i { width: 9px; height: 9px; }
+.phone .khud.rail .kh-back { padding: 5px 7px; margin: 0; }
+.phone .kh-toast { top: 6px; font-size: 11px; padding: 4px 10px; }
+
+/* ── Today's Menu / Recipe Book v2 (21 Nov): drawn products + illustrated icons, quieter cards ── */
+.tm-top { align-items: center; gap: 8px; } .tm-title { flex: 1; min-width: 0; }
+.tm-h { display: flex; align-items: center; gap: 8px; }
+.tm-icon-btn { border: 0; background: #f3dfe9; border-radius: 10px; width: 32px; height: 32px; display: grid; place-items: center; cursor: pointer; flex: none; }
+.pic { display: inline-flex; align-items: flex-end; justify-content: center; flex: none; } .pic svg { display: block; height: auto; }
+.tm-cat { display: flex; align-items: center; gap: 6px; text-transform: none; letter-spacing: 0; font-size: 14px; color: #5e2a75; }
+.tm-grid { grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); }
+.tm-item { padding: 6px 8px; gap: 2px; box-shadow: 0 2px 0 #ead2df; }
+.tm-pick { gap: 10px; } .tm-name { display: flex; flex-direction: column; font-size: 14px; line-height: 1.15; }
+.tm-name small { display: inline-flex; align-items: center; gap: 3px; font-size: 12px; color: #8a6a7e; font-weight: 800; }
+.tm-tick { width: 22px; height: 22px; background: none !important; }
+.tm-row { min-height: 0; } .tm-row:has(.tm-st) { min-height: 20px; }
+.tm-st { display: inline-flex; align-items: center; gap: 3px; font-size: 11px; font-weight: 800; color: #9a5b00; } .tm-st.lock { color: #8a7a86; }
+.tm-peek { padding: 0 !important; background: none !important; margin-left: auto; line-height: 0; }
+.tm-row { position: relative; } .tm-row .tm-peek { position: absolute; right: -2px; bottom: 26px; }
+.tm-foot { flex-wrap: wrap; } .tm-presets { flex: 1; }
+.tm-presets button { background: #fff; box-shadow: 0 2px 0 #ead2df; }
+.tm-foot .tm-go { white-space: nowrap; }
+.rv-h { gap: 14px; } .rv-meta { display: flex !important; align-items: center; gap: 4px 6px; flex-wrap: wrap; margin-top: 3px; color: #5e2a75 !important; font-weight: 800 !important; }
+.rv-meta em { display: inline-flex; align-items: center; gap: 3px; font-style: normal; background: #f3dfe9; border-radius: 8px; padding: 1px 7px 1px 4px; }
+.rv-line { gap: 8px; } .rv-focus { grid-template-columns: auto 1fr; } .rv-focus span { font-size: inherit; grid-row: auto; }
+.rv-focus b { display: block; text-transform: capitalize; } .rv-focus em { display: block; }
+.rv-steps { list-style: none; padding-left: 0; counter-reset: s; }
+.rv-steps li { display: flex; gap: 8px; align-items: flex-start; }
+.rv-st { flex: none; background: #f3dfe9 !important; border-radius: 8px; padding: 2px; margin: 0; line-height: 0; }
+.rv-st.bar { background: #f1e3d6 !important; } .rv-st.kitchen { background: #e5f2e6 !important; } .rv-st.cake { background: #fde6ef !important; }
+.book-index button { display: flex; align-items: center; gap: 8px; }
+/* phones: nearly full screen, tighter grid, fewer words */
+.phone .tmenu { background: rgba(42,24,48,.4); }
+.phone .tm-panel { width: calc(100vw - 16px); max-height: calc(100vh - 12px); padding: 8px 10px; gap: 6px; }
+.phone .tm-h { font-size: 16px; } .phone .tm-sub { font-size: 10px; }
+.phone .tm-icon-btn { width: 28px; height: 28px; }
+.phone .tm-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 5px; }
+.phone .tm-item { padding: 3px 6px; } .phone .tm-name { font-size: 12px; } .phone .tm-pick { gap: 6px; }
+.phone .tm-cat { font-size: 12px; margin: 0 0 2px; }
+.phone .tm-row .tm-peek { bottom: 18px; }
+.phone .tm-presets button { padding: 3px 8px; font-size: 11px; }
+.phone .tm-foot .tm-go { padding: 7px 12px; font-size: 13px; }
+.phone .rv-cols { grid-template-columns: 1fr 1.2fr; } .phone .rv-h span { font-size: 11px; } .phone .rv-h b { font-size: 15px; }
+.phone .book-cols { grid-template-columns: 140px 1fr; } .phone .book-index button { font-size: 11px; padding: 4px 6px; }
+
+/* picked tick on the picture's corner; the recipe (i) button on the right, never on top of each other */
+.tm-item { position: relative; }
+.tm-tick { position: absolute; left: 2px; top: 2px; width: 18px !important; height: 18px !important; } .tm-tick svg { width: 18px; height: 18px; }
+.tm-row .tm-peek, .tm-item .tm-peek { position: absolute; right: 8px; top: 50%; bottom: auto; transform: translateY(-50%); }
+.tm-name { padding-right: 22px; }
+
+/* ── cake machine readability (21 Nov): numbered dispenser tags, the NEXT one glows with an arrow; choice names ── */
+.ctag { display: flex; align-items: center; gap: 5px; white-space: nowrap; font: 800 12px 'Trebuchet MS', sans-serif; color: #5e2a75; background: rgba(255,246,238,.88); padding: 2px 8px 2px 3px; border-radius: 12px; box-shadow: 0 2px 0 rgba(94,42,117,.25); position: relative; transition: transform .15s; }
+.ctag b { width: 18px; height: 18px; border-radius: 50%; display: grid; place-items: center; background: #ead2df; color: #5e2a75; font-size: 11px; }
+.ctag.done { opacity: .7; } .ctag.done b { background: #4caf74; color: #fff; font-size: 0; } .ctag.done b::after { content: '✓'; font-size: 11px; }
+.ctag.next { background: #ff7fb6; color: #fff; transform: scale(1.18); box-shadow: 0 3px 0 #c4528a, 0 0 0 4px rgba(255,127,182,.25); }
+.ctag.next b { background: #fff; color: #c4528a; }
+.ctag-arrow { display: none; position: absolute; left: 50%; top: 100%; margin-left: -7px; width: 0; height: 0; border-left: 7px solid transparent; border-right: 7px solid transparent; border-top: 10px solid #ff7fb6; animation: ctagbob 0.9s ease-in-out infinite; }
+.ctag.next .ctag-arrow { display: block; }
+@keyframes ctagbob { 0%, 100% { transform: translateY(2px); } 50% { transform: translateY(9px); } }
+.otag { opacity: 0; transform: translateY(-3px); transition: opacity .15s, transform .15s; white-space: nowrap; font: 800 10px 'Trebuchet MS', sans-serif; color: #3d1846; background: #fff6ee; padding: 1px 5px; border-radius: 6px; box-shadow: 0 1px 0 rgba(0,0,0,.2); }
+.otag.show { opacity: 1; transform: none; }
+.otag.want { background: #ff7fb6; color: #fff; animation: otagpulse 1s ease-in-out infinite; }
+@keyframes otagpulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(255,127,182,.6); } 50% { box-shadow: 0 0 0 5px rgba(255,127,182,0); } }
+/* the order card: picture + checklist with swatches */
+.cc-list { list-style: none; margin: 6px 0 0; padding: 0; display: flex; flex-direction: column; gap: 3px; }
+.cc-list li { display: flex; align-items: center; gap: 6px; font: 700 12px 'Trebuchet MS', sans-serif; color: #3d1846; text-transform: capitalize; }
+.cc-list li b { width: 16px; height: 16px; border-radius: 50%; display: grid; place-items: center; background: #ead2df; font-size: 10px; flex: none; }
+.cc-list li.done { color: #8a9a8e; text-decoration: line-through; } .cc-list li.done b { background: #4caf74; color: #fff; }
+.cc-list .sw { width: 14px; height: 14px; border-radius: 4px; border: 1.3px solid #3d1846; display: inline-block; flex: none; }
+.beltnav .donow { display: block; font: 800 14px 'Trebuchet MS', sans-serif; color: #fff6ee; }
+.navbtn.pulse { animation: otagpulse 1s ease-in-out infinite; }
+.result { display: flex; align-items: center; gap: 6px; }
+.phone .ctag { font-size: 10px; padding: 1px 6px 1px 2px; } .phone .ctag b { width: 14px; height: 14px; font-size: 9px; }
+.phone .cc-list li { font-size: 10px; gap: 4px; } .phone .cc-list .sw { width: 11px; height: 11px; } .phone .beltnav .donow { font-size: 11px; }
+
+/* the order card sits above the machine's floating tags */
+.cake-card { z-index: 40 !important; }
+/* memory mode: the order card shrinks to one small line so the machine is in full view */
+.cake-card.mini { width: auto !important; max-width: none !important; padding: 6px 10px !important; }
+.cake-card.mini .tk-h { display: none; }
+.cc-mini { display: flex; align-items: center; gap: 10px; } .cc-mini .cc-name { font-size: 13px; margin: 0; }
+.cc-dots { display: flex; gap: 4px; } .cc-dots i { width: 9px; height: 9px; border-radius: 50%; background: #ead2df; display: block; }
+.cc-dots i.on { background: #4caf74; } .cc-dots i.now { background: #ff7fb6; box-shadow: 0 0 0 3px rgba(255,127,182,.3); }
+.cc-mini .chip { margin: 0 !important; padding: 3px 9px !important; font-size: 11px !important; }
+
+/* the (i) recipe button must not jump on hover (a global button hover nudged it out from under the mouse) */
+.tm-item .tm-peek, .tm-item .tm-peek:hover, .tm-item .tm-peek:active { transition: none !important; transform: translateY(-50%) !important; }
+.tm-item .tm-peek { display: grid !important; place-items: center; width: 24px; height: 24px; line-height: normal !important; }
+.phone .tm-item .tm-peek { width: 28px; height: 28px; }
+
+/* ── the cake machine's control deck (21 Nov): under each dispenser, its choices as labelled buttons ── */
+.deck { width: 108px; display: flex; flex-direction: column; gap: 3px; padding: 5px 5px 6px; background: rgba(255,246,238,.94); border-radius: 12px; box-shadow: 0 3px 0 #c4528a, 0 6px 14px rgba(0,0,0,.18); font-family: 'Trebuchet MS', sans-serif; user-select: none; }
+.deck-h { display: flex; align-items: center; gap: 5px; font: 900 12px 'Trebuchet MS', sans-serif; color: #5e2a75; }
+.deck-h b { width: 17px; height: 17px; border-radius: 50%; display: grid; place-items: center; background: #ead2df; font-size: 10px; }
+.deck.done { opacity: .6; } .deck.done .deck-h b { background: #4caf74; color: #fff; font-size: 0; } .deck.done .deck-h b::after { content: '✓'; font-size: 10px; }
+.deck.next { outline: 3px solid #ff7fb6; box-shadow: 0 3px 0 #c4528a, 0 0 0 7px rgba(255,127,182,.25); }
+.deck.next .deck-h b { background: #ff7fb6; color: #fff; }
+.deck-opts { display: flex; flex-direction: column; gap: 2px; }
+.dopt { display: flex; align-items: center; gap: 5px; border: 0; border-radius: 8px; padding: 3px 5px; background: #fff; box-shadow: 0 1px 0 #ead2df; font: 700 11px 'Trebuchet MS', sans-serif; color: #3d1846; cursor: pointer; text-transform: capitalize; text-align: left; }
+.dopt:hover { background: #fff0f6; } .dopt:active { transform: translateY(1px); }
+.dopt i { width: 13px; height: 13px; border-radius: 4px; border: 1.3px solid #3d1846; display: inline-block; flex: none; }
+.dopt svg { flex: none; }
+.dopt.want { background: #ff7fb6; color: #fff; animation: otagpulse 1s ease-in-out infinite; }
+.deck.done .dopt { pointer-events: auto; }
+.phone .deck { width: 86px; padding: 3px 3px 4px; gap: 2px; border-radius: 9px; }
+.phone .deck-h { font-size: 9px; gap: 3px; } .phone .deck-h b { width: 13px; height: 13px; font-size: 8px; }
+.phone .dopt { font-size: 9px; padding: 3px 4px; gap: 3px; min-height: 18px; } .phone .dopt i { width: 10px; height: 10px; }
+/* deck: compact cards (2-column choices) so neighbours never overlap and the whole deck fits under the belt */
+.deck { width: 96px; padding: 4px; gap: 3px; }
+.deck-opts { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; }
+.dopt { flex-direction: column; gap: 1px; padding: 3px 2px 2px; font-size: 9.5px; line-height: 1.05; justify-content: center; text-align: center; min-width: 0; }
+.dopt span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dopt i { width: 14px; height: 14px; }
+.phone .deck { width: 78px; } .phone .dopt { font-size: 8px; padding: 2px 1px; } .phone .dopt i { width: 11px; height: 11px; }
+.screen-q small { display: block; font-size: 22px; opacity: .7; }
+
+/* ── title menu + save slots in the concept-art style (21 Nov) ── */
+.gmenu .title-menu { width: min(300px, calc(100vw - 32px)); gap: 9px; overflow: visible; }
+.gmenu .tmb { display: flex; align-items: center; gap: 12px; padding: 10px 18px; border-radius: 999px; background: #fff6ee; color: #3d1846; font: 900 18px 'Trebuchet MS', sans-serif; box-shadow: 0 4px 0 #c4528a, 0 6px 14px rgba(42,24,48,.25); text-align: left; }
+.gmenu .tmb span { display: flex; flex-direction: column; line-height: 1.1; } .gmenu .tmb small { font: 700 11px 'Trebuchet MS', sans-serif; color: #7a5a6e; }
+.gmenu .tmb.primary { background: #f7d35c; box-shadow: 0 4px 0 #c99a1e, 0 6px 14px rgba(42,24,48,.25); font-size: 20px; padding: 12px 20px; }
+.gmenu .tmb:hover { transform: translateX(4px); }
+.tm-links { display: flex; gap: 14px; padding-left: 12px; }
+.gmenu .tm-links button { background: none; box-shadow: none; padding: 2px 0; color: #fff6ee; font: 700 12px 'Trebuchet MS', sans-serif; text-decoration: underline; text-shadow: 0 1px 2px rgba(0,0,0,.4); }
+.gmenu .tm-links button:hover { transform: none; }
+.gmenu .slots-panel { background: #fff6ee; border-radius: 28px; padding: 16px 18px 14px; box-shadow: 0 6px 0 #c4528a, 0 14px 40px rgba(42,24,48,.35); }
+.sm-h { display: flex; align-items: center; gap: 10px; font: 900 22px 'Trebuchet MS', sans-serif; color: #5e2a75; margin-bottom: 4px; }
+.gmenu .sm-x { margin-left: auto; width: 32px; height: 32px; padding: 0; border-radius: 50%; display: grid; place-items: center; background: #5e2a75; box-shadow: none; }
+.gmenu .sm-x svg path { stroke: #fff6ee; }
+.gmenu .sm-x:hover { transform: none; }
+.slot { background: #fff; border: 2px solid #ead2df; box-shadow: 0 3px 0 #ead2df; overflow: hidden; padding: 0 0 8px; }
+.slot > *:not(.slot-pic) { margin-left: 10px; margin-right: 10px; }
+.slot-pic { height: 74px; background: url('/loading-sm.webp') 50% 60% / 260% auto no-repeat; margin-bottom: 6px; border-bottom: 2px solid #ead2df; }
+.slot-pic.none { background: #fdf3f7; display: grid; place-items: center; }
+.slot-plus { width: 44px; height: 44px; border-radius: 50%; border: 2.5px dashed #c9a8d8; display: grid; place-items: center; font: 900 26px 'Trebuchet MS', sans-serif; color: #a07a92; }
+.slot.empty { background: #fff; outline: none; }
+.slot-prog { display: flex; align-items: center; gap: 4px; }
+.gmenu .slots-panel .modes button.big { border-radius: 18px; }
+@media (max-height: 520px) { .slot-pic { height: 46px; } .sm-h { font-size: 16px; } .gmenu .tmb { font-size: 14px; padding: 7px 14px; } .gmenu .tmb.primary { font-size: 15px; padding: 8px 14px; } .gmenu .title-menu { gap: 6px; } }
+/* main menu: the 3D sign smaller at the top, the buttons start below it on the left (concept art) */
+.gmenu .title-menu .titleboard { top: 1vh; width: min(520px, 56vw); height: min(200px, 22vw); }
+.gmenu .title-menu { margin-top: calc(min(200px, 22vw) + 3vh); align-self: flex-start; margin-left: clamp(16px, 6vw, 110px) !important; }
+.phone .gmenu .title-menu { margin-top: calc(min(200px, 22vw) + 1vh); }
+/* title buttons: no sliding on hover (it moved them out from under the pointer); a soft colour change instead */
+.gmenu .tmb:hover { transform: none; background: #fff0f6; } .gmenu .tmb.primary:hover { background: #f9dc78; }
+/* the 3D sign is decoration: it never takes a tap (it was swallowing Settings on phones) */
+.titleboard, .titleboard * { pointer-events: none !important; }
+/* short landscape phones: sign top-right, buttons down the left, nothing stacked */
+@media (max-height: 520px) { .gmenu .title-menu .titleboard { left: auto; right: 2vw; top: 2vh; transform: none; width: 46vw; height: 20vw; } .gmenu .title-menu { margin-top: 0 !important; align-self: center; } }
+.ctag.away { display: none; }

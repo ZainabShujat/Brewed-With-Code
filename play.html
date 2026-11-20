@@ -12,18 +12,23 @@
   <body>
     <!-- loading screen (plain HTML: shows while the game's code downloads; fades out once the 3D world is running) -->
     <style>
-      #boot { position: fixed; inset: 0; z-index: 9999; background: #291830; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 22px; padding: 24px; transition: opacity .6s ease; font-family: 'Trebuchet MS', system-ui, sans-serif; }
-      #boot img { width: min(620px, 86vw); height: auto; animation: bootbob 3s ease-in-out infinite; }
-      #boot .fact { max-width: min(560px, 86vw); text-align: center; color: #f6e7f0; font-size: clamp(14px, 2.2vw, 18px); line-height: 1.45; }
-      #boot .fact b { display: block; color: #f2c66a; font-size: .8em; letter-spacing: .14em; margin-bottom: 6px; }
-      #boot .brewing { color: #e98fa6; font-weight: 800; font-size: 14px; letter-spacing: .1em; animation: bootpulse 1.4s ease-in-out infinite; }
-      @keyframes bootbob { 50% { transform: translateY(-6px) } }
-      @keyframes bootpulse { 50% { opacity: .35 } }
+      #boot { position: fixed; inset: 0; z-index: 9999; background: #6b3f8f url('./loading-sm.webp') center 35% / cover no-repeat; transition: opacity .6s ease; font-family: 'Trebuchet MS', system-ui, sans-serif; overflow: hidden; }
+      @media (min-width: 900px) { #boot { background-image: url('./loading.webp'); } }
+      #boot::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 34%; background: linear-gradient(transparent, rgba(41,24,48,.55)); pointer-events: none; }
+      #boot .bt { position: absolute; left: 50%; bottom: clamp(14px, 4vh, 36px); transform: translateX(-50%); z-index: 1; width: min(640px, 88vw); display: flex; flex-direction: column; align-items: center; gap: 10px; }
+      #boot .fact { max-width: 100%; text-align: center; color: #3d1846; background: #fff6ee; border-radius: 16px; padding: 8px 16px 10px; font-size: clamp(12px, 1.8vw, 15px); line-height: 1.4; box-shadow: 0 3px 0 #c4528a; }
+      #boot .fact b { display: block; color: #c4528a; font-size: .78em; letter-spacing: .12em; margin-bottom: 2px; }
+      #boot .bar { position: relative; width: 100%; height: clamp(26px, 4.5vh, 36px); background: #5e2a75; border-radius: 999px; padding: 5px; box-shadow: 0 4px 0 #3d1846; box-sizing: border-box; }
+      #boot .bar i { display: block; height: 100%; width: 4%; border-radius: 999px; transition: width .35s ease;
+        background: repeating-linear-gradient(-45deg, #f7c948 0 12px, #f2b72e 12px 24px); background-size: 34px 34px; animation: bootstripe 0.9s linear infinite; }
+      #boot .bar span { position: absolute; left: 0; right: 0; top: 50%; transform: translateY(-50%); text-align: center; color: #fff6ee; font-weight: 900; font-size: clamp(12px, 2vh, 15px); letter-spacing: .06em; text-shadow: 0 1px 0 #3d1846; }
+      @keyframes bootstripe { to { background-position: 34px 0; } }
     </style>
-    <div id="boot">
-      <img src="./title-board.webp" alt="Brewed With Code" />
-      <div class="fact"><b>☕ FUN FACT</b><span id="bootfact"></span></div>
-      <div class="brewing">BREWING YOUR CAFÉ…</div>
+    <div id="boot" role="img" aria-label="Brewed With Code is loading">
+      <div class="bt">
+        <div class="fact"><b>FUN FACT</b><span id="bootfact"></span></div>
+        <div class="bar"><i id="bootbar"></i><span id="bootpct">Loading…</span></div>
+      </div>
     </div>
     <script>
       (function () {
@@ -39,6 +44,15 @@
           'A latte is mostly milk. Steaming it right gives that silky, glossy texture.'
         ]
         document.getElementById('bootfact').textContent = F[Math.floor(Math.random() * F.length)]
+        var real = 0, shown = 4, t0 = Date.now(), bar = document.getElementById('bootbar'), pct = document.getElementById('bootpct')
+        window.__bootProgress = function (p) { real = Math.max(real, p) }
+        ;(function step() {
+          if (!document.getElementById('boot')) return
+          var creep = 70 * (1 - Math.exp(-(Date.now() - t0) / 6000))
+          shown += (Math.max(creep, real * 100) - shown) * 0.15
+          bar.style.width = Math.min(100, shown).toFixed(1) + '%'; pct.textContent = 'Loading… ' + Math.round(Math.min(100, shown)) + '%'
+          requestAnimationFrame(step)
+        })()
       })()
     </script>
     <!-- The real game, with its whole interface, for filming build-log reels.

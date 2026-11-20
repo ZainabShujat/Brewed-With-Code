@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { useDay } from './day'
 import { usePantry } from './pantry'
+import { useKitchen } from './kitchen'
 import { USE, type IngredientId } from '../data/ingredients'
 const use = (items: [IngredientId, number][]) => usePantry.getState().useAll(items)
 
@@ -21,10 +22,13 @@ export const FILL_COL: Record<Filling, string> = { cream: '#fff6ec', jam: '#c232
 export const FROST_COL: Record<Exclude<Frosting, 'none'>, string> = { pink: '#f4b6c8', white: '#fbf6ef', chocolate: '#5a3424', lavender: '#cdb8e6' }
 export const PIPE_COL: Record<Exclude<Pipe, 'none'>, string> = { white: '#fffaf3', pink: '#ef93b1', chocolate: '#4a2a1c' }
 
+// the flavours on Today's Menu (set by systems/orders to avoid an import loop)
+let spongesOnMenu: () => Sponge[] = () => []
+export const setCakeMenu = (f: () => Sponge[]) => { spongesOnMenu = f }
 const pick = <T,>(a: readonly T[]) => a[Math.floor(Math.random() * a.length)]
 export function randomCakeOrder(): CakeOrder {
   const n = pick([2, 3, 3])
-  const sponge = pick(['vanilla', 'chocolate', 'strawberry'] as const)
+  const onMenu = spongesOnMenu(), sponge = pick(onMenu.length ? onMenu : (['vanilla', 'chocolate', 'strawberry'] as const))
   const tin = pick(['round', 'square', 'heart'] as const)
   const want: Cake = {
     tin,
@@ -87,7 +91,8 @@ export const useCake = create<CakeState>((set, get) => ({
     if (c.frosting !== 'none') return no(set, "it's frosted: no more sponge on top")
     if (c.layers.length >= 4) return no(set, "that's the tallest cake the machine makes (4 tiers)")
     if (c.layers.length > c.fillings.length) return no(set, 'add a filling before the next sponge')
-    const ex = USE.spongeExtra[s]; if (!use([['flour', USE.layer.flour], ['sugar', USE.layer.sugar], ['eggs', USE.layer.eggs], ['butter', USE.layer.butter], ...(ex ? [ex] : [])])) return
+    // the batter comes from the kitchen (flour, sugar, eggs, butter were used there): pour one layer's worth
+    if (!useKitchen.getState().takeLayer(s)) return no(set, `no ${s} batter: make a bowl in the kitchen 🥣`)
     set({ cake: { ...c, layers: [...c.layers, s] }, t: { ...get().t, [`L${c.layers.length}`]: now() } }) },
   addFilling: (f) => { const c = get().cake
     if (!c.layers.length) return no(set, 'add a sponge first 🍰')
@@ -118,3 +123,18 @@ export const useCake = create<CakeState>((set, get) => ({
   reset: () => set({ cake: { ...EMPTY }, t: {} }),
   newOrder: () => set({ order: randomCakeOrder(), orderUntil: performance.now() + 8000, peeks: 0 }),
 }))
+
+/** what to do next at the cake machine (new-player guidance): the station, and which choice the order wants there */
+export type CakeStation = 'tin' | 'layer' | 'fill' | 'frost' | 'pipe' | 'top' | 'star'
+export function nextCakeStep(c: Cake, want: Cake): { at: CakeStation; want: string } {
+  if (c.tin === 'none') return { at: 'tin', want: want.tin }
+  const n = want.layers.length
+  if (c.frosting === 'none') {
+    if (!c.layers.length) return { at: 'layer', want: want.layers[0] }
+    if (c.layers.length < n) return c.layers.length > c.fillings.length ? { at: 'fill', want: want.fillings[c.fillings.length] ?? want.fillings[0] } : { at: 'layer', want: want.layers[c.layers.length] }
+    return { at: 'frost', want: want.frosting }
+  }
+  if (c.piping === 'none') return { at: 'pipe', want: want.piping }
+  if (c.top === 'none') return { at: 'top', want: want.top }
+  return { at: 'star', want: '' }
+}

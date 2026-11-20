@@ -9,6 +9,9 @@ import { Creator } from './Creator'
 import { autoFullscreen } from './FullscreenButton'
 import { HowTo } from './HowTo'
 import { TitleBoard } from './TitleBoard'
+import { PlayTri, Spark, Load, Book, Gear } from './icons'
+import { useBook } from './TodaysMenu'
+import { useTodayMenu } from '../systems/todaymenu'
 import { NewGame, LoadGame, continueGame, takeBoot, modeLabel } from './SaveMenu'
 import { latest, listSlots } from '../systems/saves'
 
@@ -93,17 +96,15 @@ export function Menu({ screen, setScreen }: { screen: Screen; setScreen: (s: Scr
         const l = latest(), playing = l && listSlots().active === l.id
         return (
           <div className="panel title-menu">
-            <div className="logo small">Brewed With Code</div>
-            {l && <button className="big" data-act="continue" onClick={() => continueGame(() => start(PLAY[0]))}>
-              <b>▶ Continue</b><span>{l.name || 'Kozie'} · {modeLabel(l.meta.mode)} · Day {l.day}{playing ? '' : ` · Slot ${l.id}`}</span></button>}
-            <button className={l ? '' : 'big'} data-act="new" onClick={() => setScreen('newgame')}>{l ? '✨ New Game' : <><b>✨ New Game</b><span>pick a save slot, then Story or Zen</span></>}</button>
-            <button data-act="load" onClick={() => setScreen('load')}>📂 Load Game</button>
-            <button data-act="howto" onClick={() => setScreen('howto')}>📖 How to Play</button>
-            <button data-act="settings" onClick={() => setScreen('settings')}>⚙ Settings</button>
-            <div className="row">
-              <button onClick={() => setScreen('credits')}>Credits</button>
-              <button onClick={() => setScreen('title')}>← Title</button>
-            </div>
+            <TitleBoard />
+            {l ? <button className="tmb primary" data-act="continue" onClick={() => continueGame(() => start(PLAY[0]))}>
+              <PlayTri size={22} /><span>Continue<small>{l.name || 'Kozie'} · {modeLabel(l.meta.mode)} · Day {l.day}</small></span></button>
+              : <button className="tmb primary" data-act="new" onClick={() => setScreen('newgame')}><PlayTri size={22} /><span>New Game</span></button>}
+            {l && <button className="tmb" data-act="new" onClick={() => setScreen('newgame')}><Spark size={22} /><span>New Game</span></button>}
+            <button className="tmb" data-act="load" onClick={() => setScreen('load')}><Load size={22} /><span>Load Game</span></button>
+            <button className="tmb" data-act="howto" onClick={() => setScreen('howto')}><Book size={22} /><span>How to Play</span></button>
+            <button className="tmb" data-act="settings" onClick={() => setScreen('settings')}><Gear size={22} /><span>Settings</span></button>
+            <div className="tm-links"><button onClick={() => setScreen('credits')}>Credits</button><button onClick={() => setScreen('title')}>Title screen</button></div>
           </div>
         )
       })()}
@@ -119,6 +120,8 @@ export function Menu({ screen, setScreen }: { screen: Screen; setScreen: (s: Scr
           <div className="row">
             <button onClick={() => setScreen('creator')}>Your character</button>
             <button onClick={() => setScreen('howto')}>How to play</button>
+            <button data-act="book" onClick={() => useBook.getState().show()}>📖 Recipe Book</button>
+            <button data-act="todaymenu" onClick={() => useTodayMenu.getState().ask(() => {})}>🗒 Today's Menu</button>
             <button onClick={() => setScreen('settings')}>Settings</button>
             <button onClick={() => { useShop.getState().openShop(false); setScreen('main') }}>Main menu</button>
             <button onClick={() => { useShop.getState().openShop(false); setMode('exterior'); setScreen('title') }}>Title screen</button>

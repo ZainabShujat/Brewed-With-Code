@@ -1,3 +1,4 @@
+import { Folder, Close, Coin, Star } from './icons'
 import { useState } from 'react'
 import { SLOT_IDS, summary, newGame, switchTo, deleteSlot, listSlots, latest, type Mode, type SlotId, type Summary } from '../systems/saves'
 import { sfx } from '../systems/sound'
@@ -11,10 +12,10 @@ export function takeBoot(): Boot | null { try { const b = sessionStorage.getItem
 function reloadInto(b: Boot) { try { sessionStorage.setItem(BOOT, b) } catch { /* private mode: lands on the title */ } location.reload() }
 
 const MODES: { id: Mode; title: string; sub: string }[] = [
-  { id: 'story', title: '📖 Story Mode', sub: 'meet Mira, Theo and Juno, borrow, build, grow. Story chapters arrive in December; this save keeps its own Story progress' },
-  { id: 'zen', title: '🌿 Zen Mode', sub: 'no pressure, no loans: just your café, your town and a good cup' },
+  { id: 'story', title: 'Story Mode', sub: 'meet Mira, Theo and Juno, borrow, build, grow. Story chapters arrive in December; this save keeps its own Story progress' },
+  { id: 'zen', title: 'Zen Mode', sub: 'no pressure, no loans: just your café, your town and a good cup' },
 ]
-export const modeLabel = (m: Mode | null) => m === 'story' ? '📖 Story' : m === 'zen' ? '🌿 Zen' : 'Mode not set (older save)'
+export const modeLabel = (m: Mode | null) => m === 'story' ? 'Story' : m === 'zen' ? 'Zen' : 'Mode not set (older save)'
 const date = (t: number) => new Date(t).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })
 
 /** Continue: the most recently played valid slot. Already loaded → just play; otherwise switch and reload. */
@@ -28,13 +29,14 @@ function SlotCard({ s, n, children, onClick, pick }: { s: Summary | null; n: Slo
   const active = listSlots().active === n
   return (
     <div className={`slot ${s ? '' : 'empty'} ${pick ? 'pick' : ''}`} data-slot={n} onClick={onClick}>
+      <div className={`slot-pic ${s ? '' : 'none'}`} style={s ? { backgroundPosition: ['8% 60%', '50% 60%', '92% 60%'][n - 1] } : undefined}>{!s && <span className="slot-plus">+</span>}</div>
       <div className="slot-h">Slot {n}{active && s && <span className="slot-now">playing</span>}</div>
       {s ? <>
         <div className="slot-name">{s.name || 'Kozie'}</div>
         <div className={`slot-mode ${s.meta.mode ?? 'none'}`}>{modeLabel(s.meta.mode)}</div>
-        {s.ok ? <div className="slot-prog">Day {s.day} · 💰 {s.bank} · ⭐ {s.stars}</div> : <div className="slot-prog bad">⚠ this save can't be read</div>}
+        {s.ok ? <div className="slot-prog">Day {s.day} · <Coin size={13} /> {s.bank} · <Star size={13} /> {s.stars}</div> : <div className="slot-prog bad">This save can't be read</div>}
         <div className="slot-dates">started {date(s.meta.created)}<br />played {date(s.meta.lastPlayed)}</div>
-      </> : <div className="slot-free">empty</div>}
+      </> : <div className="slot-free">Empty slot</div>}
       <div className="slot-btns">{children}</div>
     </div>
   )
@@ -60,7 +62,7 @@ export function NewGame({ onBack }: { onBack: () => void }) {
   }
   return (
     <div className="panel slots-panel">
-      <div className="logo small">{slot ? 'Story or Zen?' : 'New game: pick a slot'}</div>
+      <div className="sm-h"><Folder size={26} />{slot ? 'Story or Zen?' : 'Pick a save slot'}<button className="sm-x" onClick={onBack} aria-label="close"><Close size={14} /></button></div>
       {!slot && <div className="slots">{all.map((s, i) => {
         const n = SLOT_IDS[i]
         return <SlotCard key={n} s={s} n={n} pick={!s} onClick={!s ? () => { sfx.tap(); setSlot(n) } : undefined}>
@@ -82,7 +84,7 @@ export function LoadGame({ onBack, play }: { onBack: () => void; play: () => voi
   const del = (n: SlotId) => { const wasActive = listSlots().active === n; deleteSlot(n); setAsk(null); if (wasActive) location.reload(); else redraw((x) => x + 1) }
   return (
     <div className="panel slots-panel">
-      <div className="logo small">Load game</div>
+      <div className="sm-h"><Folder size={26} />Load a save<button className="sm-x" onClick={onBack} aria-label="close"><Close size={14} /></button></div>
       <div className="slots">{all.map((s, i) => {
         const n = SLOT_IDS[i]
         return <SlotCard key={n} s={s} n={n}>

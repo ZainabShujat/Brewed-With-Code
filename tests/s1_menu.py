@@ -5,7 +5,11 @@ sys.stdout.reconfigure(encoding='utf-8')
 from playwright.sync_api import sync_playwright
 OUT = sys.argv[1] if len(sys.argv) > 1 else 'tests/out'
 PORT = 5203; BASE = f'http://localhost:{PORT}'
-srv = subprocess.Popen([shutil.which('npx'), 'vite', 'preview', '--outDir', 'dist-s1', '--port', str(PORT), '--strictPort'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL); time.sleep(5)
+srv = subprocess.Popen([shutil.which('npx'), 'vite', 'preview', '--outDir', 'dist-s1', '--port', str(PORT), '--strictPort'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+import urllib.request
+for _ in range(90):  # wait until the server really answers (a fixed sleep was flaky on a busy machine)
+    try: urllib.request.urlopen(BASE + '/play.html'); break
+    except Exception: time.sleep(1)
 fails, notes = [], []
 def check(ok, msg): (notes if ok else fails).append(('PASS ' if ok else 'FAIL ') + msg)
 OLD = {'brewed-with-code-save-v1': json.dumps({'day': 7, 'bank': 412, 'best': 90, 'unlocks': [], 'stars': 21}),
@@ -50,7 +54,7 @@ try:
         pg.reload(); boot(); menu()
         c = pg.inner_text('[data-act=continue]'); check('Story' in c, f'{dev}: Continue = most recently played (Story slot 3): {c!r}')
         pg.click('[data-act=load]'); pg.wait_for_timeout(400); fits('load')
-        t = pg.inner_text('.slots'); check('Mode not set' in t and 'Story' in t and 'empty' in t and 'started' in t and 'played' in t, f'{dev}: Load lists all 3 slots with mode, progress and dates')
+        t = pg.inner_text('.slots'); check('Mode not set' in t and 'Story' in t and 'empty' in t.lower() and 'started' in t and 'played' in t, f'{dev}: Load lists all 3 slots with mode, progress and dates')
         # 4. delete + replace need confirmation; Cancel keeps it
         pg.click('.slot[data-slot="1"] >> text=Delete…'); pg.wait_for_timeout(300); check(bool(pg.query_selector('.slot-confirm')), f'{dev}: Delete asks first'); fits('delete-confirm')
         pg.click('.slot-confirm >> text=Cancel'); pg.wait_for_timeout(300); check(S("!!window.__saves.listSlots().slots[1]"), f'{dev}: Cancel keeps the slot')

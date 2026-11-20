@@ -4,6 +4,7 @@ import { useDay } from '../systems/day'
 import { useShop } from '../systems/shop'
 import { cafe, dirty } from '../world/Customers'
 import { sfx } from '../systems/sound'
+import { useTodayMenu } from '../systems/todaymenu'
 import { TOUCH } from '../systems/CameraRig'
 import { frontOrder, takeOrder } from './TakeOrder'
 
@@ -15,7 +16,10 @@ const tip = (n: number) => { useShop.setState((s) => ({ coins: s.coins + n })); 
 /** flipping the OPEN / CLOSED sign (E at the door, or click / tap the sign itself) */
 export function signAct(): Act | null {
   const d = useDay.getState()
-  if (d.phase === 'idle') return { label: 'flip the sign to OPEN', run: () => { useShop.getState().openShop(true); d.start(); cafe.seed(2); cafe._spawnT = cafe.spawnEvery - 6; sfx.bell() } }
+  if (d.phase === 'idle') return { label: 'flip the sign to OPEN', run: () => {
+    const open = () => { useShop.getState().openShop(true); useDay.getState().start(); cafe.seed(2); cafe._spawnT = cafe.spawnEvery - 6; sfx.bell() }
+    // first, Today's Menu: pick what to sell (once per day; the sign then opens straight away)
+    if (useTodayMenu.getState().confirmedDay !== d.day) useTodayMenu.getState().ask(open); else open() } }
   if (d.phase === 'closing' && cafe.line.size === 0) return { label: 'flip the sign to CLOSED', run: () => { useShop.getState().openShop(false); d.closeUp(); sfx.tap() } }
   return null
 }

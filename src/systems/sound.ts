@@ -27,6 +27,24 @@ export function loop(kind: 'grind' | 'steam' | 'pour' | 'shot') {
   }
 }
 
+// a real button click (21 Nov): a crisp filtered tick + a tiny low 'thock', like pressing a physical key.
+// Debounced, so a button that also plays it from its own handler never clicks twice.
+let lastClick = 0
+function click() {
+  const a = ac(), now = a.currentTime; if (now - lastClick < 0.06) return; lastClick = now
+  const n = Math.floor(a.sampleRate * 0.03), buf = a.createBuffer(1, n, a.sampleRate), d = buf.getChannelData(0)
+  for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, 6)
+  const src = a.createBufferSource(), bp = a.createBiquadFilter(), g = a.createGain()
+  src.buffer = buf; bp.type = 'bandpass'; bp.frequency.value = 3600; bp.Q.value = 1.4; g.gain.value = 0.55
+  src.connect(bp).connect(g).connect(a.destination); src.start(now)
+  const o = a.createOscillator(), og = a.createGain()
+  o.type = 'sine'; o.frequency.setValueAtTime(190, now); o.frequency.exponentialRampToValueAtTime(80, now + 0.05)
+  og.gain.setValueAtTime(0.22, now); og.gain.exponentialRampToValueAtTime(0.0001, now + 0.07)
+  o.connect(og).connect(a.destination); o.start(now); o.stop(now + 0.09)
+}
+// every on-screen button clicks
+if (typeof window !== 'undefined') window.addEventListener('pointerdown', (e) => { const t = e.target as HTMLElement | null; if (t && t.closest && t.closest('button')) { try { click() } catch { /* no audio yet */ } } }, true)
+
 function tone(freq: number, at: number, dur: number, vol = 0.2, type: OscillatorType = 'sine') {
   const a = ac(), o = a.createOscillator(), g = a.createGain()
   o.type = type; o.frequency.value = freq
@@ -36,7 +54,7 @@ function tone(freq: number, at: number, dur: number, vol = 0.2, type: Oscillator
 }
 export const sfx = {
   bell: () => { tone(1568, 0, 1.2, 0.25); tone(2349, 0, 0.9, 0.08) },
-  tap: () => tone(660, 0, 0.08, 0.12, 'triangle'),
+  tap: () => click(),
   good: () => { tone(784, 0, 0.18, 0.15, 'triangle'); tone(1047, 0.08, 0.25, 0.15, 'triangle') },
   perfect: () => { [784, 988, 1175, 1568].forEach((f, i) => tone(f, i * 0.07, 0.35, 0.14, 'triangle')) },
   meh: () => tone(330, 0, 0.25, 0.12, 'triangle'),
