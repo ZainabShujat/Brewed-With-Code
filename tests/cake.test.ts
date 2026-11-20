@@ -26,3 +26,18 @@ test('EDGE: no fifth tier, and it says so', () => {
   stock(); C().reset(); C().setTin('round'); for (let i = 0; i < 4; i++) { C().addLayer('vanilla'); C().addFilling('jam') }
   C().addLayer('vanilla'); assert.equal(C().cake.layers.length, 4); assert.match(C().why!.text, /4 tiers/)
 })
+
+import { nextCakeStep } from '../src/systems/cake'
+test('the guide walks a new player through the machine in order', () => {
+  stock(); C().reset(); const want = { tin: 'heart', layers: ['chocolate', 'chocolate'], fillings: ['jam'], frosting: 'white', piping: 'pink', top: 'cherries' } as const
+  const W = { ...want, layers: [...want.layers], fillings: [...want.fillings] }
+  const at = () => nextCakeStep(C().cake, W)
+  assert.deepEqual(at(), { at: 'tin', want: 'heart' }); C().setTin('heart')
+  assert.deepEqual(at(), { at: 'layer', want: 'chocolate' }); C().addLayer('chocolate')
+  assert.deepEqual(at(), { at: 'fill', want: 'jam' }); C().addFilling('jam')
+  assert.deepEqual(at(), { at: 'layer', want: 'chocolate' }); C().addLayer('chocolate')
+  assert.deepEqual(at(), { at: 'frost', want: 'white' }); C().frost('white')
+  assert.deepEqual(at(), { at: 'pipe', want: 'pink' }); C().pipe('pink')
+  assert.deepEqual(at(), { at: 'top', want: 'cherries' }); C().topWith('cherries')
+  assert.equal(at().at, 'star')
+})

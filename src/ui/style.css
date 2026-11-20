@@ -1118,3 +1118,38 @@ html:not(.phone) .fullscreenbtn { left: auto; right: 14px; top: auto; bottom: 14
 .tm-tick { position: absolute; left: 2px; top: 2px; width: 18px !important; height: 18px !important; } .tm-tick svg { width: 18px; height: 18px; }
 .tm-row .tm-peek, .tm-item .tm-peek { position: absolute; right: 8px; top: 50%; bottom: auto; transform: translateY(-50%); }
 .tm-name { padding-right: 22px; }
+
+/* ── cake machine readability (21 Nov): numbered dispenser tags, the NEXT one glows with an arrow; choice names ── */
+.ctag { display: flex; align-items: center; gap: 5px; white-space: nowrap; font: 800 12px 'Trebuchet MS', sans-serif; color: #5e2a75; background: rgba(255,246,238,.88); padding: 2px 8px 2px 3px; border-radius: 12px; box-shadow: 0 2px 0 rgba(94,42,117,.25); position: relative; transition: transform .15s; }
+.ctag b { width: 18px; height: 18px; border-radius: 50%; display: grid; place-items: center; background: #ead2df; color: #5e2a75; font-size: 11px; }
+.ctag.done { opacity: .7; } .ctag.done b { background: #4caf74; color: #fff; font-size: 0; } .ctag.done b::after { content: '✓'; font-size: 11px; }
+.ctag.next { background: #ff7fb6; color: #fff; transform: scale(1.18); box-shadow: 0 3px 0 #c4528a, 0 0 0 4px rgba(255,127,182,.25); }
+.ctag.next b { background: #fff; color: #c4528a; }
+.ctag-arrow { display: none; position: absolute; left: 50%; top: 100%; margin-left: -7px; width: 0; height: 0; border-left: 7px solid transparent; border-right: 7px solid transparent; border-top: 10px solid #ff7fb6; animation: ctagbob 0.9s ease-in-out infinite; }
+.ctag.next .ctag-arrow { display: block; }
+@keyframes ctagbob { 0%, 100% { transform: translateY(2px); } 50% { transform: translateY(9px); } }
+.otag { opacity: 0; transform: translateY(-3px); transition: opacity .15s, transform .15s; white-space: nowrap; font: 800 10px 'Trebuchet MS', sans-serif; color: #3d1846; background: #fff6ee; padding: 1px 5px; border-radius: 6px; box-shadow: 0 1px 0 rgba(0,0,0,.2); }
+.otag.show { opacity: 1; transform: none; }
+.otag.want { background: #ff7fb6; color: #fff; animation: otagpulse 1s ease-in-out infinite; }
+@keyframes otagpulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(255,127,182,.6); } 50% { box-shadow: 0 0 0 5px rgba(255,127,182,0); } }
+/* the order card: picture + checklist with swatches */
+.cc-list { list-style: none; margin: 6px 0 0; padding: 0; display: flex; flex-direction: column; gap: 3px; }
+.cc-list li { display: flex; align-items: center; gap: 6px; font: 700 12px 'Trebuchet MS', sans-serif; color: #3d1846; text-transform: capitalize; }
+.cc-list li b { width: 16px; height: 16px; border-radius: 50%; display: grid; place-items: center; background: #ead2df; font-size: 10px; flex: none; }
+.cc-list li.done { color: #8a9a8e; text-decoration: line-through; } .cc-list li.done b { background: #4caf74; color: #fff; }
+.cc-list .sw { width: 14px; height: 14px; border-radius: 4px; border: 1.3px solid #3d1846; display: inline-block; flex: none; }
+.beltnav .donow { display: block; font: 800 14px 'Trebuchet MS', sans-serif; color: #fff6ee; }
+.navbtn.pulse { animation: otagpulse 1s ease-in-out infinite; }
+.result { display: flex; align-items: center; gap: 6px; }
+.phone .ctag { font-size: 10px; padding: 1px 6px 1px 2px; } .phone .ctag b { width: 14px; height: 14px; font-size: 9px; }
+.phone .cc-list li { font-size: 10px; gap: 4px; } .phone .cc-list .sw { width: 11px; height: 11px; } .phone .beltnav .donow { font-size: 11px; }
+
+/* the order card sits above the machine's floating tags */
+.cake-card { z-index: 40 !important; }
+/* memory mode: the order card shrinks to one small line so the machine is in full view */
+.cake-card.mini { width: auto !important; max-width: none !important; padding: 6px 10px !important; }
+.cake-card.mini .tk-h { display: none; }
+.cc-mini { display: flex; align-items: center; gap: 10px; } .cc-mini .cc-name { font-size: 13px; margin: 0; }
+.cc-dots { display: flex; gap: 4px; } .cc-dots i { width: 9px; height: 9px; border-radius: 50%; background: #ead2df; display: block; }
+.cc-dots i.on { background: #4caf74; } .cc-dots i.now { background: #ff7fb6; box-shadow: 0 0 0 3px rgba(255,127,182,.3); }
+.cc-mini .chip { margin: 0 !important; padding: 3px 9px !important; font-size: 11px !important; }

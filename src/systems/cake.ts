@@ -123,3 +123,18 @@ export const useCake = create<CakeState>((set, get) => ({
   reset: () => set({ cake: { ...EMPTY }, t: {} }),
   newOrder: () => set({ order: randomCakeOrder(), orderUntil: performance.now() + 8000, peeks: 0 }),
 }))
+
+/** what to do next at the cake machine (new-player guidance): the station, and which choice the order wants there */
+export type CakeStation = 'tin' | 'layer' | 'fill' | 'frost' | 'pipe' | 'top' | 'star'
+export function nextCakeStep(c: Cake, want: Cake): { at: CakeStation; want: string } {
+  if (c.tin === 'none') return { at: 'tin', want: want.tin }
+  const n = want.layers.length
+  if (c.frosting === 'none') {
+    if (!c.layers.length) return { at: 'layer', want: want.layers[0] }
+    if (c.layers.length < n) return c.layers.length > c.fillings.length ? { at: 'fill', want: want.fillings[c.fillings.length] ?? want.fillings[0] } : { at: 'layer', want: want.layers[c.layers.length] }
+    return { at: 'frost', want: want.frosting }
+  }
+  if (c.piping === 'none') return { at: 'pipe', want: want.piping }
+  if (c.top === 'none') return { at: 'top', want: want.top }
+  return { at: 'star', want: '' }
+}

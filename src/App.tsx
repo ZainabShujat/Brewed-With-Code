@@ -147,7 +147,7 @@ export default function App() {
       {SNAP && <div className="hud"><div className="modes">
         {MODES.map((m) => <button key={m.id} className={m.id === mode ? 'on' : ''} onClick={() => setMode(m.id)}><span>{m.key}</span>{m.label}</button>)}
       </div></div>}
-      {playing && !SNAP && (mode === 'pov' || mode === 'cake' || mode === 'dollhouse' || mode === 'walk' || mode === 'fp') && <DayHud />}
+      {playing && !SNAP && (mode === 'pov' || mode === 'dollhouse' || mode === 'walk' || mode === 'fp') && <DayHud />}
       {playing && !SNAP && mode === 'kitchen' && <KitchenHud />}
       {playing && mode === 'pov' && <RecipeCard />}
       {playing && mode === 'pov' && <TutorialBubble />}

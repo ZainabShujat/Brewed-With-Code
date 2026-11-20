@@ -1,3 +1,4 @@
+import { useGuide } from '../systems/guide'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useFrame, type ThreeEvent } from '@react-three/fiber'
 import { Html } from '@react-three/drei'
@@ -5,7 +6,7 @@ import * as THREE from 'three'
 import { C } from '../data/palette'
 import { mat, glass } from './mats'
 import { RBox } from './Soft'
-import { useCake, SPONGE_COL, FILL_COL, FROST_COL, PIPE_COL } from '../systems/cake'
+import { nextCakeStep, useCake, SPONGE_COL, FILL_COL, FROST_COL, PIPE_COL } from '../systems/cake'
 import { cakeSvg } from '../ui/cakeSvg'
 import { sfx } from '../systems/sound'
 import { bodyGeo } from './cakeShape'
@@ -48,7 +49,11 @@ const DIP = 0.9 // seconds: down, act, up
 // a little 'done' pop after each dispenser finishes (playtest: nobody could tell when a step had finished)
 const DONE: Record<string, string> = { tin: '✓ tin ready', layer: '✓ sponge added', fill: '✓ filling added', frost: '✓ frosted', pipe: '✓ rosettes piped', top: '✓ toppings on · roll it to ⭐' }
 // the dispenser labels: what each one DOES, numbered in order
-const LABEL: Record<string, string> = { tin: '① pick a tin', layer: '② add sponge', fill: '③ add filling', frost: '④ frost it', pipe: '⑤ pipe rosettes', top: '⑥ add toppings' }
+const LABEL: Record<string, string> = { tin: 'Tin', layer: 'Sponge', fill: 'Filling', frost: 'Frosting', pipe: 'Rosettes', top: 'Toppings' }
+export const STEP_NO: Record<string, number> = { tin: 1, layer: 2, fill: 3, frost: 4, pipe: 5, top: 6 }
+const STEP_IDX: Record<string, number> = { tin: 0, layer: 1, fill: 2, frost: 3, pipe: 4, top: 5, star: 6 }
+/** the guidance state, read every frame by the tags (cheap: plain objects) */
+export function cakeGuide() { const k = useCake.getState(); return nextCakeStep(k.cake, k.order.want) }
 
 export function CakeMachine({ children }: { children: React.ReactNode }) {
   const carrier = useRef<THREE.Group>(null)
@@ -143,10 +148,10 @@ export function CakeMachine({ children }: { children: React.ReactNode }) {
         <mesh position={[0, -0.05, 0]} rotation={[Math.PI, 0, 0]} material={mat(C.steel)}><coneGeometry args={[0.035, 0.08, 6]} /></mesh>
       </Head>
       <Head id="top" name="toppings" x={ST.top} top={H - 0.25} heads={heads} opts={[
-        { label: "sprinkles", color: C.butter, icon: "🌈", fn: () => useCake.getState().topWith("sprinkles") },
-        { label: "cherries", color: "#b3122e", icon: "🍒", fn: () => useCake.getState().topWith("cherries") },
-        { label: "strawberries", color: "#d8344a", icon: "🍓", fn: () => useCake.getState().topWith("strawberries") },
-        { label: "candles", color: C.lilac, icon: "🕯️", fn: () => useCake.getState().topWith("candles") }]}>
+        { label: "sprinkles", color: C.butter, fn: () => useCake.getState().topWith("sprinkles") },
+        { label: "cherries", color: "#b3122e", fn: () => useCake.getState().topWith("cherries") },
+        { label: "strawberries", color: "#d8344a", fn: () => useCake.getState().topWith("strawberries") },
+        { label: "candles", color: C.lilac, fn: () => useCake.getState().topWith("candles") }]}>
         {/* topping hopper: a glass bowl full of colourful bits on a purple funnel */}
         <mesh position={[0, 0.28, 0]} material={glass()}><sphereGeometry args={[0.22, 20, 12]} /></mesh>
         {Array.from({ length: 14 }, (_, i) => <mesh key={i} position={[Math.cos(i * 2.4) * 0.12 * ((i % 3) / 3 + 0.3), 0.18 + (i % 4) * 0.04, Math.sin(i * 2.4) * 0.1]} material={mat([C.counter, C.mint, C.butter, C.lilac][i % 4])}><sphereGeometry args={[0.035, 6, 4]} /></mesh>)}
@@ -169,8 +174,20 @@ export function CakeMachine({ children }: { children: React.ReactNode }) {
 type Opt = { color: string; label: string; fn: () => void; icon?: string; shape?: 'round' | 'square' | 'heart' }
 function HeadTag({ id, name }: { id: Station; name: string }) {
   const ref = useRef<HTMLDivElement>(null)
-  useFrame(() => { const el = ref.current; if (!el) return; const here = Math.abs(machine.x - ST[id]) < 0.05 && !machine.busy; const c = 'headtag big' + (here ? ' here' : ''); if (el.className !== c) el.className = c })
-  return <Html position={[0, 0.82, 0.3]} center zIndexRange={[4, 0]} style={{ pointerEvents: 'none' }}><div ref={ref} className="headtag big">{LABEL[id] ?? name}</div></Html>
+  useFrame(() => { const el = ref.current; if (!el) return
+    const g = cakeGuide(), here = Math.abs(machine.x - ST[id]) < 0.05 && !machine.busy
+    const state = STEP_IDX[id] < STEP_IDX[g.at] ? ' done' : g.at === id ? ' next' : ''
+    const c = 'ctag' + state + (here ? ' here' : ''); if (el.className !== c) el.className = c })
+  return <Html position={[0, 0.86, 0.3]} center zIndexRange={[4, 0]} style={{ pointerEvents: 'none' }}>
+    <div ref={ref} className="ctag"><b>{STEP_NO[id]}</b><span>{LABEL[id] ?? name}</span><i className="ctag-arrow" /></div></Html>
+}
+/** each choice's name, shown when the cake is under its dispenser; the one the order wants pulses (guide on) */
+function OptTag({ id, label, i = 0 }: { id: Station; label: string; i?: number }) {
+  const ref = useRef<HTMLDivElement>(null)
+  useFrame(() => { const el = ref.current; if (!el) return
+    const g = cakeGuide(), here = Math.abs(machine.x - ST[id]) < 0.05, want = useGuide.getState().on && g.at === id && g.want === label
+    const c = 'otag' + (here || want ? ' show' : '') + (want ? ' want' : ''); if (el.className !== c) el.className = c })
+  return <Html position={[0, i % 2 ? -0.24 : -0.12, 0.06]} center zIndexRange={[4, 0]} style={{ pointerEvents: 'none' }}><div ref={ref} className="otag">{label}</div></Html> // staggered, so neighbours never overlap
 }
 function Head({ id, x, top, heads, children, opts, name }: { id: Station; x: number; top: number; heads: React.MutableRefObject<Record<string, THREE.Group | null>>; children: React.ReactNode; opts: Opt[]; name: string }) {
   return (
@@ -192,7 +209,7 @@ function Head({ id, x, top, heads, children, opts, name }: { id: Station; x: num
                     <mesh position={[0, -0.022, 0]} rotation={[0, 0, Math.PI / 4]} material={mat(o.color, { rough: 0.3 })}><boxGeometry args={[0.068, 0.068, 0.05]} /></mesh></group>
                 : <mesh material={mat(o.color, { rough: 0.3 })}><sphereGeometry args={[0.066, 16, 12]} /></mesh>}
               <mesh position={[0, 0, -0.05]} rotation={[Math.PI / 2, 0, 0]} material={mat(C.steel)}><cylinderGeometry args={[0.03, 0.03, 0.08, 8]} /></mesh>
-              {o.icon && <Html position={[0, 0, 0.08]} center zIndexRange={[4, 0]} style={{ pointerEvents: 'none', fontSize: 13 }}><span className="headtag icon">{o.icon}</span></Html>}
+              <OptTag id={id} label={o.label} i={i} />
             </group>
           )
         })}
