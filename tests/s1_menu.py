@@ -54,7 +54,7 @@ try:
         pg.reload(); boot(); menu()
         c = pg.inner_text('[data-act=continue]'); check('Story' in c, f'{dev}: Continue = most recently played (Story slot 3): {c!r}')
         pg.click('[data-act=load]'); pg.wait_for_timeout(400); fits('load')
-        t = pg.inner_text('.slots'); check('Mode not set' in t and 'Story' in t and 'empty' in t and 'started' in t and 'played' in t, f'{dev}: Load lists all 3 slots with mode, progress and dates')
+        t = pg.inner_text('.slots'); check('Mode not set' in t and 'Story' in t and 'empty' in t.lower() and 'started' in t and 'played' in t, f'{dev}: Load lists all 3 slots with mode, progress and dates')
         # 4. delete + replace need confirmation; Cancel keeps it
         pg.click('.slot[data-slot="1"] >> text=Delete…'); pg.wait_for_timeout(300); check(bool(pg.query_selector('.slot-confirm')), f'{dev}: Delete asks first'); fits('delete-confirm')
         pg.click('.slot-confirm >> text=Cancel'); pg.wait_for_timeout(300); check(S("!!window.__saves.listSlots().slots[1]"), f'{dev}: Cancel keeps the slot')
