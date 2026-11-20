@@ -7,8 +7,8 @@ const KEY = 'bwc.menu'
 export type Preset = { name: string; ids: string[] }
 type Saved = { ids: string[]; confirmedDay: number; presets: Preset[] }
 const DEFAULT_PRESETS: Preset[] = [
-  { name: '☀ Morning coffee', ids: ['espresso', 'americano', 'latte', 'cappuccino', 'flatwhite'] },
-  { name: '🍰 Afternoon treats', ids: ['latte', 'mocha', 'cake-vanilla', 'cake-chocolate', 'cake-strawberry'] },
+  { name: 'Morning coffee', ids: ['espresso', 'americano', 'latte', 'cappuccino', 'flatwhite'] },
+  { name: 'Afternoon treats', ids: ['latte', 'mocha', 'cake-vanilla', 'cake-chocolate', 'cake-strawberry'] },
 ]
 const load = (): Saved => {
   try { const s = JSON.parse(localStorage.getItem(KEY) || 'null'); if (s && Array.isArray(s.ids)) return { ids: s.ids, confirmedDay: s.confirmedDay | 0, presets: Array.isArray(s.presets) ? s.presets : DEFAULT_PRESETS } } catch { /* fresh */ }

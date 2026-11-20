@@ -25,7 +25,7 @@ with sync_playwright() as p:
         ids = S("window.__menu.getState().ids"); check('cake-chocolate' in ids and 'espresso' not in ids, f'{dev}: add / remove items ({ids})')
         pg.click('[data-item="latte"] .tm-peek'); pg.wait_for_timeout(300); check(bool(pg.query_selector('.rv')), f'{dev}: a recipe opens from the menu')
         pg.click('.rv-line >> nth=0'); pg.wait_for_timeout(200); check(bool(pg.query_selector('.rv-focus')), f'{dev}: tapping an ingredient shows it larger')
-        pg.screenshot(path=f'{OUT}/menu-recipe-{dev}.png'); pg.click('text=back to the menu'); pg.wait_for_timeout(200)
+        pg.screenshot(path=f'{OUT}/menu-recipe-{dev}.png'); pg.click('[aria-label="back to the menu"]'); pg.wait_for_timeout(200)
         pg.click('.tm-go'); pg.wait_for_timeout(800)
         check(not pg.query_selector('.tmenu') and S("window.__day.getState().phase") == 'open', f'{dev}: Confirm opens the café')
         # customers' orders follow the menu

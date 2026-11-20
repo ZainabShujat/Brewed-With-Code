@@ -7,8 +7,8 @@ import { INGREDIENTS, USE, type IngredientId } from './ingredients'
 
 export type Category = 'hot' | 'cold' | 'cakes' | 'pastries' | 'breakfast' | 'food'
 export const CATEGORIES: { id: Category; label: string }[] = [
-  { id: 'hot', label: '☕ Hot drinks' }, { id: 'cold', label: '🧊 Cold drinks' }, { id: 'cakes', label: '🎂 Cakes' },
-  { id: 'pastries', label: '🥐 Pastries & desserts' }, { id: 'breakfast', label: '🍳 Breakfast' }, { id: 'food', label: '🥪 Sandwiches & food' },
+  { id: 'hot', label: 'Hot drinks' }, { id: 'cold', label: 'Cold drinks' }, { id: 'cakes', label: 'Cakes' },
+  { id: 'pastries', label: 'Pastries & desserts' }, { id: 'breakfast', label: 'Breakfast' }, { id: 'food', label: 'Sandwiches & food' },
 ]
 export type Station = 'bar' | 'kitchen' | 'cake'
 export const STATION_NAME: Record<Station, string> = { bar: 'coffee counter', kitchen: 'kitchen', cake: 'cake bench' }
