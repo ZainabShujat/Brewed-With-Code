@@ -1,3 +1,4 @@
+import './systems/saves' // first: migrate the old save into slot 1 before any system reads storage
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App'

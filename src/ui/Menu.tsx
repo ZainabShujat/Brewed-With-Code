@@ -9,9 +9,11 @@ import { Creator } from './Creator'
 import { autoFullscreen } from './FullscreenButton'
 import { HowTo } from './HowTo'
 import { TitleBoard } from './TitleBoard'
+import { NewGame, LoadGame, continueGame, takeBoot, modeLabel } from './SaveMenu'
+import { latest, listSlots } from '../systems/saves'
 
 // ── The game's front end: title screen → main menu → play, with a pause menu (Esc) ──────────
-export type Screen = 'title' | 'main' | 'howto' | 'settings' | 'credits' | 'playing' | 'paused' | 'creator'
+export type Screen = 'title' | 'main' | 'howto' | 'settings' | 'credits' | 'playing' | 'paused' | 'creator' | 'newgame' | 'load'
 
 const load = (k: string, d: string) => { try { return localStorage.getItem(k) ?? d } catch { return d } }
 const save = (k: string, v: string) => { try { localStorage.setItem(k, v) } catch { /* private mode */ } }
@@ -37,13 +39,19 @@ export function Menu({ screen, setScreen }: { screen: Screen; setScreen: (s: Scr
   // title + menu screens: a still front view of the café (no sway: a moving camera made the menu stutter);
   // the game also draws at a calmer 20 fps here (see startLoop), so the laptop / phone stays cool. Any key / click continues
   useEffect(() => {
-    if (screen !== 'title' && screen !== 'main' && screen !== 'howto' && screen !== 'settings' && screen !== 'credits') return
+    if (screen !== 'title' && screen !== 'main' && screen !== 'howto' && screen !== 'settings' && screen !== 'credits' && screen !== 'newgame' && screen !== 'load') return
     setMode('exterior')
     view.yaw = 0; view.pitch = 0; view.zoom = 1.15
     const go = () => screen === 'title' && leaveTitle()
     window.addEventListener('keydown', go)
     return () => window.removeEventListener('keydown', go)
   }, [screen, setMode, setScreen])
+
+  // after a New Game / Load / Continue reload: go straight on (new → how to play → creator; continue → your café)
+  useEffect(() => {
+    const b = takeBoot(); if (!b) return
+    if (b === 'new') { setPending(PLAY[0]); setFirstRun(true); setScreen('howto') } else start(PLAY[0])
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Esc pauses / resumes; Tab hops to the next station while playing
   useEffect(() => {
@@ -56,7 +64,7 @@ export function Menu({ screen, setScreen }: { screen: Screen; setScreen: (s: Scr
 
   // first visit: straight from the title to making your character, then into your café (Kozie's tour starts there).
   // Returning players get the menu.
-  const leaveTitle = () => { autoFullscreen(); if (!useAvatar.getState().made) { setPending(PLAY[0]); setFirstRun(true); setScreen('howto') } else setScreen('main') }
+  const leaveTitle = () => { autoFullscreen(); setScreen('main') }
   const start = (p: typeof PLAY[number]) => {
     autoFullscreen()
     if (!useAvatar.getState().made) { setPending(p); setScreen('creator'); return } // first time: make your character
@@ -81,21 +89,27 @@ export function Menu({ screen, setScreen }: { screen: Screen; setScreen: (s: Scr
         </div>
       )}
 
-      {screen === 'main' && (
-        <div className="panel">
-          <div className="logo small">Brewed With Code</div>
-          {PLAY.map((p) => (
-            <button key={p.id} className="big" onClick={() => start(p)}><b>{p.title}</b><span>{p.sub}</span></button>
-          ))}
-          <div className="row">
-            <button onClick={() => setScreen('creator')}>Your character</button>
-            <button onClick={() => setScreen('howto')}>How to play</button>
-            <button onClick={() => setScreen('settings')}>Settings</button>
-            <button onClick={() => setScreen('credits')}>Credits</button>
-            <button onClick={() => setScreen('title')}>← Title</button>
+      {screen === 'main' && (() => {
+        const l = latest(), playing = l && listSlots().active === l.id
+        return (
+          <div className="panel title-menu">
+            <div className="logo small">Brewed With Code</div>
+            {l && <button className="big" data-act="continue" onClick={() => continueGame(() => start(PLAY[0]))}>
+              <b>▶ Continue</b><span>{l.name || 'Kozie'} · {modeLabel(l.meta.mode)} · Day {l.day}{playing ? '' : ` · Slot ${l.id}`}</span></button>}
+            <button className={l ? '' : 'big'} data-act="new" onClick={() => setScreen('newgame')}>{l ? '✨ New Game' : <><b>✨ New Game</b><span>pick a save slot, then Story or Zen</span></>}</button>
+            <button data-act="load" onClick={() => setScreen('load')}>📂 Load Game</button>
+            <button data-act="howto" onClick={() => setScreen('howto')}>📖 How to Play</button>
+            <button data-act="settings" onClick={() => setScreen('settings')}>⚙ Settings</button>
+            <div className="row">
+              <button onClick={() => setScreen('credits')}>Credits</button>
+              <button onClick={() => setScreen('title')}>← Title</button>
+            </div>
           </div>
-        </div>
-      )}
+        )
+      })()}
+
+      {screen === 'newgame' && <NewGame onBack={() => setScreen('main')} />}
+      {screen === 'load' && <LoadGame onBack={() => setScreen('main')} play={() => start(PLAY[0])} />}
 
       {screen === 'paused' && (
         <div className="panel">
