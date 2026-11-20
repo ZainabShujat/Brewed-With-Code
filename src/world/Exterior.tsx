@@ -40,6 +40,17 @@ function Spout() {
     </group>
   )
 }
+// ...and its handle on the opposite side: a big half-loop bulging out to the left, joined top and bottom
+function Handle() {
+  // a C-shaped loop: centred out past the pot's side, open towards the pot, its two ends joining it top and bottom
+  const R = 1.7, open = 0.34 * Math.PI
+  return (
+    <group position={[-6.65, 4.3, 0.4]}>
+      <mesh rotation={[0, 0, open]} material={mat(C.counter)} castShadow><torusGeometry args={[R, 0.44, 16, 48, 2 * Math.PI - 2 * open]} /></mesh>
+      <mesh rotation={[0, 0, Math.PI - 0.2]} material={mat(C.lilac)}><torusGeometry args={[R, 0.47, 12, 16, 0.4]} /></mesh>
+    </group>
+  )
+}
 function CoffeePot() {
   const body = useMemo(() => {
     const curve = new THREE.SplineCurve(POT_PROFILE.slice(1, -1).map(([r, y]) => new THREE.Vector2(r, y)))
@@ -64,6 +75,7 @@ function CoffeePot() {
       <RBox size={[1.9, 0.4, 1.0]} pos={[0.6, 10.1, -0.6]} color={C.plum} r={0.18} />
       </Reveal>
       <Reveal id="spout" at={[6.6, 5.4, 0]}><Spout /></Reveal>
+      <Reveal id="handle" at={[-6.6, 4.2, 0]}><Handle /></Reveal>
       <Reveal id="band" at={[0, 3, 0]}>
       {/* candy band with dots */}
       <mesh position={[0, 4.4, 0]} rotation={[Math.PI / 2, 0, 0]} material={mat(C.counter)}><torusGeometry args={[5.97, 0.16, 10, 48]} /></mesh>

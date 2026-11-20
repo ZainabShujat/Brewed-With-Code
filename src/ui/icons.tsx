@@ -48,3 +48,10 @@ export const INGREDIENT_ICON: Record<IngredientId, (p: P) => JSX.Element> = {
 }
 export const IngIcon = ({ id, ...p }: P & { id: IngredientId }) => { const I = INGREDIENT_ICON[id]; return <I {...p} /> }
 export const STATION_ICON: Record<Station, (p: P) => JSX.Element> = { bar: Cup, kitchen: Bowl, cake: CakeIcon }
+
+export const PlayTri = (p: P) => <Svg {...p}><path d="M10 6 L25 16 L10 26z" fill="#5e2a75" {...S} /></Svg>
+export const Folder = (p: P) => <Svg {...p}><path d="M4 9 a2 2 0 0 1 2 -2 h7 l3 3 h10 a2 2 0 0 1 2 2 v13 a2 2 0 0 1 -2 2 h-20 a2 2 0 0 1 -2 -2z" fill="#fff6ee" {...S} /><path d="M4 13 h24" {...S} /></Svg>
+export const Load = (p: P) => <Svg {...p}><path d="M16 5 v14 M10 13 l6 6 l6 -6" fill="none" {...S} strokeWidth={2.2} /><path d="M6 22 v4 h20 v-4" fill="none" {...S} strokeWidth={2.2} /></Svg>
+export const Gear = (p: P) => <Svg {...p}><path d="M16 4 l2.2 3.2 l3.8 -0.8 l0.8 3.8 l3.2 2.2 l-2 3.6 l2 3.6 l-3.2 2.2 l-0.8 3.8 l-3.8 -0.8 L16 28 l-2.2 -3.2 l-3.8 0.8 l-0.8 -3.8 l-3.2 -2.2 l2 -3.6 l-2 -3.6 l3.2 -2.2 l0.8 -3.8 l3.8 0.8z" fill="#fff6ee" {...S} /><circle cx="16" cy="16" r="4" fill="#cdb8e6" {...S} /></Svg>
+export const Spark = (p: P) => <Svg {...p}><path d="M16 4 l2.6 8.4 L27 15 l-8.4 2.6 L16 26 l-2.6 -8.4 L5 15 l8.4 -2.6z" fill="#f7c948" {...S} /></Svg>
+export const Star = (p: P) => <Svg {...p}><path d="M16 4 l3.6 7.6 l8.2 1 l-6 5.8 l1.6 8.2 L16 22.6 l-7.4 4 l1.6 -8.2 l-6 -5.8 l8.2 -1z" fill="#f7c948" {...S} /></Svg>
