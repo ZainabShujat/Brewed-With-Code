@@ -5,7 +5,11 @@ sys.stdout.reconfigure(encoding='utf-8')
 from playwright.sync_api import sync_playwright
 OUT = sys.argv[1] if len(sys.argv) > 1 else 'tests/out'
 PORT = 5203; BASE = f'http://localhost:{PORT}'
-srv = subprocess.Popen([shutil.which('npx'), 'vite', 'preview', '--outDir', 'dist-s1', '--port', str(PORT), '--strictPort'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL); time.sleep(5)
+srv = subprocess.Popen([shutil.which('npx'), 'vite', 'preview', '--outDir', 'dist-s1', '--port', str(PORT), '--strictPort'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+import urllib.request
+for _ in range(90):  # wait until the server really answers (a fixed sleep was flaky on a busy machine)
+    try: urllib.request.urlopen(BASE + '/play.html'); break
+    except Exception: time.sleep(1)
 fails, notes = [], []
 def check(ok, msg): (notes if ok else fails).append(('PASS ' if ok else 'FAIL ') + msg)
 OLD = {'brewed-with-code-save-v1': json.dumps({'day': 7, 'bank': 412, 'best': 90, 'unlocks': [], 'stars': 21}),

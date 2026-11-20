@@ -1212,3 +1212,9 @@ html:not(.phone) .fullscreenbtn { left: auto; right: 14px; top: auto; bottom: 14
 .gmenu .title-menu .titleboard { top: 1vh; width: min(520px, 56vw); height: min(200px, 22vw); }
 .gmenu .title-menu { margin-top: calc(min(200px, 22vw) + 3vh); align-self: flex-start; margin-left: clamp(16px, 6vw, 110px) !important; }
 .phone .gmenu .title-menu { margin-top: calc(min(200px, 22vw) + 1vh); }
+/* title buttons: no sliding on hover (it moved them out from under the pointer); a soft colour change instead */
+.gmenu .tmb:hover { transform: none; background: #fff0f6; } .gmenu .tmb.primary:hover { background: #f9dc78; }
+/* the 3D sign is decoration: it never takes a tap (it was swallowing Settings on phones) */
+.titleboard, .titleboard * { pointer-events: none !important; }
+/* short landscape phones: sign top-right, buttons down the left, nothing stacked */
+@media (max-height: 520px) { .gmenu .title-menu .titleboard { left: auto; right: 2vw; top: 2vh; transform: none; width: 46vw; height: 20vw; } .gmenu .title-menu { margin-top: 0 !important; align-self: center; } }
