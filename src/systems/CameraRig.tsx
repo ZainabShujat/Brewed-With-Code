@@ -63,7 +63,7 @@ export function useMouseLook() {
     let mid: [number, number] | null = null, tap0 = { t: 0, x: 0, y: 0 }
     const midOf = (): [number, number] => { const [a, b] = [...pts.values()]; return [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2] }
     const pd = (e: PointerEvent) => {
-      pts.set(e.pointerId, [e.clientX, e.clientY]); if (pts.size === 2) { pinch = span(); mid = midOf(); down = -1; return }
+      pts.set(e.pointerId, [e.clientX, e.clientY]); if (pts.size === 2) { pinch = span(); mid = midOf(); down = -1; stick.x = stick.y = 0; return }
       down = e.button; lx = e.clientX; ly = e.clientY
       // MOUSE LOOK, like any first-person game: hold the RIGHT button and move the mouse to turn your head.
       // In Walk view a left click on the scene locks the mouse for full look (Esc to let go).
@@ -80,8 +80,10 @@ export function useMouseLook() {
       if (pts.has(e.pointerId)) pts.set(e.pointerId, [e.clientX, e.clientY])
       if (pts.size === 2 && pinch) {
         const d = span(); zoomBy(pinch / d); pinch = d
-        // two fingers dragging together pan the dollhouse
-        const m = midOf(); if (mid && view.mode === 'dollhouse') { const a = view.yaw + view.spin, k = 0.03 * view.zoom, dx = m[0] - mid[0], dy = m[1] - mid[1]
+        // two fingers dragging together: pan the dollhouse; on foot, turn (left/right) and tilt (up/down) the camera
+        const m = midOf()
+        if (mid && (view.mode === 'walk' || view.mode === 'fp')) { view.yaw -= (m[0] - mid[0]) * 0.006 * view.sens; view.pitch = Math.max(-1.1, Math.min(1.0, view.pitch - (m[1] - mid[1]) * 0.005 * view.sens)) }
+        if (mid && view.mode === 'dollhouse') { const a = view.yaw + view.spin, k = 0.03 * view.zoom, dx = m[0] - mid[0], dy = m[1] - mid[1]
           view.panX = Math.max(-72, Math.min(72, view.panX - (Math.cos(a) * dx + Math.sin(a) * dy) * k)); view.panZ = Math.max(-30, Math.min(56, view.panZ - (-Math.sin(a) * dx + Math.cos(a) * dy) * k)) }
         mid = m; return
       }
@@ -94,8 +96,15 @@ export function useMouseLook() {
         return
       }
       if (down < 0) return
-      if (e.pointerType === 'touch') { // one finger: turn the camera (on foot and in the dollhouse); stations keep their drags
+      if (e.pointerType === 'touch') {
         if (grabbed || !(view.mode === 'walk' || view.mode === 'fp' || view.mode === 'dollhouse')) return
+        // ON FOOT (playtest 20 Nov): one finger held and dragged WALKS you in the swiped direction (relative to the camera:
+        // swipe up = away from it), faster the further you drag; let go to stop. No joystick, no inverted look.
+        if (view.mode === 'walk' || view.mode === 'fp') {
+          const ox = e.clientX - tap0.x, oy = e.clientY - tap0.y, d = Math.hypot(ox, oy)
+          if (d < 14) { stick.x = stick.y = 0; return }
+          const k = Math.min(1, (d - 14) / 70) / d; stick.x = ox * k; stick.y = oy * k; return
+        }
         const dx = e.clientX - lx, dy = e.clientY - ly; lx = e.clientX; ly = e.clientY
         view.yaw -= dx * 0.008 * view.sens
         if (view.mode !== 'dollhouse') view.pitch = Math.max(-1.1, Math.min(1.0, view.pitch - dy * 0.006 * view.sens))
@@ -120,6 +129,7 @@ export function useMouseLook() {
       if (!orbit) view.yaw = Math.max(-1.4, Math.min(1.4, view.yaw))
     }
     const pu = (e: PointerEvent) => {
+      if (e.pointerType === 'touch') { stick.x = 0; stick.y = 0 }
       // a quick tap (not a drag) on the floor while on foot: walk there
       if (e.pointerType === 'touch' && pts.size === 1 && (view.mode === 'walk' || view.mode === 'fp') && performance.now() - tap0.t < 320 && Math.hypot(e.clientX - tap0.x, e.clientY - tap0.y) < 14) {
         const st = stationAt(); if (st && !grabbed) enterStation(st) // at the bar / cake bench: a tap steps in

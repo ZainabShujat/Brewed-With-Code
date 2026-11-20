@@ -23,8 +23,8 @@ if (typeof window !== 'undefined') (window as unknown as { __navtut: typeof useN
 type Step = { pc: string; phone: string; done: (s: Snap) => boolean; spot?: string }
 type Snap = { yaw: number; moved: number; mode: string; phase: string; order: boolean }
 const STEPS: Step[] = [
-  { pc: "Hi, I'm Kozie! This is your café. First, look around: drag with the mouse (or use ← →).", phone: "Hi, I'm Kozie! This is your café. First, look around: drag one finger across the screen.", done: (s) => Math.abs(s.yaw) > 0.9 },
-  { pc: 'Now walk: W A S D (hold Shift to run).', phone: 'Now walk: tap the floor anywhere and you walk there.', done: (s) => s.moved > 1.2 },
+  { pc: "Hi, I'm Kozie! This is your café. First, look around: drag with the mouse (or use ← →).", phone: "Hi, I'm Kozie! This is your café. First, look around: slide TWO fingers across the screen.", done: (s) => Math.abs(s.yaw) > 0.9 },
+  { pc: 'Now walk: W A S D (hold Shift to run).', phone: 'Now walk: hold one finger down and slide it the way you want to go (or just tap a spot).', done: (s) => s.moved > 1.2 },
   { pc: 'Three ways to see your café, up in the top right. Try 👁 First person (or press 2).', phone: 'Three ways to see your café, top right. Tap 👁 First person.', done: (s) => s.mode === 'fp', spot: 'fp' },
   { pc: "Now you're seeing through your own eyes! Try 🏠 Dollhouse (3) to see the whole café.", phone: "You're seeing through your own eyes! Now tap 🏠 Dollhouse to see the whole café.", done: (s) => s.mode === 'dollhouse', spot: 'dollhouse' },
   { pc: 'And 🚶 Explore (1) puts you back on your feet.', phone: 'And 🚶 Explore puts you back on your feet.', done: (s) => s.mode === 'walk', spot: 'walk' },
