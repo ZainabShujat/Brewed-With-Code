@@ -1,3 +1,4 @@
+import { STREET as S, STORE_SHOPS, inShop } from '../world/streetLayout'
 import { groundY } from '../world/streetLayout'
 import { RR } from '../world/layout'
 import { BAR_VIEW } from '../world/barLayout'
@@ -172,6 +173,22 @@ function applyLook(mode: string, dt: number) {
   }
 }
 
+// The follow camera must never sit INSIDE a wall: from in there the wall's faces aren't drawn, so you saw straight
+// through to the pale sky (the "everything turned white" reports). If the spot behind you is inside the café's wall or
+// a shop, slide the camera in towards you until it's clear, like any third-person game.
+function camBlocked(x: number, z: number, indoors: boolean) {
+  const r = Math.hypot(x, z)
+  if (indoors) return r > RR - 0.8
+  if (r < S.potClear + 0.3 && !(Math.abs(x) < 1.6 && z > 0)) return true // the teapot's shell (the door passage is open)
+  return STORE_SHOPS.some((sh) => inShop(sh, x, z))
+}
+function keepOutOfWalls(px: number, pz: number, indoors: boolean) {
+  if (!camBlocked(wantPos.x, wantPos.z, indoors)) return
+  const dx = wantPos.x - px, dz = wantPos.z - pz
+  let lo = 0, hi = 1 // binary search the furthest clear point on the line from you to the camera
+  for (let i = 0; i < 10; i++) { const m = (lo + hi) / 2; if (camBlocked(px + dx * m, pz + dz * m, indoors)) hi = m; else lo = m }
+  const k = Math.max(0.15, lo * 0.95); wantPos.x = px + dx * k; wantPos.z = pz + dz * k; wantPos.y = Math.max(wantPos.y * (0.6 + 0.4 * k), 2.4) // closer in = a little lower
+}
 let lastMode = ''
 function fadeCut() {
   if (typeof document === 'undefined') return
@@ -223,6 +240,7 @@ export function CameraRig() {
       const dist = (indoors ? 8 : 10) * view.zoom, elev = Math.max(0.4, Math.min(1.3, 0.82 + view.pitch))
       wantLook.set(player.x, 1.0, player.z)
       wantPos.set(player.x + Math.sin(view.yaw) * Math.cos(elev) * dist, 1.0 + Math.sin(elev) * dist, player.z + Math.cos(view.yaw) * Math.cos(elev) * dist)
+      keepOutOfWalls(player.x, player.z, indoors)
     } else if (mode === 'fp') {
       // first person: you ARE the character; the camera is your eyes, W walks where you look
       if (tapAt.on) { tapAt.on = false; _rc.setFromCamera(_ndc.set(tapAt.x, tapAt.y), camera); if (_rc.ray.intersectPlane(_floor, _hit)) Object.assign(goTo, { x: _hit.x / WORLD, z: _hit.z / WORLD, on: true }) }

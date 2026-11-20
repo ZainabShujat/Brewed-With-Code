@@ -1,3 +1,4 @@
+import { useGuide } from '../systems/guide'
 import { useDrawers, tickDrawers, DRAWER_OF, DRAWER_X } from '../systems/drawers'
 import { useMemo, useRef, useState, type ReactNode } from 'react'
 import { useFrame, type ThreeEvent } from '@react-three/fiber'
@@ -322,9 +323,9 @@ function MilkBottle({ x, milk, color, cap }: { x: number; milk: 'whole' | 'oat' 
 // a spot on the floor of a drawer's tray, in its OPEN position (counter space; matches Interior's Counter drawers)
 // (20 Nov) the extras live in an open CADDY at the back of the counter: always visible, all in one tidy place, with
 // labelled sections (the drawers sat at the bottom edge of the bar camera, so an open drawer's contents were hidden)
-function inTray(d: 'sprinkles' | 'fillers', dx: number, _y: number): [number, number, number] { return d === 'sprinkles' ? [0.44 + dx * 0.8, TOP + 0.13, RZ] : [dx < 0 ? 1.17 : 0.93, TOP + 0.15, RZ] }
-const WHIP_AT: [number, number, number] = [0.93, TOP + 0.17, RZ], CHOC_AT: [number, number, number] = [1.18, TOP + 0.14, RZ]
-const CADDY = { x0: 0.02, x1: 1.34, z: RZ, d: 0.3 }
+function inTray(d: 'sprinkles' | 'fillers', dx: number, _y: number): [number, number, number] { return d === 'sprinkles' ? [0.32 + dx * 0.67, TOP + 0.13, RZ] : [dx < 0 ? 0.78 : 0.97, TOP + 0.15, RZ] }
+const WHIP_AT: [number, number, number] = [0.97, TOP + 0.17, RZ], CHOC_AT: [number, number, number] = [0.78, TOP + 0.14, RZ]
+const CADDY = { x0: 0.0, x1: 1.08, z: RZ, d: 0.3 } // clear of the glass rack (x ≈ 1.2 – 2.1)
 function Caddy() {
   const w = CADDY.x1 - CADDY.x0, cx = (CADDY.x0 + CADDY.x1) / 2, wood = mat('#c8935e', { rough: 0.8 }), dark = mat('#8a5a34', { rough: 0.8 })
   return (
@@ -332,9 +333,7 @@ function Caddy() {
       <mesh position={[cx, TOP + 0.015, CADDY.z]} material={dark} receiveShadow><boxGeometry args={[w, 0.03, CADDY.d]} /></mesh>
       <mesh position={[cx, TOP + 0.07, CADDY.z + CADDY.d / 2]} material={wood}><boxGeometry args={[w, 0.14, 0.025]} /></mesh>
       <mesh position={[cx, TOP + 0.04, CADDY.z - CADDY.d / 2]} material={wood}><boxGeometry args={[w, 0.08, 0.025]} /></mesh>
-      {[CADDY.x0, 0.81, CADDY.x1].map((x) => <mesh key={x} position={[x, TOP + 0.07, CADDY.z]} material={wood}><boxGeometry args={[0.025, 0.14, CADDY.d]} /></mesh>)}
-      <Html position={[0.42, TOP + 0.42, CADDY.z + 0.12]} center zIndexRange={[5, 0]} style={{ pointerEvents: 'none' }}><div className="drawertag">🧂 toppings</div></Html>
-      <Html position={[1.08, TOP + 0.48, CADDY.z + 0.12]} center zIndexRange={[5, 0]} style={{ pointerEvents: 'none' }}><div className="drawertag">🍫 sauce · cream</div></Html>
+      {[CADDY.x0, 0.64, CADDY.x1].map((x) => <mesh key={x} position={[x, TOP + 0.07, CADDY.z]} material={wood}><boxGeometry args={[0.025, 0.14, CADDY.d]} /></mesh>)}
     </group>
   )
 }
@@ -366,7 +365,7 @@ export function Bar() {
     s().tick(performance.now() / 1000)
     const n = needs(), k = JSON.stringify(n); if (k !== needKey.current) { needKey.current = k; setNeed(n) }
   })
-  const milkOut = (m: string) => need.all || need.milkType === m
+  const milkOut = (_m: string) => true // every milk and the jug are always out (the order decides which you use)
   const drawer = useDrawers((d) => d.open)
   useFrame((_, dt) => tickDrawers(Math.min(dt, 0.1)))
   const inDrawer = (_t: string) => { void drawer; return true } // (the caddy's extras are always out)
@@ -391,7 +390,7 @@ export function Bar() {
       {milkOut('oat') && <MilkBottle x={BAR.milks[1]} milk="oat" color="#eedcb8" cap="#c9a24a" />}
       {milkOut('almond') && <MilkBottle x={BAR.milks[2]} milk="almond" color="#f2e6d2" cap="#9a6a4a" />}
       {/* steel pitcher: steam the milk */}
-      {need.milk && <Grab id="milk" tip="milk jug: pick it up (drag it under the steam wand, or over your glass to pour)" pos={pHome} size={[0.36, 0.36, 0.36]} drops={{ cup: startMilkPour, wand: () => s().placePitcher('wand'), pitcherHome: () => s().placePitcher('home') }} holdDrops={steamed ? ['cup'] : []}>{/* only steamed milk auto-pours: carrying it to the wand past your glass mustn't start a pour */}
+      {<Grab id="milk" tip="milk jug: pick it up (drag it under the steam wand, or over your glass to pour)" pos={pHome} size={[0.36, 0.36, 0.36]} drops={{ cup: startMilkPour, wand: () => s().placePitcher('wand'), pitcherHome: () => s().placePitcher('home') }} holdDrops={steamed ? ['cup'] : []}>{/* only steamed milk auto-pours: carrying it to the wand past your glass mustn't start a pour */}
         <Flyer kind="milk" home={pHome} act="tilt" side={SPOUT.milk.side} above={pourAbove(size)}>
           <PitcherLevel />
           <SteamGauge />
@@ -625,7 +624,7 @@ const ACTION: Partial<Record<Step, string>> = {
 }
 const drawerLabel = (_id: Step) => ''
 function ActionTag() {
-  const pov = useGame((st) => st.mode === 'pov'), g = useRef<THREE.Group>(null)
+  const pov = useGame((st) => st.mode === 'pov') && useGuide((gd) => gd.on), g = useRef<THREE.Group>(null)
   const [label, setLabel] = useState(''), last = useRef('')
   useFrame(({ clock }) => {
     const st = useShop.getState(), busy = st.pouringMilk || !!st.shaking || st.pulling || st.steaming || !!st.filling
@@ -664,7 +663,7 @@ function spotFor(id: Step): Spot | null {
   }
 }
 function Guide() {
-  const pov = useGame((st) => st.mode === 'pov')
+  const pov = useGame((st) => st.mode === 'pov') && useGuide((g) => g.on)
   const arrow = useRef<THREE.Group>(null), ring = useRef<THREE.Mesh>(null), dest = useRef<THREE.Mesh>(null)
   useFrame(({ clock }) => {
     const a = arrow.current, r = ring.current, d = dest.current; if (!a || !r || !d) return
@@ -694,7 +693,6 @@ const MATS: { n: number; label: string; at: V3; steps: Step[] }[] = [
   { n: 2, label: 'espresso', at: [MACHINE.x, TOP + 0.02, BZ - 0.42], steps: ['pull', 'pourShot'] }, // in front of the shot glass, not over it
   { n: 3, label: 'milk', at: [0.83, TOP + 0.02, BZ - 0.16], steps: ['fillPitcher', 'pitcherToWand', 'steam', 'pourMilk'] },
   { n: 4, label: 'your glass', at: [CUP_AT[0], TOP + 0.02, BZ - 0.16], steps: [] },
-  { n: 5, label: 'extras', at: [0.3, TOP + 0.36, RZ + 0.05], steps: ['choc', 'water', 'topping'] },
   { n: 6, label: 'pass 🔔', at: [BAR.pass[0], TOP + 0.02, BZ - 0.16], steps: ['serve'] },
 ]
 function StationMats() {
@@ -706,7 +704,7 @@ function StationMats() {
     <group>
       {MATS.map((m) => (
         <Html key={m.n} position={m.at} center zIndexRange={[5, 0]} style={{ pointerEvents: 'none' }}>
-          <div className={'stmat' + (m.steps.includes(step) ? ' on' : '')}><b>{m.n}</b>{m.label}</div>
+          <div className={'stmat' + (m.steps.includes(step) ? ' on' : '')} style={m.steps.includes(step) ? undefined : { display: 'none' }}><b>{m.n}</b>{m.label}</div>
         </Html>
       ))}
     </group>

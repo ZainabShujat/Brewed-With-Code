@@ -6,6 +6,7 @@ import { drinkSvg } from './drinkSvg'
 import { nextStep, orderSteps, STEP_LABEL } from '../systems/targets'
 import { useTutorial } from '../systems/tutorial'
 import { hoverTip } from '../systems/drag'
+import { useGuide } from '../systems/guide'
 
 // The coffee bar's HUD for making drinks by hand: the order ticket, a live recipe card that ticks itself off as you
 // work, a hint for what to do next, and the result when you serve. No meters: the objects are the meters
@@ -39,7 +40,7 @@ export function RecipeCard() {
   const steps = orderSteps(), at = steps.indexOf(step.id)
   // HOLD / DRAG / LET GO stand out, so you know at a glance which kind of move it is
   const words = next.split(/(HOLD|DRAG|LET GO)/).map((t, i) => (t === 'HOLD' || t === 'DRAG' || t === 'LET GO') ? <b key={i} className={'verb v-' + t.replace(' ', '').toLowerCase()}>{t === 'HOLD' ? '👆 hold' : t === 'DRAG' ? '✋ drag' : 'let go'}</b> : t)
-  const tutOn = useTutorial((t) => t.lesson < 2)
+  const tutOn = useTutorial((t) => t.lesson < 2), guide = useGuide()
 
   const fresh = s.last && performance.now() / 1000 - s.last.t < 2.5
   const cheering = s.cheer && performance.now() / 1000 - s.cheer.t < 1.3
@@ -57,7 +58,8 @@ export function RecipeCard() {
         )}
       </div>
       <div className="coins">💰 {s.coins} · served {s.served}</div>
-      <div className={'brew-next' + (ready ? ' ready' : '')}>
+      {!tutOn && <button className="guidetoggle" onClick={guide.toggle} title="step-by-step help at the bar">🎓 guide {guide.on ? 'on' : 'off'}</button>}{/* from the 3rd order (after Kozie's two), guidance is optional */}
+      <div className={'brew-next' + (ready ? ' ready' : '')} style={!tutOn && !guide.on ? { display: 'none' } : undefined}>
         {at >= 0 && <div className="stepbar"><b style={{ width: `${(at / Math.max(1, steps.length - 1)) * 100}%` }} /></div>}
         {!tutOn && <div className="brew-say">{at >= 0 && <em>step {at + 1} of {steps.length} · </em>}{words}</div>}
         {!tutOn && hoverTip.text && <div className="brew-tip">👆 {hoverTip.text}</div>}
