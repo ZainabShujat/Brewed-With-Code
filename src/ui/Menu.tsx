@@ -98,7 +98,7 @@ export function Menu({ screen, setScreen }: { screen: Screen; setScreen: (s: Scr
           <div className="panel title-menu">
             <TitleBoard />
             {l ? <button className="tmb primary" data-act="continue" onClick={() => continueGame(() => start(PLAY[0]))}>
-              <PlayTri size={22} /><span>Continue<small>{l.name || 'Kozie'} · Day {l.day}</small></span></button>
+              <PlayTri size={22} /><span>Continue<small>{l.name || 'Kozie'} · {modeLabel(l.meta.mode)} · Day {l.day}</small></span></button>
               : <button className="tmb primary" data-act="new" onClick={() => setScreen('newgame')}><PlayTri size={22} /><span>New Game</span></button>}
             {l && <button className="tmb" data-act="new" onClick={() => setScreen('newgame')}><Spark size={22} /><span>New Game</span></button>}
             <button className="tmb" data-act="load" onClick={() => setScreen('load')}><Load size={22} /><span>Load Game</span></button>
