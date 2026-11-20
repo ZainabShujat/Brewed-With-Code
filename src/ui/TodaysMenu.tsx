@@ -101,3 +101,4 @@ export function RecipeBook() {
     </div>
   )
 }
+if (typeof window !== 'undefined') (window as unknown as { __book: typeof useBook }).__book = useBook

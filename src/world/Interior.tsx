@@ -11,6 +11,7 @@ import { RBox, Puck } from './Soft'
 import { Reveal } from './Reveal'
 import { Bar } from './Bar'
 import { CakeBench } from './Cake'
+import { KitchenRoom } from './KitchenRoom'
 import { Swing, Slide } from './Swing'
 import { useGame } from '../systems/store'
 import { Model } from './Models'
@@ -294,8 +295,7 @@ function Decor({ hideBack }: { hideBack: boolean }) {
         </group>
       ))}
       {/* bar stools along the side of the counter */}
-      <group position={[4.2, 0, -7.6]} scale={FURN}><Stool pos={[0, 0, 0]} /></group>
-      <group position={[4.2, 0, -6.2]} scale={FURN}><Stool pos={[0, 0, 0]} color={C.purple} /></group>
+      {/* (the two bar stools that stood here made way for the prep kitchen, 21 Nov) */}
     </group>
   )
 }
@@ -310,6 +310,7 @@ export function Interior({ cutaway, pov, only = '' }: { cutaway: boolean; pov: b
       <Reveal id="fridge" at={[9.5, 0, -9.4]}><group visible={only === ''} position={[FRIDGE_DX, 0, FRIDGE_DZ]}><Fridge /></group></Reveal>
       <Reveal id="decor"><Decor hideBack={pov} /></Reveal>
       <CakeBench />
+      <Reveal id="prepkitchen" at={[6.6, 0, -8.3]}><KitchenRoom /></Reveal>
       {TABLES.map(([x, z], i) => (
         <Reveal key={`${x},${z}`} id="tables" at={[x, 0, z]}>
           {/* FURN: tables + stools sized for ~2 m characters (table ~1.05 m, seat ~0.8 m) */}

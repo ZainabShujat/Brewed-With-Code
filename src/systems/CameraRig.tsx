@@ -24,6 +24,8 @@ const SHOTS: Record<Exclude<CamMode, 'walk' | 'fp' | 'vlog'>, { pos: THREE.Vecto
   // the cake bench in the kitchen: close, slightly above, like leaning over the turntable
   cake: { pos: new THREE.Vector3(-6.95, 3.6, -3.4), look: new THREE.Vector3(-6.95, 1.95, -9.1) }, // the whole cake machine: canopy, dispensers, belt // stepped back: the whole bakery corner, calm and roomy // the bakery corner: cake, backsplash, shelf
   dollhouse: { pos: new THREE.Vector3(17.5, 19, 23.5), look: new THREE.Vector3(-0.3, 0.2, -0.6) },
+  // the prep kitchen: standing at the counter, looking down at the bowl and jars
+  kitchen: { pos: new THREE.Vector3(5.95, 3.7, -6.95), look: new THREE.Vector3(6.15, 0.85, -9.35) },
   pov: { pos: new THREE.Vector3(0.1, 3.9, -14.3), look: new THREE.Vector3(0.1, 0.95, -6.7) } // looking down at the workspace: every tool readable,
 }
 
@@ -40,13 +42,14 @@ const wantLook = new THREE.Vector3()
 // Walk / barista / cakes = turn your head (right-drag, or drag on empty space), wheel leans in/out.
 const loadSens = () => { try { return Number(localStorage.getItem('sens')) || 1 } catch { return 1 } }
 /** the station you're standing at, on foot (layout units): the coffee bar or the cake bench */
-export function stationAt(): 'pov' | 'cake' | '' {
+export function stationAt(): 'pov' | 'cake' | 'kitchen' | '' {
   const p = useGame.getState().player
   if (p.x > -3.1 && p.x < 3.5 && ((p.z > -6.4 && p.z < -4.4) || (p.z > -10.4 && p.z < -8.0))) return 'pov'
   if (p.x > -9.2 && p.x < -4.8 && p.z > -10.8 && p.z < -7.2) return 'cake'
+  if (p.x > 4.6 && p.x < 8.8 && p.z > -9.2 && p.z < -6.9) return 'kitchen' // behind the curtains
   return ''
 }
-export function enterStation(st: 'pov' | 'cake') { useGame.getState().setMode(st) }
+export function enterStation(st: 'pov' | 'cake' | 'kitchen') { useGame.getState().setMode(st) }
 export const view = { yaw: 0, pitch: 0, zoom: 1, mode: '' as string, sens: loadSens(), looking: false, panX: 0, panZ: 0, spin: 0 }
 export const setSens = (v: number) => { view.sens = v; try { localStorage.setItem('sens', String(v)) } catch { /* private mode */ } }
 const _off = new THREE.Vector3(), _sph = new THREE.Spherical()
@@ -237,7 +240,7 @@ export function CameraRig() {
     let cut = false
     // switching between Explore / first person / Dollhouse GLIDES (no cut); going to a station cuts with a fade
     let glide = false
-    if (lastMode !== mode) { glide = GLIDE.has(lastMode) && GLIDE.has(mode); cut = lastMode !== '' && !glide; if (glide) glideT = 1.2; lastMode = mode; if (cut) fadeCut(); if ((mode === 'pov' || mode === 'cake') && document.pointerLockElement) document.exitPointerLock() }
+    if (lastMode !== mode) { glide = GLIDE.has(lastMode) && GLIDE.has(mode); cut = lastMode !== '' && !glide; if (glide) glideT = 1.2; lastMode = mode; if (cut) fadeCut(); if ((mode === 'pov' || mode === 'cake' || mode === 'kitchen') && document.pointerLockElement) document.exitPointerLock() }
     if (glideT > 0) glideT -= dt
     const asp = (camera as THREE.PerspectiveCamera).aspect
     setFov(camera as THREE.PerspectiveCamera, mode === 'cake' && asp < 1 ? 58 : (mode === 'pov' ? 50 : mode === 'dollhouse' ? 19 : 45) * (asp < 1 ? Math.min(1.7, 1 / asp * 0.95) : 1)) // portrait phone = wider lens // barista view: a slightly wider, human field of view

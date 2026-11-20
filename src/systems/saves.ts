@@ -33,6 +33,7 @@ export const PROGRESS_KEYS = [
   'bwc.tutorial.done',
   'bwc.navtut.done',
   'bwc.menu', // today's menu + presets (S4/S5)
+  'bwc.kitchen', // the half-made bowl + batter on the shelf
 ] as const
 
 const INDEX = 'bwc.slots', SLOT = (n: SlotId) => `bwc.slot.${n}`, SLOT_BAK = (n: SlotId) => `bwc.backup.slot.${n}`

@@ -34,7 +34,7 @@ with sync_playwright() as p:
         allowed = set(S("window.__menu.getState().ids")) | {'cake'}
         check(all(o in allowed for o in orders), f'{dev}: orders only from the menu {orders}')
         # the recipe book
-        S("import('/src/ui/TodaysMenu.tsx').then(m => m.useBook.getState().show('cake-chocolate'))"); pg.wait_for_timeout(500)
+        S("window.__book.getState().show('cake-chocolate')"); pg.wait_for_timeout(500)
         t = S("document.querySelector('.tm-panel.book')?.innerText || ''")
         check('Recipe Book' in t and 'cocoa' in t.lower() and 'kitchen' in t.lower(), f'{dev}: Recipe Book shows the chocolate cake with its kitchen step')
         pg.screenshot(path=f'{OUT}/book-{dev}.png')

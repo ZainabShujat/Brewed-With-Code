@@ -1,3 +1,4 @@
+import { KitchenHud } from './ui/KitchenHud'
 import { TodaysMenu, RecipeBook } from './ui/TodaysMenu'
 import { WORLD } from './world/layout'
 import { Canvas, useFrame } from '@react-three/fiber'
@@ -72,7 +73,7 @@ export function World() {
   const mode = useGame((s) => s.mode)
   useEffect(() => { if (!REEL) document.body.classList.toggle('notags', mode === 'walk' || mode === 'fp') }, [mode])
   useEffect(() => { if (!REEL) document.body.classList.toggle('not-cake', mode !== 'cake') }, [mode]) // the cake machine's labels only at the cake bench
-  useEffect(() => { document.body.classList.toggle('station-cursor', mode === 'pov' || mode === 'cake') }, [mode]) // the game's own arrow cursor at the stations
+  useEffect(() => { document.body.classList.toggle('station-cursor', mode === 'pov' || mode === 'cake' || mode === 'kitchen') }, [mode]) // the game's own arrow cursor at the stations
   const inside = mode !== 'exterior'
   const outro = mode === 'outro'
   const kozie = useGame((s) => s.kozie)
@@ -146,7 +147,8 @@ export default function App() {
       {SNAP && <div className="hud"><div className="modes">
         {MODES.map((m) => <button key={m.id} className={m.id === mode ? 'on' : ''} onClick={() => setMode(m.id)}><span>{m.key}</span>{m.label}</button>)}
       </div></div>}
-      {playing && !SNAP && (mode === 'pov' || mode === 'cake' || mode === 'dollhouse' || mode === 'walk' || mode === 'fp') && <DayHud />}
+      {playing && !SNAP && (mode === 'pov' || mode === 'cake' || mode === 'kitchen' || mode === 'dollhouse' || mode === 'walk' || mode === 'fp') && <DayHud />}
+      {playing && !SNAP && mode === 'kitchen' && <KitchenHud />}
       {playing && mode === 'pov' && <RecipeCard />}
       {playing && mode === 'pov' && <TutorialBubble />}
       {playing && !SNAP && <ModeFade />}

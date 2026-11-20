@@ -2,11 +2,12 @@ import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { useCake } from '../src/systems/cake'
 import { usePantry } from '../src/systems/pantry'
+import { useKitchen } from '../src/systems/kitchen'
 
 // Regression (playtest 19 Nov): topping machines stopped working after the third tier. Every tier count, with a
 // sponge or a filling on top, must frost, pipe and top.
 const C = () => useCake.getState()
-const stock = () => usePantry.setState((s) => ({ stock: Object.fromEntries(Object.keys(s.stock).map((k) => [k, 999])) as typeof s.stock }))
+const stock = () => { usePantry.setState((s) => ({ stock: Object.fromEntries(Object.keys(s.stock).map((k) => [k, 999])) as typeof s.stock })); useKitchen.setState({ batter: { vanilla: 99, chocolate: 99, strawberry: 99 } }) }
 for (const tiers of [1, 2, 3, 4]) for (const fillingOnTop of [false, true]) {
   test(`${tiers} tier${tiers > 1 ? 's' : ''}${fillingOnTop ? ' with a filling on top' : ''}: frost, rosettes and toppings all work`, () => {
     stock(); C().reset(); C().setTin('round')

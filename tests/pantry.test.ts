@@ -2,6 +2,7 @@ import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { usePantry } from '../src/systems/pantry'
 import { useShop } from '../src/systems/shop'
+import { useKitchen } from '../src/systems/kitchen'
 import { useCake } from '../src/systems/cake'
 import { useDay } from '../src/systems/day'
 import { INGREDIENTS, packPrice, packAmount, levelFromStars } from '../src/data/ingredients'
@@ -33,13 +34,11 @@ test('a shot uses 18 g of beans; an empty pantry stops the shot and says where t
   hold(S().pullTick, 1); assert.equal(S().shotGlass, 0)
   assert.match(Pn().note?.text ?? '', /Daily Grind/)
 })
-test('a cake layer uses flour, sugar, an egg and butter, and nothing at all if one is missing', () => {
-  fresh(); useCake.getState().reset(); useCake.getState().setTin('round')
+test('a cake layer pours kitchen batter and takes nothing more from the pantry', () => {
+  fresh(); useCake.getState().reset(); useCake.getState().setTin('round'); useKitchen.setState({ batter: { vanilla: 1, chocolate: 0, strawberry: 0 } })
   const st = { ...Pn().stock }; useCake.getState().addLayer('vanilla')
-  assert.equal(useCake.getState().cake.layers.length, 1)
-  assert.equal(Pn().stock.eggs, st.eggs - 1); assert.equal(Pn().stock.flour, st.flour - 60)
-  usePantry.setState({ stock: { ...Pn().stock, eggs: 0 } }); useCake.getState().addFilling('cream'); const flour = Pn().stock.flour
-  useCake.getState().addLayer('vanilla')
-  assert.equal(useCake.getState().cake.layers.length, 1, 'no egg, no layer'); assert.equal(Pn().stock.flour, flour, 'and no flour wasted')
-  assert.match(Pn().note?.text ?? '', /Flour & Co/)
+  assert.equal(useCake.getState().cake.layers.length, 1); assert.equal(useKitchen.getState().batter.vanilla, 0)
+  assert.equal(Pn().stock.eggs, st.eggs); assert.equal(Pn().stock.flour, st.flour)
+  useCake.getState().addFilling('cream'); useCake.getState().addLayer('vanilla')
+  assert.equal(useCake.getState().cake.layers.length, 1, 'no batter, no layer'); assert.match(useCake.getState().why!.text, /kitchen/)
 })

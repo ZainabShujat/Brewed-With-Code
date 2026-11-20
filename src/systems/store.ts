@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 
-export type CamMode = 'exterior' | 'dollhouse' | 'walk' | 'fp' | 'pov' | 'outro' | 'vlog' | 'cake'
+export type CamMode = 'exterior' | 'dollhouse' | 'walk' | 'fp' | 'pov' | 'outro' | 'vlog' | 'cake' | 'kitchen'
 /** on your feet: third-person Explore or first person */
 export const onFoot = (m: string) => m === 'walk' || m === 'fp'
 
@@ -26,7 +26,7 @@ export const useGame = create<State>((set) => ({
   mode: 'exterior',
   setMode: (mode) => set((s) => {
     // entering walk from the barista view: step out onto the café floor
-    if ((mode === 'walk' || mode === 'fp') && (s.mode === 'pov' || s.mode === 'cake')) Object.assign(s.player, { x: 0.4, z: 2.4, facing: 0 })
+    if ((mode === 'walk' || mode === 'fp') && (s.mode === 'pov' || s.mode === 'cake' || s.mode === 'kitchen')) Object.assign(s.player, { x: 0.4, z: 2.4, facing: 0 })
     return { mode }
   }),
   player: { x: 0.4, z: 2.4, facing: 0 }, // facing the camera when you arrive (third-person Explore)

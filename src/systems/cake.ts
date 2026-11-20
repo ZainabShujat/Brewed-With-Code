@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { useDay } from './day'
 import { usePantry } from './pantry'
+import { useKitchen } from './kitchen'
 import { USE, type IngredientId } from '../data/ingredients'
 const use = (items: [IngredientId, number][]) => usePantry.getState().useAll(items)
 
@@ -90,7 +91,8 @@ export const useCake = create<CakeState>((set, get) => ({
     if (c.frosting !== 'none') return no(set, "it's frosted: no more sponge on top")
     if (c.layers.length >= 4) return no(set, "that's the tallest cake the machine makes (4 tiers)")
     if (c.layers.length > c.fillings.length) return no(set, 'add a filling before the next sponge')
-    const ex = USE.spongeExtra[s]; if (!use([['flour', USE.layer.flour], ['sugar', USE.layer.sugar], ['eggs', USE.layer.eggs], ['butter', USE.layer.butter], ...(ex ? [ex] : [])])) return
+    // the batter comes from the kitchen (flour, sugar, eggs, butter were used there): pour one layer's worth
+    if (!useKitchen.getState().takeLayer(s)) return no(set, `no ${s} batter: make a bowl in the kitchen 🥣`)
     set({ cake: { ...c, layers: [...c.layers, s] }, t: { ...get().t, [`L${c.layers.length}`]: now() } }) },
   addFilling: (f) => { const c = get().cake
     if (!c.layers.length) return no(set, 'add a sponge first 🍰')
