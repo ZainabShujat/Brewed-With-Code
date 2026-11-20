@@ -27,6 +27,19 @@ export const POT_R = (y: number) => {
   return 5
 }
 
+// the teapot's spout (21 Nov, from the concept art): a fat tapered pink tube out of the right side, angled up,
+// with a rolled rim and a dark open mouth
+function Spout() {
+  const ang = 0.72, len = 3.6, base: [number, number] = [5.3, 3.9]
+  const cx = base[0] + Math.sin(ang) * len / 2, cy = base[1] + Math.cos(ang) * len / 2
+  return (
+    <group position={[cx, cy, 0.4]} rotation={[0, 0, -ang]}>
+      <mesh material={mat(C.counter)} castShadow><cylinderGeometry args={[0.85, 1.45, len, 28]} /></mesh>
+      <mesh position={[0, len / 2, 0]} rotation={[Math.PI / 2, 0, 0]} material={mat(C.counter)}><torusGeometry args={[0.85, 0.16, 12, 28]} /></mesh>
+      <mesh position={[0, len / 2 + 0.01, 0]} rotation={[-Math.PI / 2, 0, 0]} material={mat('#5a2a4a')}><circleGeometry args={[0.72, 24]} /></mesh>
+    </group>
+  )
+}
 function CoffeePot() {
   const body = useMemo(() => {
     const curve = new THREE.SplineCurve(POT_PROFILE.slice(1, -1).map(([r, y]) => new THREE.Vector2(r, y)))
@@ -50,6 +63,7 @@ function CoffeePot() {
       <mesh position={[0.6, 9.1, -0.6]} material={mat(C.plum)} castShadow><cylinderGeometry args={[0.45, 0.6, 1.8, 20]} /></mesh>
       <RBox size={[1.9, 0.4, 1.0]} pos={[0.6, 10.1, -0.6]} color={C.plum} r={0.18} />
       </Reveal>
+      <Reveal id="spout" at={[6.6, 5.4, 0]}><Spout /></Reveal>
       <Reveal id="band" at={[0, 3, 0]}>
       {/* candy band with dots */}
       <mesh position={[0, 4.4, 0]} rotation={[Math.PI / 2, 0, 0]} material={mat(C.counter)}><torusGeometry args={[5.97, 0.16, 10, 48]} /></mesh>
