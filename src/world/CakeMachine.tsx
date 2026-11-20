@@ -1,3 +1,4 @@
+import { useGame } from '../systems/store'
 import { Model } from './Models'
 import { useGuide } from '../systems/guide'
 import { useEffect, useMemo, useRef, useState } from 'react'
@@ -263,7 +264,7 @@ function HeadTag({ id, name }: { id: Station; name: string }) {
   useFrame(() => { const el = ref.current; if (!el) return
     const g = cakeGuide(), here = Math.abs(machine.x - ST[id]) < 0.05 && !machine.busy
     const state = STEP_IDX[id] < STEP_IDX[g.at] ? ' done' : g.at === id ? ' next' : ''
-    const c = 'ctag' + state + (here ? ' here' : ''); if (el.className !== c) el.className = c })
+    const c = 'ctag' + state + (here ? ' here' : '') + (useGame.getState().mode === 'cake' ? '' : ' away'); if (el.className !== c) el.className = c }) // only at the cake bench (they floated over the Dollhouse view)
   return <Html position={[0, 0.86, 0.3]} center zIndexRange={[4, 0]} style={{ pointerEvents: 'none' }}>
     <div ref={ref} className="ctag"><b>{STEP_NO[id]}</b><span>{LABEL[id] ?? name}</span><i className="ctag-arrow" /></div></Html>
 }

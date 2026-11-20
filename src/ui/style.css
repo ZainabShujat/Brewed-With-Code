@@ -1218,3 +1218,4 @@ html:not(.phone) .fullscreenbtn { left: auto; right: 14px; top: auto; bottom: 14
 .titleboard, .titleboard * { pointer-events: none !important; }
 /* short landscape phones: sign top-right, buttons down the left, nothing stacked */
 @media (max-height: 520px) { .gmenu .title-menu .titleboard { left: auto; right: 2vw; top: 2vh; transform: none; width: 46vw; height: 20vw; } .gmenu .title-menu { margin-top: 0 !important; align-self: center; } }
+.ctag.away { display: none; }
