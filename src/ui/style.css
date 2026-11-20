@@ -920,3 +920,12 @@ html:not(.phone) .fullscreenbtn { left: auto; right: 14px; top: auto; bottom: 14
 .areasign { text-align: center; white-space: nowrap; background: #fff6ee; color: #5e2a75; border-radius: 12px; padding: 5px 12px 7px; box-shadow: 0 3px 0 #b896c8; font-family: 'Trebuchet MS', sans-serif; }
 .areasign b { display: block; font-size: 15px; } .areasign small { font-size: 11px; opacity: .75; }
 .menuidle .areasign { visibility: hidden !important; }
+
+/* portrait phones: an install invitation (the installed app opens full-screen + landscape by itself) */
+.rotate.install { gap: 12px; padding: 24px; text-align: center; }
+.rotate.install .rot-board { width: min(330px, 84vw); height: auto; }
+.rotate.install b { font-size: 21px; }
+.rotate.install .rot-steps { background: rgba(255,246,238,.12); border-radius: 14px; padding: 10px 14px; font-size: 15px; line-height: 1.5; max-width: 300px; }
+.rotate.install .rot-steps b { font-size: 15px; color: #f2c66a; }
+.rotate.install .rot-skip { background: none; border: 0; color: #f6e7f0; opacity: .7; text-decoration: underline; font-size: 13px; margin-top: 6px; }
+.rotate.install { background: #291830 !important; }
