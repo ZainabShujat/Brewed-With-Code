@@ -1,7 +1,7 @@
 {
   "name": "Brewed With Code",
   "short_name": "Brewed",
-  "description": "A cozy, low-poly 3D café game that runs in the browser",
+  "description": "A cozy 3D caf\u00e9 game you play in your browser: brew coffee, bake cakes, meet a town of marshmallows and notebooks.",
   "start_url": "./",
   "display": "standalone",
   "orientation": "landscape",
@@ -9,10 +9,30 @@
   "theme_color": "#2b1d33",
   "icons": [
     {
-      "src": "./icon.svg",
+      "src": "./icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./icon-512.png",
       "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
       "type": "image/svg+xml",
-      "purpose": "any maskable"
+      "purpose": "any"
     }
-  ]
+  ],
+  "id": "./",
+  "scope": "./"
 }

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useDay, DAY_LEN } from '../systems/day'
+import { useDay, daySpan } from '../systems/day'
 import { useShop } from '../systems/shop'
 import { sfx } from '../systems/sound'
 import { cafe } from '../world/Customers'
@@ -61,7 +61,7 @@ export function DayHud() {
   return (
     <div className={'dayclock' + (d.phase === 'closing' ? ' closing' : d.left < 20 ? ' late' : '')}>
       <b>Day {d.day}</b> · {d.phase === 'closing' ? (cafe.line.size ? 'closing time · serve the last guests' : 'closing time · flip the door sign to CLOSED (E)') : `${m}:${String(s).padStart(2, '0')}`}
-      <i style={{ width: `${(d.left / DAY_LEN) * 100}%` }} />
+      <i style={{ width: `${Math.min(100, (d.left / daySpan()) * 100)}%` }} />
     </div>
   )
 }

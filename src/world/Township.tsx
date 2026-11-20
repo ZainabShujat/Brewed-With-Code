@@ -115,9 +115,9 @@ function buildTown(side: -1 | 1) {
   const kit = new Kit(), r = rng(side < 0 ? 31337 : 4242)
   const cols: [number, number][] = [[AVE[0] + 4, AVE[1] - 4], [AVE[1] + 4, AVE[2] - 4], [AVE[2] + 4, AVE[2] + 20]]
   const rows: [number, number][] = [[CROSS[0] + 4, CROSS[1] - 4], [CROSS[1] + 4, CROSS[2] - 5], [CROSS[2] + 5, CROSS[3] - 4], [CROSS[3] + 4, 66]] // from just behind the café's depth forward: nothing behind the back wall (that's the forest)
-  const dense = quality.high ? 1 : 0.6
+  const dense = quality.high ? 1 : 0.75
   cols.forEach(([a0, a1], ci) => rows.forEach(([z0, z1]) => {
-    const step = ci === 0 ? 9 : 15
+    const step = ci === 0 ? 7.5 : 12.5 // (playtest 20 Nov: closer together, a proper neighbourhood)
     // lots laid out evenly INSIDE the block, so nothing spills onto a street; each lot's half-size decides what fits
     const nx = Math.max(1, Math.floor((a1 - a0) / step)), nz = Math.max(1, Math.floor((z1 - z0) / step))
     const lx = (a1 - a0) / nx, lz = (z1 - z0) / nz, half = Math.min(lx, lz) / 2 - 1.2 // keep a pavement margin

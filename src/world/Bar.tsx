@@ -390,7 +390,7 @@ export function Bar() {
       {milkOut('oat') && <MilkBottle x={BAR.milks[1]} milk="oat" color="#eedcb8" cap="#c9a24a" />}
       {milkOut('almond') && <MilkBottle x={BAR.milks[2]} milk="almond" color="#f2e6d2" cap="#9a6a4a" />}
       {/* steel pitcher: steam the milk */}
-      {<Grab id="milk" tip="milk jug: pick it up (drag it under the steam wand, or over your glass to pour)" pos={pHome} size={[0.36, 0.36, 0.36]} drops={{ cup: startMilkPour, wand: () => s().placePitcher('wand'), pitcherHome: () => s().placePitcher('home') }} holdDrops={steamed ? ['cup'] : []}>{/* only steamed milk auto-pours: carrying it to the wand past your glass mustn't start a pour */}
+      {<Grab id="milk" tip="milk jug: pick it up (drag it under the steam wand, or over your glass to pour)" pos={pHome} size={[0.3, 0.36, 0.32]} drops={{ cup: startMilkPour, wand: () => s().placePitcher('wand'), pitcherHome: () => s().placePitcher('home') }} holdDrops={steamed ? ['cup'] : []}>{/* only steamed milk auto-pours: carrying it to the wand past your glass mustn't start a pour */}
         <Flyer kind="milk" home={pHome} act="tilt" side={SPOUT.milk.side} above={pourAbove(size)}>
           <PitcherLevel />
           <SteamGauge />

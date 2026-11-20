@@ -40,3 +40,6 @@ if (typeof window !== 'undefined') (window as unknown as { __clock: object }).__
   speed: (x: number) => { speed = x },
   get: () => hourNow(),
 }
+
+/** jump the world clock (game time only): a new business day starts at opening time */
+export function setHour(h: number) { if (!useClock.getState().real) { gameHour = ((h % 24) + 24) % 24; save() } }

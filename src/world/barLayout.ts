@@ -22,7 +22,7 @@ export const BAR = {
   wand: [MACHINE.x + 0.36, TOP, MACHINE.z - 0.2] as V3, // the steam wand off the machine's side; the pitcher sits under it
   cup: [-0.1, TOP + 0.06, COUNTER.z - 0.3] as V3,     // your glass on its coaster
   pitcher: [0.42, TOP + 0.12, BZ] as V3,
-  milks: [0.76, 1.0, 1.24],                           // milk bottles (x), front row
+  milks: [0.66, 0.88, 1.1], // (20 Nov) shifted left: with all three always out, the third covered the glass rack                           // milk bottles (x), front row
   choc: [-0.48, TOP + 0.14, RZ] as V3,
   kettle: [-0.16, TOP + 0.12, RZ] as V3,
   shakers: { cocoa: 0.2, cinnamon: 0.44, sprinkles: 0.68 } as Record<string, number>, // back row (x)

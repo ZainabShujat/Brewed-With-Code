@@ -60,6 +60,7 @@ type CakeState = {
   orderUntil: number   // the order screen shows the cake until this time (ms), then you work from memory
   peeks: number
   why: { text: string; t: number } | null // why the last dispenser did nothing
+  yay: { text: string; t: number } | null // a dispenser just finished (a little ✓ pop)
   peek: () => void
   showFor: () => void
   setTin: (t: Exclude<Tin, 'none'>) => void
@@ -75,7 +76,7 @@ type CakeState = {
 
 const no = (set: (p: Partial<CakeState>) => void, text: string) => set({ why: { text, t: performance.now() } })
 export const useCake = create<CakeState>((set, get) => ({
-  cake: { ...EMPTY }, order: randomCakeOrder(), t: {}, coins: 0, last: null, spin: true, orderUntil: 0, peeks: 0, why: null,
+  cake: { ...EMPTY }, order: randomCakeOrder(), t: {}, coins: 0, last: null, spin: true, orderUntil: 0, peeks: 0, why: null, yay: null,
   showFor: () => set({ orderUntil: performance.now() + 8000 }),
   peek: () => set((s) => ({ orderUntil: performance.now() + 2500, peeks: s.peeks + 1 })),
   // the tin comes first: it decides the cake's shape

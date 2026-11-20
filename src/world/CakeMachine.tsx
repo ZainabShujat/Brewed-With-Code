@@ -34,7 +34,8 @@ export const machine = {
   },
   // click a bulb on a dispenser: only works when the cake is right under it
   drop(at: Station, fn: () => void) {
-    if (this.busy || Math.abs(this.x - ST[at]) > 0.05) { sfx.meh(); this.nudge = at; this.nudgeT = performance.now(); return }
+    if (this.busy) { sfx.meh(); useCake.setState({ why: { text: "wait, it's still working… ⏳", t: performance.now() } }); return }
+    if (Math.abs(this.x - ST[at]) > 0.05) { sfx.meh(); this.nudge = at; this.nudgeT = performance.now(); useCake.setState({ why: { text: 'roll the cake under this one first (◀ ▶)', t: performance.now() } }); return }
     this.run(at, fn)
   },
   nudge: '' as string, nudgeT: 0,
@@ -44,6 +45,10 @@ const ORDER: Station[] = ['start', 'tin', 'layer', 'fill', 'frost', 'pipe', 'top
 if (typeof window !== 'undefined') (window as unknown as { __machine: typeof machine }).__machine = machine
 
 const DIP = 0.9 // seconds: down, act, up
+// a little 'done' pop after each dispenser finishes (playtest: nobody could tell when a step had finished)
+const DONE: Record<string, string> = { tin: '✓ tin ready', layer: '✓ sponge added', fill: '✓ filling added', frost: '✓ frosted', pipe: '✓ rosettes piped', top: '✓ toppings on · roll it to ⭐' }
+// the dispenser labels: what each one DOES, numbered in order
+const LABEL: Record<string, string> = { tin: '① pick a tin', layer: '② add sponge', fill: '③ add filling', frost: '④ frost it', pipe: '⑤ pipe rosettes', top: '⑥ add toppings' }
 
 export function CakeMachine({ children }: { children: React.ReactNode }) {
   const carrier = useRef<THREE.Group>(null)
@@ -58,7 +63,7 @@ export function CakeMachine({ children }: { children: React.ReactNode }) {
     if (m.dipT >= 0) {
       const before = m.dipT; m.dipT += dt
       if (before < 0.3 && m.dipT >= 0.3) { m.queue[0].fn(); if (m.active !== 'star') sfx.tap() }
-      if (m.dipT >= DIP + (m.active === 'frost' ? 1.2 : m.active === 'pipe' ? 1.6 : 0.6)) { m.dipT = -1; m.active = ''; m.queue.shift() }
+      if (m.dipT >= DIP + (m.active === 'frost' ? 1.2 : m.active === 'pipe' ? 1.6 : 0.6)) { const done = m.active; m.dipT = -1; m.active = ''; m.queue.shift(); if (DONE[done]) { useCake.setState({ yay: { text: DONE[done], t: performance.now() } }); sfx.good() } }
     }
     if (carrier.current) carrier.current.position.x = m.x
     // belt slats crawl while the cake moves
@@ -162,6 +167,11 @@ export function CakeMachine({ children }: { children: React.ReactNode }) {
 }
 
 type Opt = { color: string; label: string; fn: () => void; icon?: string; shape?: 'round' | 'square' | 'heart' }
+function HeadTag({ id, name }: { id: Station; name: string }) {
+  const ref = useRef<HTMLDivElement>(null)
+  useFrame(() => { const el = ref.current; if (!el) return; const here = Math.abs(machine.x - ST[id]) < 0.05 && !machine.busy; const c = 'headtag big' + (here ? ' here' : ''); if (el.className !== c) el.className = c })
+  return <Html position={[0, 0.82, 0.3]} center zIndexRange={[4, 0]} style={{ pointerEvents: 'none' }}><div ref={ref} className="headtag big">{LABEL[id] ?? name}</div></Html>
+}
 function Head({ id, x, top, heads, children, opts, name }: { id: Station; x: number; top: number; heads: React.MutableRefObject<Record<string, THREE.Group | null>>; children: React.ReactNode; opts: Opt[]; name: string }) {
   return (
     <group position={[x, top - 0.75, 0]}>
@@ -175,7 +185,7 @@ function Head({ id, x, top, heads, children, opts, name }: { id: Station; x: num
               {/* a generous invisible tap area (fingers!), then the bulb or the tin's own shape */}
               <mesh onClick={pick} visible={false}
                 onPointerOver={(e) => { e.stopPropagation(); document.body.style.cursor = 'pointer' }} onPointerOut={() => { document.body.style.cursor = '' }}>
-                <sphereGeometry args={[0.085, 8, 6]} /></mesh>
+                <sphereGeometry args={[0.11, 8, 6]} /></mesh>
               {o.shape === 'round' ? <mesh rotation={[Math.PI / 2, 0, 0]} material={mat(o.color, { rough: 0.3 })}><cylinderGeometry args={[0.062, 0.062, 0.035, 24]} /></mesh>
                 : o.shape === 'square' ? <mesh material={mat(o.color, { rough: 0.3 })}><boxGeometry args={[0.11, 0.11, 0.035]} /></mesh>
                 : o.shape === 'heart' ? <group>{[-1, 1].map((sd) => <mesh key={sd} position={[sd * 0.028, 0.02, 0]} material={mat(o.color, { rough: 0.3 })}><sphereGeometry args={[0.04, 14, 10]} /></mesh>)}
@@ -187,7 +197,7 @@ function Head({ id, x, top, heads, children, opts, name }: { id: Station; x: num
           )
         })}
       </group>
-      <Html position={[0, 0.78, 0.3]} center zIndexRange={[4, 0]} style={{ pointerEvents: 'none' }}><div className="headtag">{name}</div></Html>
+      <HeadTag id={id} name={name} />
       <mesh position={[0, 0.62, 0]} material={mat(C.plum)}><cylinderGeometry args={[0.025, 0.025, 0.3, 8]} /></mesh>
       <group ref={(g) => { heads.current[id] = g }}>{children}</group>
     </group>

@@ -11,6 +11,7 @@ import { useGame } from '../systems/store'
 import { STREET as S } from './streetLayout'
 import { useLampSpot } from './LampLights'
 import { Signboard } from './Signboard'
+import { AreaSigns } from './AreaSigns'
 
 // The street outside the café, at HUMAN scale (1 unit ≈ 1 m, same as the café floor), unlike the 2.95×
 // exterior dressing. A T-shaped street: pavement → road with a zebra crossing → far pavement → a side street,
@@ -229,6 +230,7 @@ export function Street() {
       {/* the path from the door to the pavement, and the night glow at the door */}
       <DoorPassage />
       <Signboard />
+      <AreaSigns />
       <CafeLights />
       <mesh position={[0, 0.18, padA[0] + 1.6]} rotation={[-Math.PI / 2, 0, 0]} material={nightGlow}><planeGeometry args={[7, 5]} /></mesh>
       {/* streetlamps */}
