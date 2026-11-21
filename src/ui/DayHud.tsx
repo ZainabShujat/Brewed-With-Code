@@ -26,7 +26,7 @@ export function DayHud() {
         <span className="dayno">Day {d.day}</span>
         <span className="daybank">💰 {d.bank} saved · ⭐ {d.stars}</span>
       </div>
-      {navDone && !nearDoor && <div className="dayhint">
+      {false && navDone && !nearDoor && <div className="dayhint">
         🪧 the café is closed · {TOUCH ? 'walk to door & tap sign to OPEN' : <span>walk to the door and press <b>E</b> to flip the sign to OPEN</span>}
       </div>}
       {!onFoot(mode) && <button className="brew-go daygo-btn" onClick={() => { const g = useGame.getState(); g.setMode('walk'); Object.assign(g.player, { x: 0, z: 10.4, facing: 0 }) }}>🚪 go to the door</button>}

@@ -12,6 +12,7 @@ import { Reveal } from './Reveal'
 import { Bar } from './Bar'
 import { CakeBench } from './Cake'
 import { KitchenRoom } from './KitchenRoom'
+import { Waypoint } from './Waypoint'
 import { Swing, Slide } from './Swing'
 import { useGame } from '../systems/store'
 import { Model } from './Models'
@@ -311,6 +312,7 @@ export function Interior({ cutaway, pov, only = '' }: { cutaway: boolean; pov: b
       <Reveal id="decor"><Decor hideBack={pov} /></Reveal>
       <CakeBench />
       <Reveal id="prepkitchen" at={[6.6, 0, -8.3]}><KitchenRoom /></Reveal>
+      <Waypoint />
       {TABLES.map(([x, z], i) => (
         <Reveal key={`${x},${z}`} id="tables" at={[x, 0, z]}>
           {/* FURN: tables + stools sized for ~2 m characters (table ~1.05 m, seat ~0.8 m) */}

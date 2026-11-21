@@ -1,3 +1,4 @@
+import { GoalLine } from './ui/GoalLine'
 import { KitchenHud } from './ui/KitchenHud'
 import { TodaysMenu, RecipeBook } from './ui/TodaysMenu'
 import { WORLD } from './world/layout'
@@ -149,6 +150,7 @@ export default function App() {
       </div></div>}
       {playing && !SNAP && (mode === 'pov' || mode === 'dollhouse' || mode === 'walk' || mode === 'fp') && <DayHud />}
       {playing && !SNAP && mode === 'kitchen' && <KitchenHud />}
+      {playing && !SNAP && (mode === 'walk' || mode === 'fp' || mode === 'dollhouse') && <GoalLine />}
       {playing && mode === 'pov' && <RecipeCard />}
       {playing && mode === 'pov' && <TutorialBubble />}
       {playing && !SNAP && <ModeFade />}

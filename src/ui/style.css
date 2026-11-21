@@ -1233,3 +1233,12 @@ html:not(.phone) .fullscreenbtn { left: auto; right: 14px; top: auto; bottom: 14
 .phone .kh-scale { top: 10%; width: 220px; padding: 8px 12px 10px; } .phone .kh-scale .ks-n { font-size: 32px; }
 /* keep the scale off the bowl: top-right corner, so you watch the flour fall */
 .kh-scale { left: auto; right: 24px; top: 70px; transform: none; } .phone .kh-scale { right: 10px; top: 46px; }
+
+/* the goal line: what to do next, always, on foot (the pink arrow in the world shows where) */
+.goalline { position: fixed; left: 50%; top: 12px; transform: translateX(-50%); z-index: 24; display: flex; align-items: center; gap: 10px; max-width: min(640px, 70vw); padding: 8px 18px 9px 12px; border-radius: 999px; background: #fff6ee; color: #3d1846; font: 800 16px/1.25 'Trebuchet MS', sans-serif; box-shadow: 0 4px 0 #c4528a, 0 8px 20px rgba(0,0,0,.2); animation: goalin .35s ease-out; pointer-events: none; }
+.goalline svg { flex: none; }
+@keyframes goalin { from { transform: translate(-50%, -14px); opacity: 0; } to { transform: translate(-50%, 0); opacity: 1; } }
+.phone .goalline { top: 6px; max-width: 54vw; font-size: 11px; padding: 4px 12px 5px 8px; gap: 6px; }
+.phone .goalline { top: auto; bottom: 10px; animation: none; }
+.goalline { top: 62px; max-width: min(560px, 60vw); }
+.phone .goalline { top: auto; }
