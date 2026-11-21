@@ -1,3 +1,5 @@
+import { DemoOverlay } from './ui/DemoOverlay'
+import { useDemo } from './systems/demo'
 import { GoalLine } from './ui/GoalLine'
 import { KitchenHud } from './ui/KitchenHud'
 import { TodaysMenu, RecipeBook } from './ui/TodaysMenu'
@@ -124,6 +126,7 @@ function startLoop(s: { advance: (t: number) => void }) {
 }
 
 export default function App() {
+  const demoOn = useDemo((d) => d.on)
   const mode = useGame((s) => s.mode)
   const setMode = useGame((s) => s.setMode)
   const navDone = useNavTut((t) => t.done)
@@ -150,7 +153,8 @@ export default function App() {
       </div></div>}
       {playing && !SNAP && (mode === 'pov' || mode === 'dollhouse' || mode === 'walk' || mode === 'fp') && <DayHud />}
       {playing && !SNAP && mode === 'kitchen' && <KitchenHud />}
-      {playing && !SNAP && (mode === 'walk' || mode === 'fp' || mode === 'dollhouse') && <GoalLine />}
+      {playing && !SNAP && !demoOn && (mode === 'walk' || mode === 'fp' || mode === 'dollhouse') && <GoalLine />}
+      {!SNAP && <DemoOverlay />}
       {playing && mode === 'pov' && <RecipeCard />}
       {playing && mode === 'pov' && <TutorialBubble />}
       {playing && !SNAP && <ModeFade />}

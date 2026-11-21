@@ -1,3 +1,4 @@
+import { useDemo } from '../systems/demo'
 import { useEffect, useState } from 'react'
 import { useGame, type CamMode } from '../systems/store'
 import { useShop } from '../systems/shop'
@@ -103,6 +104,7 @@ export function Menu({ screen, setScreen }: { screen: Screen; setScreen: (s: Scr
             {l && <button className="tmb" data-act="new" onClick={() => setScreen('newgame')}><Spark size={22} /><span>New Game</span></button>}
             <button className="tmb" data-act="load" onClick={() => setScreen('load')}><Load size={22} /><span>Load Game</span></button>
             <button className="tmb" data-act="howto" onClick={() => setScreen('howto')}><Book size={22} /><span>How to Play</span></button>
+            <button className="tmb" data-act="demo" onClick={() => { setScreen('playing'); useDemo.getState().start() }}><PlayTri size={22} /><span>Watch a demo<small>the game plays a day by itself</small></span></button>
             <button className="tmb" data-act="settings" onClick={() => setScreen('settings')}><Gear size={22} /><span>Settings</span></button>
             <div className="tm-links"><button onClick={() => setScreen('credits')}>Credits</button><button onClick={() => setScreen('title')}>Title screen</button></div>
           </div>
