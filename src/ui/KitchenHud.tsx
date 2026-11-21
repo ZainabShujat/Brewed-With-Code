@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useGame } from '../systems/store'
-import { useKitchen, PARTS, needs, scoop, type Flavour, type Part } from '../systems/kitchen'
+import { useKitchen, PARTS, needs, scoop, target, partLabel, type Flavour, type Part } from '../systems/kitchen'
 import { INGREDIENTS } from '../data/ingredients'
 import { TOUCH } from '../systems/CameraRig'
 import { SPONGE_COL } from '../systems/cake'
@@ -18,7 +18,7 @@ export function KitchenHud() {
   useEffect(() => { const id = setInterval(() => tick((n) => n + 1), 250); return () => clearInterval(id) }, [])
   const f = k.bowl.flavour, ready = k.ready(), msg = k.msg && performance.now() - k.msg.t < 3500 ? k.msg : null
   const parts = f ? PARTS.filter((p) => needs(f, p)) : []
-  const hint = !f ? 'Pick a flavour' : ready ? (TOUCH ? 'Hold the whisk to stir' : 'Hold the whisk to stir') : (TOUCH ? 'Tap the ingredients' : 'Click the ingredients')
+  const hint = k.next().text // exactly what to do next (an arrow in the room points at it too)
   return (
     <>
       <div className={`khud ${TOUCH ? 'rail' : ''}`} onPointerDown={(e) => e.stopPropagation()}>
@@ -45,6 +45,14 @@ export function KitchenHud() {
           <button className="kh-back" onClick={() => useGame.getState().setMode('walk')} aria-label="back to the café"><Back size={16} />{!TOUCH && 'Café'}</button>
         </div>
       </div>
+      {k.hold && f && (() => { const p = k.hold.part, tgt = target(f, p), g = k.poured[p], pct = Math.min(1.6, g / tgt) / 1.6
+        const zone = g >= tgt * 0.85 && g <= tgt * 1.15
+        return <div className={`kh-scale ${zone ? 'ok' : g > tgt * 1.15 ? 'over' : ''}`}>
+          <div className="ks-l">{partLabel(f, p)}</div>
+          <div className="ks-n">{Math.round(g)}<small> / {tgt} g</small></div>
+          <div className="ks-bar"><i className="ks-zone" style={{ left: `${0.85 / 1.6 * 100}%`, width: `${0.3 / 1.6 * 100}%` }} /><b style={{ width: `${pct * 100}%` }} /></div>
+          <div className="ks-t">{zone ? 'let go now!' : g > tgt * 1.15 ? 'too much!' : 'keep holding…'}</div>
+        </div> })()}
       {(msg || TOUCH) && <div className={`kh-toast ${msg?.good ? 'good' : ''} ${msg ? '' : 'quiet'}`}>{msg ? msg.text : hint}</div>}
     </>
   )

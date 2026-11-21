@@ -55,3 +55,30 @@ test('a scoop pours for a moment: a second tap mid-pour is ignored', () => {
   fresh(); K().choose('vanilla'); useKitchen.setState({ pour: null }); K().add('flour'); K().add('flour')
   assert.equal(K().bowl.added.flour, 1); assert.equal(K().pour?.part, 'flour')
 })
+
+// ── hold to pour (21 Nov): flour / sugar / cocoa poured by weight on a scale ──
+import { POUR_SECONDS, target, POUR_MS } from '../src/systems/kitchen'
+const holdFor = (p: 'flour' | 'sugar' | 'extra', secs: number) => {
+  K().startPour(p); useKitchen.setState({ hold: { part: p, t: performance.now() - POUR_MS } }) // skip the lift-over animation
+  for (let t = 0; t < secs; t += 0.05) K().holdTick(0.05); K().stopPour() }
+test('holding the flour sack for the right time pours the target weight: Perfect', () => {
+  fresh(); K().choose('vanilla'); const st = usePantry.getState().stock.flour
+  holdFor('flour', POUR_SECONDS); assert.equal(K().bowl.added.flour, 3); assert.match(K().msg!.text, /Perfect! 1[78]\d g of flour/)
+  assert.ok(Math.abs((st - usePantry.getState().stock.flour) - target('vanilla', 'flour')) < 12, 'the pantry loses what was poured')
+})
+test('letting go too early keeps the pour: hold again to top up', () => {
+  fresh(); K().choose('vanilla'); holdFor('sugar', POUR_SECONDS * 0.4)
+  assert.equal(K().bowl.added.sugar, 0); assert.match(K().msg!.text, /top up/)
+  holdFor('sugar', POUR_SECONDS * 0.55); assert.equal(K().bowl.added.sugar, 3)
+})
+test('pouring way past the line still counts, with a heavy warning', () => {
+  fresh(); K().choose('chocolate'); holdFor('extra', POUR_SECONDS * 1.5)
+  assert.equal(K().bowl.added.extra, 3); assert.match(K().msg!.text, /heavy/)
+})
+test('the next step reads like an instruction, in order', () => {
+  fresh(); assert.equal(K().next().text, 'Pick a flavour')
+  K().choose('vanilla'); assert.match(K().next().text, /Hold the flour · pour 180 g/)
+  holdFor('flour', POUR_SECONDS); assert.match(K().next().text, /Hold the sugar/)
+  holdFor('sugar', POUR_SECONDS); assert.match(K().next().text, /Tap the eggs · crack 3 more/)
+  fill(['eggs', 'butter']); assert.match(K().next().text, /whisk/)
+})

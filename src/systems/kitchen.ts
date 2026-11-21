@@ -32,6 +32,9 @@ type K = Saved & {
   stirring: boolean; pour: { part: Part; t: number } | null; msg: { text: string; t: number; good?: boolean } | null
   choose: (f: Flavour) => void; add: (p: Part) => void; setStirring: (on: boolean) => void; stirBy: (dt: number) => void
   ready: () => boolean; takeLayer: (f: Flavour) => boolean; tip: () => void
+  hold: { part: Part; t: number } | null; poured: Record<Part, number>
+  startPour: (p: Part) => void; holdTick: (dt: number) => void; stopPour: () => void
+  next: () => { at: Part | 'whisk' | 'flavour'; text: string }
 }
 const persist = (s: Saved) => { try { localStorage.setItem(KEY, JSON.stringify({ bowl: s.bowl, batter: s.batter })) } catch { /* private mode */ } }
 const now = () => (typeof performance !== 'undefined' ? performance.now() : Date.now())
@@ -61,10 +64,46 @@ export const useKitchen = create<K>((set, get) => ({
     const stir = Math.min(1, s.bowl.stir + dt / STIR_SECONDS)
     if (stir < 1) { set({ bowl: { ...s.bowl, stir } }); return }
     const f = s.bowl.flavour!, batter = { ...s.batter, [f]: s.batter[f] + LAYERS_PER_BOWL }, bowl = EMPTY_BOWL()
-    set({ bowl, batter, stirring: false, ...say(`${f} batter ready: 3 layers on the shelf for the cake bench 🎂`, true) }); persist({ bowl, batter }); play('bell') },
+    set({ bowl, batter, stirring: false, poured: { flour: 0, sugar: 0, eggs: 0, butter: 0, extra: 0 }, ...say(`${f} batter ready: 3 layers on the shelf for the cake bench 🎂`, true) }); persist({ bowl, batter }); play('bell') },
   /** the cake bench pours one layer's worth */
   takeLayer: (f) => { const s = get(); if (s.batter[f] < 1) return false
     const batter = { ...s.batter, [f]: s.batter[f] - 1 }; set({ batter }); persist({ ...s, batter }); return true },
-  tip: () => { const bowl = EMPTY_BOWL(); set({ bowl, stirring: false, ...say('bowl tipped out') }); persist({ ...get(), bowl }) },
+  tip: () => { const bowl = EMPTY_BOWL(); set({ bowl, stirring: false, hold: null, poured: { flour: 0, sugar: 0, eggs: 0, butter: 0, extra: 0 }, ...say('bowl tipped out') }); persist({ ...get(), bowl }) },
+
+  // ── HOLD TO POUR (21 Nov, "the kitchen is too vague"): flour, sugar and cocoa pour while you hold them, onto a
+  //    kitchen scale. Let go near the target weight. Short? hold again to top up. Eggs, butter, strawberries stay taps.
+  hold: null, poured: { flour: 0, sugar: 0, eggs: 0, butter: 0, extra: 0 },
+  startPour: (p) => { const s = get(), b = s.bowl
+    if (!b.flavour) return set(say('pick a flavour first: vanilla, chocolate or strawberry'))
+    if (!pours(b.flavour, p)) return s.add(p)
+    if (b.added[p] >= needs(b.flavour, p)) return set(say(`that's enough ${partLabel(b.flavour, p)}`))
+    if (b.stir > 0) return set(say("you've started stirring: it's all in"))
+    set({ hold: { part: p, t: now() }, pour: { part: p, t: now() }, msg: null }) },
+  holdTick: (dt) => { const s = get(); if (!s.hold || !s.bowl.flavour) return
+    const p = s.hold.part, tgt = target(s.bowl.flavour, p)
+    if (now() - s.hold.t < POUR_MS * 0.38) return // still lifting it over the bowl
+    set({ poured: { ...s.poured, [p]: Math.min(tgt * 1.6, s.poured[p] + tgt / POUR_SECONDS * dt) } }) },
+  stopPour: () => { const s = get(), h = s.hold; if (!h || !s.bowl.flavour) return set({ hold: null })
+    const f = s.bowl.flavour, p = h.part, tgt = target(f, p), g = s.poured[p], sc = scoop(f, p)!
+    const r = now() - h.t, k = Math.max(0, Math.min(0.75, r / POUR_MS)) // the sack rights itself and goes home from where it is
+    const base = { hold: null, pour: { part: p, t: now() - Math.max(k, 0.75) * POUR_MS } }
+    if (g < tgt * 0.85) return set({ ...base, ...say(g < 1 ? `hold the ${partLabel(f, p)} to pour` : `${Math.round(g)} of ${tgt} g: hold again to top up`) })
+    if (!usePantry.getState().useAll([[sc[0], g]])) return set({ ...base, ...say(`out of ${sc[0]}: buy more in town`) }) // exactly what you poured
+    const bowl = { ...s.bowl, added: { ...s.bowl.added, [p]: needs(f, p) } }
+    const off = g / tgt, good = off <= 1.15
+    set({ ...base, bowl, ...say(good ? `Perfect! ${Math.round(g)} g of ${partLabel(f, p)}` : `a bit heavy (${Math.round(g)} g), it'll do`, good) }); persist({ ...get(), bowl }); play(good ? 'bell' : 'tap') },
+  /** what to do next, for the arrow and the instruction line */
+  next: () => { const b = get().bowl
+    if (!b.flavour) return { at: 'flavour' as const, text: 'Pick a flavour' }
+    for (const p of PARTS) { const need = needs(b.flavour, p); if (b.added[p] < need) {
+      const l = partLabel(b.flavour, p)
+      return { at: p, text: pours(b.flavour, p) ? `Hold the ${l} · pour ${target(b.flavour, p)} g` : `Tap the ${l} · ${p === 'eggs' ? 'crack' : p === 'butter' ? 'cut' : 'chop'} ${need - b.added[p]} more` } } }
+    return { at: 'whisk' as const, text: b.stir > 0 ? 'Keep whisking until it’s smooth' : 'Hold the whisk · stir until smooth' } },
 }))
+/** which parts are poured by weight (held) rather than tapped */
+export const pours = (f: Flavour, p: Part) => p === 'flour' || p === 'sugar' || (p === 'extra' && f === 'chocolate')
+export const partLabel = (f: Flavour, p: Part) => p === 'extra' ? (f === 'chocolate' ? 'cocoa' : 'strawberries') : p
+/** the weight a whole bowl needs of a poured part (3 layers' worth) */
+export const target = (f: Flavour, p: Part) => { const sc = scoop(f, p); return sc ? Math.round(sc[1] * LAYERS_PER_BOWL) : 0 }
+export const POUR_SECONDS = 2.2 // holding this long pours exactly the target
 if (typeof window !== 'undefined') (window as unknown as { __kitchen: typeof useKitchen }).__kitchen = useKitchen

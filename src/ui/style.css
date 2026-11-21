@@ -1219,3 +1219,17 @@ html:not(.phone) .fullscreenbtn { left: auto; right: 14px; top: auto; bottom: 14
 /* short landscape phones: sign top-right, buttons down the left, nothing stacked */
 @media (max-height: 520px) { .gmenu .title-menu .titleboard { left: auto; right: 2vw; top: 2vh; transform: none; width: 46vw; height: 20vw; } .gmenu .title-menu { margin-top: 0 !important; align-self: center; } }
 .ctag.away { display: none; }
+
+/* the kitchen scale (hold to pour): big grams, a target band, 'let go now!' */
+.kh-scale { position: fixed; left: 50%; top: 18%; transform: translateX(-50%); z-index: 27; width: 300px; padding: 12px 16px 14px; border-radius: 20px; background: #fff6ee; box-shadow: 0 5px 0 #c4528a, 0 12px 30px rgba(0,0,0,.25); font-family: 'Trebuchet MS', sans-serif; text-align: center; pointer-events: none; }
+.kh-scale .ks-l { font: 900 14px 'Trebuchet MS', sans-serif; color: #c4528a; text-transform: uppercase; letter-spacing: 1px; }
+.kh-scale .ks-n { font: 900 46px/1 'Trebuchet MS', sans-serif; color: #3d1846; margin: 4px 0 8px; } .kh-scale .ks-n small { font-size: 18px; color: #8a6a7e; }
+.kh-scale .ks-bar { position: relative; height: 14px; border-radius: 8px; background: #ead2df; overflow: hidden; }
+.kh-scale .ks-bar b { position: absolute; left: 0; top: 0; bottom: 0; background: #ff7fb6; border-radius: 8px; }
+.kh-scale .ks-zone { position: absolute; top: 0; bottom: 0; background: rgba(76,175,116,.45); z-index: 1; }
+.kh-scale .ks-t { margin-top: 6px; font: 800 14px 'Trebuchet MS', sans-serif; color: #8a6a7e; }
+.kh-scale.ok { box-shadow: 0 5px 0 #4caf74, 0 0 0 6px rgba(76,175,116,.25); } .kh-scale.ok .ks-t { color: #2f7a43; } .kh-scale.ok .ks-bar b { background: #4caf74; }
+.kh-scale.over .ks-t { color: #b23a48; } .kh-scale.over .ks-bar b { background: #e0475a; }
+.phone .kh-scale { top: 10%; width: 220px; padding: 8px 12px 10px; } .phone .kh-scale .ks-n { font-size: 32px; }
+/* keep the scale off the bowl: top-right corner, so you watch the flour fall */
+.kh-scale { left: auto; right: 24px; top: 70px; transform: none; } .phone .kh-scale { right: 10px; top: 46px; }

@@ -29,11 +29,18 @@ with sync_playwright() as p:
         check(bool(pg.query_selector('.khud')), f'{dev}: the kitchen panel shows')
         pg.click('[data-flavour="vanilla"]'); pg.wait_for_timeout(200)
         tap = (lambda xy: pg.touchscreen.tap(*xy)) if dev == 'phone' else (lambda xy: pg.mouse.click(*xy))
-        for part in ('flour', 'sugar', 'eggs', 'butter'):
+        # flour + sugar: press and HOLD (they pour onto the scale), let go in the green zone; eggs + butter: tap 3x
+        for part in ('flour', 'sugar'):
+            pg.mouse.move(*W(f'kitchen:{part}')); pg.mouse.down(); pg.wait_for_timeout(1900)
+            if part == 'flour': pg.screenshot(path=f'{OUT}/kitchen-scale-{dev}.png')
+            for _ in range(60):  # hold until the scale says it's in the zone (slow test renderers pour per frame)
+                g = S(f"window.__kitchen.getState().poured.{part}")
+                if g >= {'flour': 165, 'sugar': 110}[part]: break
+                pg.wait_for_timeout(100)
+            pg.mouse.up(); pg.wait_for_timeout(1200)
+        for part in ('eggs', 'butter'):
             for i in range(3):
-                tap(W(f'kitchen:{part}'))
-                if i == 0: pg.wait_for_timeout(480); pg.screenshot(path=f'{OUT}/kitchen-pour-{part}-{dev}.png'); pg.wait_for_timeout(520)
-                else: pg.wait_for_timeout(1000)
+                tap(W(f'kitchen:{part}')); pg.wait_for_timeout(1000)
         added = S("window.__kitchen.getState().bowl.added")
         check(all(added[k] == 3 for k in ('flour', 'sugar', 'eggs', 'butter')), f'{dev}: clicking the jars adds scoops {added}')
         pg.screenshot(path=f'{OUT}/kitchen-bowl-{dev}.png')

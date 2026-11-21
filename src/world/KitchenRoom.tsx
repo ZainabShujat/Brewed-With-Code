@@ -25,6 +25,8 @@ const ease = (x: number) => x * x * (3 - 2 * x)
 
 /** one scoop's animation clock for this part: 0..1 while it plays, null otherwise */
 function pourPhase(part: Part) {
+  const h = useKitchen.getState().hold
+  if (h && h.part === part) return Math.min(0.6, (performance.now() - h.t) / POUR_MS) // held: travel, tip, keep pouring
   const p = useKitchen.getState().pour
   if (!p || p.part !== part) return null
   const k = (performance.now() - p.t) / POUR_MS
@@ -86,7 +88,9 @@ function Pourer({ part, home, h, tip = 2.0, kind, sift, lid, children, name, siz
   })
   return (
     <>
-      <group ref={g} position={home} name={name} onClick={click(() => useKitchen.getState().add(part))} onPointerOver={hover(true)} onPointerOut={hover(false)}>
+      <group ref={g} position={home} name={name} onPointerOver={hover(true)} onPointerOut={hover(false)}
+        onPointerDown={(e) => { if (!inKitchen()) return; e.stopPropagation(); const k = useKitchen.getState(); k.startPour(part)
+          if (useKitchen.getState().hold) { const up = () => { useKitchen.getState().stopPour(); window.removeEventListener('pointerup', up) }; window.addEventListener('pointerup', up) } }}>
         {/* the inner pivot sits at the mouth (height h): tipping happens around the opening, like a real pour */}
         <group position={[0, h, 0]}><group ref={tilt}><group position={[0, -h, 0]}>{children}{lid && <group ref={lidRef}>{lid}</group>}</group></group></group>
         <mesh position={[0, size[1] / 2, 0]} visible={false}><boxGeometry args={size} /></mesh>
@@ -230,7 +234,7 @@ function Bowl() {
   const fill = useRef<THREE.Mesh>(null), flecks = useRef<THREE.Group>(null), whisk = useRef<THREE.Group>(null), swirl = useRef<THREE.Mesh>(null)
   const fillMat = useMemo(() => mat('#efe2c8').clone(), [])
   useFrame((_, dt) => {
-    const k = useKitchen.getState(); k.stirBy(Math.min(dt, 0.1))
+    const k = useKitchen.getState(); k.stirBy(Math.min(dt, 0.1)); k.holdTick(Math.min(dt, 0.1))
     const b = k.bowl, f = b.flavour
     const total = f ? PARTS.reduce((a, p) => a + needs(f, p), 0) : 1, got = PARTS.reduce((a, p) => a + b.added[p], 0)
     const lvl = f ? got / total : 0, y = 0.07 + lvl * 0.17
@@ -293,6 +297,15 @@ function SideCurtain() {
   return <group ref={g}><Curtain from={[KX0 - 0.1, KZ_BACK]} to={[KX0 - 0.1, KZ_FRONT]} color="#cdb8e6" rotY={Math.PI / 2} /></group>
 }
 
+const NEXT_AT: Record<string, [number, number]> = { flour: [5.0, 0.95], sugar: [5.5, 0.75], eggs: [6.0, 0.45], butter: [7.3, 0.4], whisk: [6.6, 0.7] }
+function NextArrow() {
+  const g = useRef<THREE.Group>(null)
+  useFrame(() => { const o = g.current; if (!o) return; const k = useKitchen.getState(), n = k.next()
+    const f = k.bowl.flavour, at = n.at === 'extra' ? (f === 'chocolate' ? [7.7, 0.45] : [7.95, 0.45]) : NEXT_AT[n.at]
+    o.visible = inKitchen() && !!at && !k.hold && !k.stirring
+    if (at) o.position.set(at[0], TOP + at[1] + 0.12 + Math.abs(Math.sin(performance.now() / 260)) * 0.1, CZ - 0.05) })
+  return <group ref={g}><mesh rotation={[Math.PI, 0, 0]} material={mat('#ff7fb6', { emissive: '#ff4f9a' })}><coneGeometry args={[0.09, 0.18, 4]} /></mesh></group>
+}
 export function KitchenRoom() {
   const z = CZ - 0.1
   return (
@@ -314,6 +327,7 @@ export function KitchenRoom() {
       </Pourer>
       <Eggs home={[6.0, TOP, z + 0.02]} />
       <Bowl />
+      <NextArrow />
       <Butter home={[7.3, TOP, z]} />
       <Extra home={[7.8, TOP, z]} />
       {/* the tools: board, rolling pin, knife block, spoon, a pot */}
